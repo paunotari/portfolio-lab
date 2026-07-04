@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.DS_Store
+.venv/
+# regenerable outputs (rebuild with scripts/run_pipeline.py)
+/outputs/
+/data/processed/
