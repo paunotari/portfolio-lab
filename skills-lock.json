@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "analyzing-financial-statements": {
+      "source": "smithery.ai",
+      "sourceType": "well-known",
+      "computedHash": "b14994fda6448e554f9b54e516196356b66b2d97a9de707cdda12ee64bb50b2d"
+    },
+    "creating-financial-models": {
+      "source": "smithery.ai",
+      "sourceType": "well-known",
+      "computedHash": "10793f1c4d6d397d0aa61e70f13838461bcaaa6410d432fac024499d82a97d4a"
+    }
+  }
+}
