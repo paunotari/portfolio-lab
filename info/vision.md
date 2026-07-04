@@ -65,15 +65,17 @@ using the per-regime returns and correlations the engine already computes.
 - Look-through diversification (sector / country / single-stock concentration). ✅
 - Self-contained dashboard. ✅
 
-**Phase 1 — Live data & macro**
-- Connect to **FRED** and other macro sources for live indicators (inflation, rates, growth,
-  unemployment, yield curve, PMI…). *Open question: best free/affordable APIs.*
+**Phase 1 — Live data & macro (macro part DONE)**
+- ✅ **FRED** ingest: 12 historical indicators (inflation, rates, curve, growth, unemployment,
+  credit spread, VIX, USD, oil, PPI), month-end aligned, API-key or keyless. (`ingest/macro.py`)
 - Live index / holdings data feed. *Open question: where to source reliable live index data.*
 - Compare each index's **current** behaviour vs its own history.
 
-**Phase 2 — Macro correlation & simulation**
-- Estimate correlations of individual indices **and factors** to the **most important macro
-  indicators** over history — the core input for regime-conditional forecasting.
+**Phase 2 — Macro correlation & simulation (correlation part DONE)**
+- ✅ Correlations of individual indices **and factors** to the macro indicators over history —
+  contemporaneous + lead/lag, level + change bases, with betas (`analytics/macro_link.py`,
+  visualized in the dashboard's Macro tab).
+- Per-regime macro correlations; 4-quadrant macro-state classification (next).
 - Simulate future behaviour/returns conditioned on macro characteristics (scenario engine).
 
 **Phase 3 — Optimization**
@@ -84,6 +86,9 @@ using the per-regime returns and correlations the engine already computes.
 **Phase 4 — Intelligence**
 - Probabilistic models / reinforcement learning to adapt allocation across regimes instead of
   relying on historical averages. This is the genuinely novel, under-served niche.
+- ⚠️ **Constraint:** FRED's terms of use prohibit using FRED data to train ML/AI systems. If this
+  phase is built, macro features must come from a different source (OECD, World Bank, ECB, BLS…)
+  — FRED stays limited to the statistical/deterministic layers (Phases 0–3).
 
 **Phase 5 — Tracker & product**
 - Day-to-day portfolio tracking, rebalancing alerts on regime change, reporting.

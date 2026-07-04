@@ -79,6 +79,24 @@ padding:2px 10px;margin:2px;font-size:12px}
      <div id="rollchart" style="height:340px"></div></div>
  </section>
 
+ <section class="tab" id="t-macro">
+   <div class="card"><h2>Macro indicator over time</h2>
+     <select id="macrosel"></select>
+     <div class="muted" id="macronote" style="margin-top:6px"></div>
+     <div id="macrochart" style="height:380px"></div>
+     <div class="muted">Shaded bands = macro regimes (see Regimes tab). Hover a band top label for the regime name.</div></div>
+   <div class="card"><h2>Index ↔ macro correlation heatmap <span class="muted">(contemporaneous, monthly)</span></h2>
+     <select id="macrobasis">
+       <option value="chg">Δ change basis (sensitivity to surprises)</option>
+       <option value="level">level basis (regime context — interpret with care)</option>
+     </select>
+     <div id="macroheat" style="height:560px"></div>
+     <div class="muted">Blank cells = insufficient overlapping history (&lt;36 months).</div></div>
+   <div class="card"><h2>Top macro drivers for one series</h2>
+     <select id="macrodrvsel"></select>
+     <div id="macrodrv" style="height:360px"></div></div>
+ </section>
+
  <section class="tab" id="t-div">
    <div class="grid g2">
      <div class="card"><h2>Portfolio sleeves (weights, %)</h2>
@@ -113,7 +131,7 @@ $('#sub').textContent=`Common window ${cw.cw_start} → ${cw.cw_end} · ${DATA.i
 
 // nav/tabs
 const TABS=[['perf','Performance'],['fvr','Factor vs Reference'],['reg','Regimes'],
-  ['corr','Correlations'],['div','Diversification']];
+  ['corr','Correlations'],['macro','Macro'],['div','Diversification']];
 const nav=$('#nav');
 TABS.forEach(([id,label],i)=>{const b=document.createElement('button');b.textContent=label;
   b.onclick=()=>show(id,b);if(i==0)b.classList.add('on');nav.appendChild(b);});
@@ -221,6 +239,70 @@ function drawCorr(k){const c=DATA.corr[k];
     colorbar:{title:'ρ'}}],{...P,margin:{l:190,r:20,t:10,b:170},
     xaxis:{tickangle:-45,tickfont:{size:9}},yaxis:{tickfont:{size:9},autorange:'reversed'}},
     {displayModeBar:false});}
+
+// ---------- Macro ----------
+(function(){
+  if(!DATA.macro){ $('#t-macro').innerHTML='<div class="card"><h2>Macro</h2>'
+    +'<div class="muted">No macro data baked — run the pipeline with the FRED ingest + macro_link steps.</div></div>'; return; }
+  const meta={}; DATA.macro_meta.forEach(m=>meta[m.name]=m);
+  // regime shading shapes + labels (reused by the series chart)
+  const bands=DATA.regime_meta.map((r,i)=>({type:'rect',xref:'x',yref:'paper',
+    x0:r.start,x1:r.end,y0:0,y1:1,fillcolor:i%2?'rgba(91,157,255,.07)':'rgba(244,162,89,.07)',
+    line:{width:0},layer:'below'}));
+  const bandLabels=DATA.regime_meta.map(r=>({x:r.start,y:1,xref:'x',yref:'paper',
+    text:r.name.split(' ')[0],showarrow:false,font:{size:8,color:'#8b97ad'},
+    xanchor:'left',yanchor:'bottom',hovertext:r.name}));
+
+  // (a) indicator time series with regime bands
+  const msel=$('#macrosel');
+  Object.keys(DATA.macro.series).forEach(name=>{const o=document.createElement('option');
+    o.value=name;o.textContent=`${name} — ${meta[name]?meta[name].units:''}`;msel.appendChild(o);});
+  msel.onchange=()=>drawMacroSeries(msel.value);
+  function drawMacroSeries(name){
+    const m=meta[name]||{};
+    $('#macronote').textContent=`${m.units||''} · ${m.transform==='yoy'?'12-month % change of the underlying index':'level as published'} · history ${m.start||'?'} → ${m.end||'?'} (FRED: ${m.id||''})`;
+    // default to the analysis window (regime bands readable); drag/zoom out for full history
+    Plotly.newPlot('macrochart',[{x:DATA.macro.dates,y:DATA.macro.series[name],mode:'lines',
+      line:{color:'#5b9dff',width:1.4},connectgaps:false}],
+      {...P,margin:{l:55,r:10,t:18,b:40},
+       xaxis:{gridcolor:'#26304a',range:['1997-01-01',DATA.macro.dates[DATA.macro.dates.length-1]]},
+       yaxis:{gridcolor:'#26304a'},shapes:bands,annotations:bandLabels},{displayModeBar:false});
+  }
+  drawMacroSeries(Object.keys(DATA.macro.series)[0]);
+
+  // (b) index<->macro correlation heatmap with basis toggle
+  const bsel=$('#macrobasis');
+  bsel.onchange=()=>drawMacroHeat(bsel.value);
+  function drawMacroHeat(basis){
+    const c=DATA.macro_corr[basis];
+    Plotly.newPlot('macroheat',[{z:c.z,x:c.indicators,y:c.series,type:'heatmap',
+      colorscale:[[0,'#ff6b6b'],[.5,'#171d2b'],[1,'#39d98a']],zmid:0,zmin:-1,zmax:1,
+      colorbar:{title:'corr'},hoverongaps:false}],
+      {...P,margin:{l:210,r:20,t:10,b:120},xaxis:{tickangle:-40,tickfont:{size:9}},
+       yaxis:{tickfont:{size:9},autorange:'reversed'}},{displayModeBar:false});
+  }
+  drawMacroHeat('chg');
+
+  // (c) top drivers bar for one series (uses the currently selected basis)
+  const dsel=$('#macrodrvsel');
+  DATA.macro_corr.chg.series.forEach(s=>{const o=document.createElement('option');
+    o.value=s;o.textContent=s;dsel.appendChild(o);});
+  function drawDrivers(){
+    const basis=bsel.value, c=DATA.macro_corr[basis];
+    const i=c.series.indexOf(dsel.value);
+    const pairs=c.indicators.map((ind,j)=>[ind,c.z[i][j]]).filter(p=>p[1]!=null)
+      .sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
+    Plotly.newPlot('macrodrv',[{type:'bar',orientation:'h',
+      y:pairs.map(p=>p[0]),x:pairs.map(p=>p[1]),
+      marker:{color:pairs.map(p=>p[1]>=0?'#39d98a':'#ff6b6b')}}],
+      {...P,margin:{l:170,r:20,t:6,b:40},
+       xaxis:{title:`corr (${basis} basis)`,range:[-1,1],gridcolor:'#26304a'},
+       yaxis:{autorange:'reversed',tickfont:{size:10}}},{displayModeBar:false});
+  }
+  dsel.onchange=drawDrivers;
+  bsel.addEventListener('change',drawDrivers);
+  drawDrivers();
+})();
 
 // ---------- Diversification (live) ----------
 const EXAMPLE={"MSCI USA Momentum Index":40,"MSCI AC Asia ex Japan Momentum Index":30,"MSCI Emerging Markets Index":30};

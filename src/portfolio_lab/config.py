@@ -47,10 +47,19 @@ CORRELATION_FULL = ANALYTICS_DIR / "correlation_full.csv"
 ROLLING_CORRELATION = ANALYTICS_DIR / "rolling_avg_correlation.csv"
 ANALYTICS_REPORT = ANALYTICS_DIR / "REPORT.md"
 
+# macro-link (index/factor returns <-> macro indicators) output file handles
+MACRO_ANALYTICS_DIR = ANALYTICS_DIR / "macro"
+MACRO_CORRELATIONS = MACRO_ANALYTICS_DIR / "macro_correlations.csv"
+MACRO_CORR_CONTEMP_LEVEL = MACRO_ANALYTICS_DIR / "macro_corr_contemp_level.csv"
+MACRO_CORR_CONTEMP_CHG = MACRO_ANALYTICS_DIR / "macro_corr_contemp_chg.csv"
+MACRO_BETA = MACRO_ANALYTICS_DIR / "macro_sensitivity_beta.csv"
+MACRO_REPORT = MACRO_ANALYTICS_DIR / "REPORT_macro.md"
+
 
 def ensure_dirs() -> None:
     """Create all writable output directories if missing (idempotent)."""
-    for d in (PROCESSED_DIR, ANALYTICS_DIR, CORR_REGIME_DIR, DIVERSIFICATION_DIR):
+    for d in (PROCESSED_DIR, ANALYTICS_DIR, CORR_REGIME_DIR, DIVERSIFICATION_DIR,
+              MACRO_ANALYTICS_DIR):
         d.mkdir(parents=True, exist_ok=True)
 
 
@@ -78,6 +87,10 @@ CONCENTRATION_THRESHOLDS = {"sector": 30.0, "country": 35.0, "stock": 5.0}
 
 ROLLING_WINDOW_MONTHS = 36
 FACTSHEET_ASOF = "2026-06-30"
+
+# macro-link engine settings
+MACRO_MIN_OVERLAP_MONTHS = 36        # pairs with fewer overlapping months are flagged insufficient
+MACRO_LAGS = [0, 1, 3, 6, 12]        # months by which macro LEADS returns (0 = contemporaneous)
 
 
 def factor_type(index_name: str) -> str:

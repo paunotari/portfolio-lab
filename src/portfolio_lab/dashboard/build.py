@@ -63,10 +63,28 @@ def _collect_data() -> dict:
     stk_by = by_index(_rd(C.TOP_CONSTITUENTS), "constituent")
     usa_idx = [r["index_name"] for r in _rd(C.INDEX_META) if r["region"] == "USA"]
 
+    # macro series + meta + index<->macro correlation matrices (optional: skipped when absent)
+    macro = macro_meta = macro_corr = None
+    if C.MACRO_MONTHLY.exists() and C.MACRO_CORR_CONTEMP_CHG.exists():
+        mm = pd.read_csv(C.MACRO_MONTHLY, index_col=0)
+        macro = {"dates": list(mm.index),
+                 "series": {c: [None if pd.isna(x) else round(float(x), 3) for x in mm[c]]
+                            for c in mm.columns}}
+        macro_meta = _rd(C.MACRO_META)
+
+        def load_wide(path):
+            df = pd.read_csv(path, index_col=0)
+            return {"series": list(df.index), "indicators": list(df.columns),
+                    "z": [[None if pd.isna(v) else round(float(v), 3) for v in row]
+                          for row in df.values]}
+        macro_corr = {"level": load_wide(C.MACRO_CORR_CONTEMP_LEVEL),
+                      "chg": load_wide(C.MACRO_CORR_CONTEMP_CHG)}
+
     return dict(perf=perf, fvr=fvr, regperf=regperf, regime_meta=regime_meta, levels=levels,
                 corr=corr, rolling=rolling, sec_by=sec_by, ctry_by=ctry_by, stk_by=stk_by,
                 usa_idx=usa_idx, indices=sorted(sec_by.keys()),
-                thresh=C.CONCENTRATION_THRESHOLDS, country_fix=C.COUNTRY_FIX)
+                thresh=C.CONCENTRATION_THRESHOLDS, country_fix=C.COUNTRY_FIX,
+                macro=macro, macro_meta=macro_meta, macro_corr=macro_corr)
 
 
 def build():

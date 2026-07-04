@@ -10,7 +10,8 @@ thesis*, see [factor-diversification-thesis.md](factor-diversification-thesis.md
 
 A reproducible pipeline + analytics toolkit + dashboard for studying **MSCI factor indices across
 7 regions** (Reference, Momentum, Enhanced Value, Quality) over ~28 years of monthly data, with a
-focus on: factor-vs-reference performance, macro-regime behaviour, cross-index correlations, and
+focus on: factor-vs-reference performance, macro-regime behaviour, cross-index correlations,
+**index↔macro-indicator correlations** (12 FRED indicators, level + change bases, lead/lag), and
 **look-through concentration** (real sector / country / single-stock exposure of a portfolio).
 
 It is the empirical foundation for the larger product described in `vision.md`.
@@ -48,7 +49,9 @@ open outputs/dashboard.html             # double-click; Plotly loads from CDN
 Individual stages (from repo root, src is auto-added to path by scripts/tests):
 ```bash
 python -m portfolio_lab.ingest.returns
+python -m portfolio_lab.ingest.macro          # FRED fetch (uses FRED_API_KEY from .env if set)
 python -m portfolio_lab.analytics.engine
+python -m portfolio_lab.analytics.macro_link  # index<->macro correlations (needs macro_monthly.csv)
 python -m portfolio_lab.portfolio.diversification
 python -m portfolio_lab.dashboard.build
 ```
@@ -59,16 +62,17 @@ python -m portfolio_lab.dashboard.build
 
 | Module | Responsibility |
 |---|---|
-| `config.py` | **All paths and domain constants.** Regions, factor types, GICS sectors, country-name fixes, concentration thresholds, `factor_type()`. Import paths from here — never hard-code. |
+| `config.py` | **All paths and domain constants.** Regions, factor types, GICS sectors, country-name fixes, concentration thresholds, macro-link settings (`MACRO_MIN_OVERLAP_MONTHS`, `MACRO_LAGS`), `factor_type()`. Loads `.env` (e.g. `FRED_API_KEY`) at import. Import paths from here — never hard-code. |
 | `ingest/returns.py` | `*Monthly.xlsx` → `returns_monthly_long.csv` (+`ret`) and `levels_wide.csv`. |
 | `ingest/factsheets.py` | Factsheet `*.pdf` → `sector_weights / country_weights / top_constituents / index_meta`. Region from folder; handles 3 constituent-table layouts; `clean_name()` fixes pdfplumber row-merge. |
 | `ingest/asia_images.py` | Appends the 2 AC Asia ex Japan factor indices with no PDF (transcribed from web screenshots, `source=msci_web_image`). **Run after factsheets.** |
 | `ingest/macro.py` | Historical macro indicators from **FRED** → `macro_monthly.csv` (+`macro_meta.csv`), month-end aligned. Official JSON API when `FRED_API_KEY` is set, else keyless CSV endpoint. Uses `certifi` for SSL. |
 | `analytics/regimes.py` | `REGIMES`: 10 macro regimes with dated boundaries + analyst annotations (macro/factors/regions/shift). Data only. |
 | `analytics/engine.py` | Performance summary, factor-vs-reference, per-regime performance, correlation matrices (full + per regime), 36m rolling correlation, and `REPORT.md`. |
+| `analytics/macro_link.py` | **Index↔macro correlation engine.** For each of the 21 return series × 12 indicators: contemporaneous + lagged (0/1/3/6/12m, macro leads) correlations on **two bases** — `chg` (Δ month-over-month, the sound basis) and `level` (regime context only) — plus univariate OLS betas. 36-month min-overlap guard flags short pairs as insufficient. Outputs to `outputs/analytics/macro/` (long CSV, two wide 21×12 matrices, betas, `REPORT_macro.md`). |
 | `portfolio/diversification.py` | `analyze_portfolio({index: weight})` → look-through sector/country/stock exposure, HHI, threshold flags. Reusable API + CLI. |
-| `dashboard/build.py` | Bakes all data as JSON into `outputs/dashboard.html`. |
-| `dashboard/template.py` | The static HTML shell + browser JS (`__DATA__`/`__JS__` placeholders). Edit here for UI. |
+| `dashboard/build.py` | Bakes all data as JSON into `outputs/dashboard.html`. Macro data is optional — the tab degrades gracefully when absent. |
+| `dashboard/template.py` | The static HTML shell + browser JS (`__DATA__`/`__JS__` placeholders). Edit here for UI. **6 tabs**: Performance, Factor vs Reference, Regimes, Correlations, **Macro** (regime-shaded indicator chart, index↔macro heatmap with level/Δ toggle, per-series top-drivers bar), Diversification (live what-if). |
 
 ## 5. Data flow
 
@@ -78,10 +82,12 @@ data/raw/msci_indexes/<REGION>/*.pdf  ─ingest.factsheets► sector/country/top
                                        ─ingest.asia_images (append 2 rows-sets)
 FRED (network) ─ingest.macro──► macro_monthly.csv, macro_meta.csv
 levels_wide.csv + regimes ─analytics.engine──► outputs/analytics/*  (+ REPORT.md)
+levels_wide.csv + macro_monthly.csv ─analytics.macro_link──► outputs/analytics/macro/*  (+ REPORT_macro.md)
 weights CSVs ─portfolio.diversification──► outputs/diversification/*
 all of the above ─dashboard.build──► outputs/dashboard.html
 ```
-Macro ingest needs network; skip it offline with `python scripts/run_pipeline.py --no-macro`.
+Macro ingest needs network; skip it (and macro_link) offline with
+`python scripts/run_pipeline.py --no-macro`. Pipeline is 8 steps; see `scripts/run_pipeline.py`.
 
 ## 6. Data model / conventions
 
@@ -109,9 +115,19 @@ Macro ingest needs network; skip it offline with `python scripts/run_pipeline.py
    start later than the factor indices (which go back to 1997).
 7. **Regime annotations are analyst priors.** The engine computes realized numbers alongside them
    so they can be confirmed/challenged — don't treat the narrative as the result.
-8. **Macro series have uneven start dates** (e.g. broad USD index from 2006; some stress series
-   shorter). Downstream correlation work must align on overlapping months per pair, not assume a
-   common window. With a real `FRED_API_KEY` (vs the keyless endpoint) more history is returned.
+8. **Macro series have uneven start dates** (e.g. broad USD index from 2006). The macro_link
+   engine aligns per-pair on overlapping months and flags pairs under 36 months as insufficient
+   rather than reporting noise.
+9. **`hy_credit_spread` (BAMLH0A0HYM2) only has history from 2023** — ICE Data Indices restricts
+   historical redistribution through FRED (verified against real API + key; not a code issue).
+   All its macro-link pairs are flagged insufficient. `BAA10Y` (Moody's Baa − 10Y, from 1986) is
+   the standard full-history substitute if credit stress is needed — not yet added.
+10. **Macro-link output is exploratory/descriptive**: many pairwise correlations, no significance
+    testing. `chg` basis (Δ) is the statistically sound one; `level` basis is regime context —
+    persistent series make level correlations prone to spuriousness.
+11. **FRED terms of use prohibit using FRED data for AI/ML training.** Statistical/deterministic
+    methods (correlations, optimization, regime rules) are fine; if vision.md Phase 4 (ML/RL)
+    is ever built, its macro features must come from a different source than FRED.
 
 ## 8. Extending it (conventions to keep)
 

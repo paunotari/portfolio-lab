@@ -63,6 +63,30 @@ def test_macro_present_if_fetched():
     assert "cpi_yoy" in rows[0], "expected macro indicator columns missing"
 
 
+def test_macro_link_correlations_valid():
+    # structural validity of the macro-link outputs (skipped if not generated)
+    if not C.MACRO_CORRELATIONS.exists():
+        return
+    rows = _rows(C.MACRO_CORRELATIONS)
+    assert rows, "macro_correlations.csv is empty"
+    for r in rows:
+        if r["insufficient"] == "True":
+            continue
+        c = float(r["corr"])
+        assert -1.0 <= c <= 1.0, f"corr out of bounds: {r['series']} vs {r['indicator']} = {c}"
+        assert int(r["n"]) >= 36, f"reported pair with n<36: {r['series']} vs {r['indicator']}"
+
+
+def test_macro_link_wide_matrices_shape():
+    if not C.MACRO_CORR_CONTEMP_CHG.exists():
+        return
+    for path in (C.MACRO_CORR_CONTEMP_LEVEL, C.MACRO_CORR_CONTEMP_CHG):
+        rows = _rows(path)
+        assert len(rows) == 21, f"{path.name}: expected 21 series rows, got {len(rows)}"
+        n_ind = len(rows[0]) - 1  # minus the series index column
+        assert n_ind == 12, f"{path.name}: expected 12 indicator cols, got {n_ind}"
+
+
 if __name__ == "__main__":
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     passed = 0

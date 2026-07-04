@@ -8,9 +8,11 @@ Steps:
   1. ingest.returns      xlsx  -> returns_monthly_long.csv, levels_wide.csv
   2. ingest.factsheets   pdf   -> sector/country/top_constituents/index_meta CSVs
   3. ingest.asia_images  append the 2 image-sourced AC Asia ex Japan factor indices
-  4. analytics.engine    performance / factor-vs-ref / regimes / correlations -> outputs/analytics
-  5. portfolio.diversification  example look-through -> outputs/diversification
-  6. dashboard.build     self-contained outputs/dashboard.html
+  4. ingest.macro        FRED  -> macro_monthly.csv, macro_meta.csv       (skippable: --no-macro)
+  5. analytics.engine    performance / factor-vs-ref / regimes / correlations -> outputs/analytics
+  6. analytics.macro_link  index<->macro correlations/betas -> outputs/analytics/macro
+  7. portfolio.diversification  example look-through -> outputs/diversification
+  8. dashboard.build     self-contained outputs/dashboard.html
 """
 import sys
 import argparse
@@ -20,7 +22,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from portfolio_lab.ingest import returns, factsheets, asia_images, macro
-from portfolio_lab.analytics import engine
+from portfolio_lab.analytics import engine, macro_link
 from portfolio_lab.portfolio import diversification
 from portfolio_lab.dashboard import build as dashboard_build
 
@@ -31,15 +33,17 @@ def main():
     ap.add_argument("--no-macro", action="store_true", help="skip FRED macro fetch (needs network)")
     args = ap.parse_args()
 
-    print("=== 1/7 ingest returns ===");     returns.build()
-    print("=== 2/7 ingest factsheets ===");  factsheets.build()
-    print("=== 3/7 ingest asia images ==="); asia_images.build()
+    print("=== 1/8 ingest returns ===");     returns.build()
+    print("=== 2/8 ingest factsheets ===");  factsheets.build()
+    print("=== 3/8 ingest asia images ==="); asia_images.build()
     if not args.no_macro:
-        print("=== 4/7 ingest macro (FRED) ==="); macro.build()
-    print("=== 5/7 analytics ===");          engine.run()
-    print("=== 6/7 diversification ===");    diversification.main()
+        print("=== 4/8 ingest macro (FRED) ==="); macro.build()
+    print("=== 5/8 analytics ===");          engine.run()
+    if not args.no_macro:
+        print("=== 6/8 macro-link ===");     macro_link.run()
+    print("=== 7/8 diversification ===");    diversification.main()
     if not args.no_dashboard:
-        print("=== 7/7 dashboard ===");      dashboard_build.build()
+        print("=== 8/8 dashboard ===");      dashboard_build.build()
     print("\nPipeline complete.")
 
 
