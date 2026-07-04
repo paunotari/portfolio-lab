@@ -11,6 +11,14 @@ from pathlib import Path
 PACKAGE_DIR = Path(__file__).resolve().parent          # src/portfolio_lab
 PROJECT_ROOT = PACKAGE_DIR.parents[1]                   # repo root
 
+# Load secrets (e.g. FRED_API_KEY) from a local, gitignored .env file at the repo root, if
+# present. Never hardcode keys here or anywhere in the codebase — see .env.example.
+try:
+    from dotenv import load_dotenv
+    load_dotenv(PROJECT_ROOT / ".env")
+except ImportError:
+    pass  # python-dotenv not installed: env vars must be exported in the shell instead
+
 DATA_DIR = PROJECT_ROOT / "data"
 RAW_DIR = DATA_DIR / "raw" / "msci_indexes"             # region subfolders: xlsx + pdf
 PROCESSED_DIR = DATA_DIR / "processed"                  # tidy CSVs (regenerable)
@@ -28,6 +36,8 @@ SECTOR_WEIGHTS = PROCESSED_DIR / "sector_weights.csv"
 COUNTRY_WEIGHTS = PROCESSED_DIR / "country_weights.csv"
 TOP_CONSTITUENTS = PROCESSED_DIR / "top_constituents.csv"
 INDEX_META = PROCESSED_DIR / "index_meta.csv"
+MACRO_MONTHLY = PROCESSED_DIR / "macro_monthly.csv"      # date x indicators (transformed)
+MACRO_META = PROCESSED_DIR / "macro_meta.csv"            # one row per indicator
 
 # analytics output file handles
 PERFORMANCE_SUMMARY = ANALYTICS_DIR / "performance_summary.csv"

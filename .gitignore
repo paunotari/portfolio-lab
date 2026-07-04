@@ -5,3 +5,4 @@ __pycache__/
 # regenerable outputs (rebuild with scripts/run_pipeline.py)
 /outputs/
 /data/processed/
+.env

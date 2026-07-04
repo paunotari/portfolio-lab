@@ -63,6 +63,7 @@ python -m portfolio_lab.dashboard.build
 | `ingest/returns.py` | `*Monthly.xlsx` → `returns_monthly_long.csv` (+`ret`) and `levels_wide.csv`. |
 | `ingest/factsheets.py` | Factsheet `*.pdf` → `sector_weights / country_weights / top_constituents / index_meta`. Region from folder; handles 3 constituent-table layouts; `clean_name()` fixes pdfplumber row-merge. |
 | `ingest/asia_images.py` | Appends the 2 AC Asia ex Japan factor indices with no PDF (transcribed from web screenshots, `source=msci_web_image`). **Run after factsheets.** |
+| `ingest/macro.py` | Historical macro indicators from **FRED** → `macro_monthly.csv` (+`macro_meta.csv`), month-end aligned. Official JSON API when `FRED_API_KEY` is set, else keyless CSV endpoint. Uses `certifi` for SSL. |
 | `analytics/regimes.py` | `REGIMES`: 10 macro regimes with dated boundaries + analyst annotations (macro/factors/regions/shift). Data only. |
 | `analytics/engine.py` | Performance summary, factor-vs-reference, per-regime performance, correlation matrices (full + per regime), 36m rolling correlation, and `REPORT.md`. |
 | `portfolio/diversification.py` | `analyze_portfolio({index: weight})` → look-through sector/country/stock exposure, HHI, threshold flags. Reusable API + CLI. |
@@ -75,10 +76,12 @@ python -m portfolio_lab.dashboard.build
 data/raw/msci_indexes/<REGION>/*.xlsx ─ingest.returns──► returns_monthly_long.csv, levels_wide.csv
 data/raw/msci_indexes/<REGION>/*.pdf  ─ingest.factsheets► sector/country/top_constituents/index_meta.csv
                                        ─ingest.asia_images (append 2 rows-sets)
+FRED (network) ─ingest.macro──► macro_monthly.csv, macro_meta.csv
 levels_wide.csv + regimes ─analytics.engine──► outputs/analytics/*  (+ REPORT.md)
 weights CSVs ─portfolio.diversification──► outputs/diversification/*
 all of the above ─dashboard.build──► outputs/dashboard.html
 ```
+Macro ingest needs network; skip it offline with `python scripts/run_pipeline.py --no-macro`.
 
 ## 6. Data model / conventions
 
@@ -106,6 +109,9 @@ all of the above ─dashboard.build──► outputs/dashboard.html
    start later than the factor indices (which go back to 1997).
 7. **Regime annotations are analyst priors.** The engine computes realized numbers alongside them
    so they can be confirmed/challenged — don't treat the narrative as the result.
+8. **Macro series have uneven start dates** (e.g. broad USD index from 2006; some stress series
+   shorter). Downstream correlation work must align on overlapping months per pair, not assume a
+   common window. With a real `FRED_API_KEY` (vs the keyless endpoint) more history is returned.
 
 ## 8. Extending it (conventions to keep)
 

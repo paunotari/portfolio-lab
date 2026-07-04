@@ -54,6 +54,15 @@ def test_usa_indices_have_no_country_chart():
     assert usa.isdisjoint(have), "USA indices unexpectedly have country weights"
 
 
+def test_macro_present_if_fetched():
+    # macro is network-dependent (skippable); only validate when the file exists
+    if not C.MACRO_MONTHLY.exists():
+        return
+    rows = _rows(C.MACRO_MONTHLY)
+    assert rows, "macro_monthly.csv is empty"
+    assert "cpi_yoy" in rows[0], "expected macro indicator columns missing"
+
+
 if __name__ == "__main__":
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     passed = 0
