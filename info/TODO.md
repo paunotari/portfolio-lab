@@ -94,6 +94,39 @@ forgotten).
       constraint as the deferred ML/RL item below. Everything built here is descriptive/
       correlational + a stated-assumption bootstrap, not a forecast.
 
+### Follow-up: revisit both methods — likely too simple as-is (2026-07)
+
+User's own framing after reviewing this: the classifier and the simulation both currently use a
+narrow, mechanical rule, and there's probably real signal being left on the table before this is
+good enough to lean on. Needs a proper review/redesign pass, not just tweaking constants.
+
+- [ ] **4-quadrant classifier is currently only 2 inputs** (`indpro_yoy` growth trend ×
+      `core_pce_yoy` inflation trend, both hard-thresholded into just "up/down"). Worth
+      reconsidering:
+  - Bring in more of the 15 macro indicators we already have (yield curve slope, credit spreads,
+    unemployment trend, VIX, breakeven inflation, PPI) rather than 2 in isolation — a composite
+    growth/inflation signal, not a single proxy series each.
+  - Hard up/down threshold throws away magnitude and creates artificial certainty right at the
+    boundary — a continuous/graded signal (or a soft probability of each quadrant, e.g. "70%
+    Reflation / 30% Goldilocks") would be more honest than a forced hard bucket.
+  - No persistence/transition modeling at all — real macro regimes last months to years, but
+    nothing here captures how likely a transition is from one quadrant to another. A historical
+    state-transition (Markov) matrix is the natural, still-non-ML way to add this.
+- [ ] **Monte Carlo simulation draws each future month independently (i.i.d.)** — it has zero
+      memory of the previous simulated month's state, so a simulated path can flip quadrant every
+      single month, which doesn't look like real macro history (regimes persist). Candidates:
+  - Use a historical transition matrix (see above) instead of a single static probability vector,
+    so simulated sequences have realistic regime *duration*, not just correct long-run frequency.
+  - Consider block-bootstrap (multi-month chunks) instead of single-month draws within a state, to
+    preserve some within-regime serial correlation/momentum.
+  - Consider conditioning the *starting* quadrant probabilities on where we currently are/where
+    trend is heading (from `current_state()`) rather than always starting from the unconditional
+    scenario weights — a simulation run today should plausibly reflect that we're already inside
+    a state, not agnostic to it.
+- [ ] Before redesigning, explicitly decide: how much of this can use richer statistics/Markov
+      models (still not "AI" under FRED's terms) vs. where the line to Phase 4 ML actually is —
+      revisit `info/CLAUDE.md` caveat #11 when scoping this so we don't accidentally cross it.
+
 ## Data sources
 
 - [x] **Index registry** (`data/index_registry.csv`) — explicit manifest of tracked indexes;
