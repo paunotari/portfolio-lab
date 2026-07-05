@@ -43,13 +43,44 @@ _(both done — see Portfolio optimization below for what builds on them next)_
 
 ## Macro & regime analysis (vision.md Phase 2 remainder)
 
+Motivating observation (2026-07): over the full 28y, AC Asia ex Japan / EM (esp. Enhanced Value)
+top the CAGR table — but that's almost entirely a 1998–2010 story. From ~2010–2026 the leaders
+flip to USA Quality, World Momentum/Quality generally, with visibly lower volatility. The
+regime/leadership question isn't "who won in 28 years," it's "why did leadership flip, what macro
+backdrop was each era in, and can we read the current backdrop to reason about what's more likely
+to work now." That's the goal of this section — go beyond who-won-historically to a macro-aware
+read of *why*, tying directly into the regime-targeted optimizer above.
+
 - [ ] **Per-regime macro correlations** — extend `analytics/macro_link.py` to compute one
       index↔macro correlation matrix per regime (currently only full-sample). Cheap, additive.
 - [ ] **4-quadrant macro-state classification** (inflationary / deflationary / growth /
-      stagnation) with per-state historical performance. This is the direct input the
-      regime-targeted optimizer needs — do this before or alongside that optimizer work.
+      stagnation) with per-state historical performance **broken down by factor AND region**, not
+      just in aggregate — so we can explicitly show e.g. "EM/Asia Enhanced Value led during
+      [state X, which dominated 1998–2010]" vs. "USA Quality/Momentum led during [state Y, which
+      has dominated since ~2010]." This is the direct input the regime-targeted optimizer needs —
+      do this before or alongside that optimizer work.
+- [ ] **Regime-attribution narrative report**: walk the full history labeled by macro state,
+      identify the leading factor/region in each stretch, and quantify how consistently a given
+      state favors a given factor/region (e.g. is Quality reliably strongest in disinflationary/
+      slow-growth periods? Is EM/Value reliably strongest in weak-USD, reflationary periods?).
+      This turns "look, EM won 1998–2010 and USA Quality won since" from an eyeballed observation
+      into a measured, regime-conditional pattern — and is what tells us whether the recent
+      USA-Quality/Momentum leadership is a *structural* macro-driven pattern or just the current
+      cycle.
+- [ ] **Current-regime + trend read**: classify the *most recent* data into a macro state and
+      describe the trend direction of the key inputs (inflation rising/falling, rate-hike vs
+      cutting cycle, yield-curve steepening/inverting, credit spreads widening/tightening) so we
+      have a descriptive "which state are we in, and which way are things moving" signal — a
+      trend-following read, explicitly **not** a forecast/prediction model. Combined with the
+      regime-attribution report above, this is what lets us reason about which factors/regions
+      are more likely to be favored *if* the current trend continues.
 - [ ] **Scenario simulation**: simulate future index/factor behaviour conditioned on a chosen
       macro characteristic or state, building on the correlations already computed.
+- [ ] *(Explicitly out of scope for now, noted per the user's own framing)* an actual predictive
+      model (ML/probabilistic) that forecasts regime transitions or forward returns — this is
+      vision.md Phase 4 territory: same FRED-ToS constraint as the deferred ML/RL item below (any
+      such model's macro features would need a non-FRED source). The items above are descriptive/
+      correlational only, not predictive.
 
 ## Data sources
 
