@@ -44,10 +44,22 @@ padding:2px 10px;margin:2px;font-size:12px}
 <nav id="nav"></nav>
 <main>
  <section class="tab" id="t-perf">
-   <div class="card"><h2>Risk / return (common window)</h2><div id="scatter" style="height:420px"></div>
-     <div class="muted">Bubble size = max drawdown depth. Common window shown in header.</div></div>
+   <div class="card">
+     <h2>Date range</h2>
+     <div class="muted">CAGR, volatility, Sharpe and max drawdown below are all computed over this
+       single window — defaults to the common window (every index has data). Pick any range to
+       compare performance over a specific period instead.</div>
+     <div style="display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap">
+       <label class="muted">From <input type="date" id="perfFrom"></label>
+       <label class="muted">To <input type="date" id="perfTo"></label>
+       <button onclick="resetPerfRange()">reset to common window</button>
+       <span class="muted" id="perfRangeNote"></span>
+     </div>
+   </div>
+   <div class="card"><h2>Risk / return</h2><div id="scatter" style="height:420px"></div>
+     <div class="muted">Bubble size = max drawdown depth, over the selected date range.</div></div>
    <div class="card"><h2>Cumulative growth (base 100, log scale)</h2>
-     <div class="muted">Toggle series in the legend. Click a legend item to hide.</div>
+     <div class="muted">Toggle series in the legend. Click a legend item to hide. Shaded band = selected date range.</div>
      <div id="cum" style="height:460px"></div></div>
    <div class="card"><h2>Performance table</h2><div id="perftbl"></div></div>
  </section>
@@ -126,8 +138,8 @@ const P={paper_bgcolor:'#171d2b',plot_bgcolor:'#171d2b',font:{color:'#e6ebf5',si
 const FCOLOR={Reference:'#8b97ad',Momentum:'#5b9dff','Enhanced Value':'#f4a259',Quality:'#39d98a'};
 
 // header
-const cw=DATA.perf[0];
-$('#sub').textContent=`Common window ${cw.cw_start} → ${cw.cw_end} · ${DATA.indices.length} indices · 7 regions × 4 factor types · monthly net USD`;
+const allDates=DATA.levels.dates;
+$('#sub').textContent=`${allDates[0]} → ${allDates[allDates.length-1]} · ${DATA.indices.length} indices · 7 regions × 4 factor types · monthly net USD`;
 
 // nav/tabs
 const TABS=[['perf','Performance'],['fvr','Factor vs Reference'],['reg','Regimes'],
@@ -140,18 +152,68 @@ function show(id,btn){document.querySelectorAll('.tab').forEach(t=>t.classList.r
   btn.classList.add('on');window.dispatchEvent(new Event('resize'));}
 $('#t-perf').classList.add('on');
 
-// ---------- Performance ----------
-(function(){
-  const x=DATA.perf.map(r=>r.cw_ann_vol*100), y=DATA.perf.map(r=>r.cw_CAGR*100);
-  const size=DATA.perf.map(r=>8+Math.abs(r.cw_max_drawdown)*40);
-  const col=DATA.perf.map(r=>FCOLOR[r.factor]);
-  const txt=DATA.perf.map(r=>`${r.series}<br>CAGR ${pct(r.cw_CAGR)} · vol ${pct(r.cw_ann_vol)}`
-    +`<br>Sharpe ${r.cw_sharpe_rf0.toFixed(2)} · maxDD ${pct(r.cw_max_drawdown)}`);
-  Plotly.newPlot('scatter',[{x,y,text:txt,mode:'markers',type:'scatter',
+// ---------- Performance (single CAGR, driven by a user-adjustable date range) ----------
+// commonStart = earliest date where every series has data (mirrors engine.py's
+// lv.dropna(how="any").index.min()); commonEnd = last date in the dataset.
+const commonStart=(()=>{ const names=Object.keys(DATA.levels.series);
+  for(const d of allDates){ if(names.every(n=>DATA.levels.series[n][allDates.indexOf(d)]!=null)) return d; }
+  return allDates[0]; })();
+const commonEnd=allDates[allDates.length-1];
+
+function statsForRange(name,fromD,toD){
+  const dates=allDates, vals=DATA.levels.series[name];
+  const idx=[]; for(let i=0;i<dates.length;i++){ if(dates[i]>=fromD&&dates[i]<=toD&&vals[i]!=null) idx.push(i); }
+  if(idx.length<2) return null;
+  const lv=idx.map(i=>vals[i]);
+  const n=lv.length-1;
+  const cagr=Math.pow(lv[lv.length-1]/lv[0],12/n)-1;
+  const rets=[]; for(let i=1;i<lv.length;i++) rets.push(lv[i]/lv[i-1]-1);
+  const mean=rets.reduce((a,b)=>a+b,0)/rets.length;
+  const variance=rets.reduce((a,b)=>a+(b-mean)*(b-mean),0)/(rets.length-1||1);
+  const annVol=Math.sqrt(variance)*Math.sqrt(12);
+  const sharpe=annVol?( (mean*12)/annVol ):null;
+  let peak=-Infinity, maxDD=0;
+  for(const v of lv){ peak=Math.max(peak,v); maxDD=Math.min(maxDD, v/peak-1); }
+  return {CAGR:cagr, ann_vol:annVol, sharpe_rf0:sharpe, max_drawdown:maxDD,
+          months:n, start:dates[idx[0]], end:dates[idx[idx.length-1]]};
+}
+
+const SERIES_META=DATA.perf.map(r=>({series:r.series,region:r.region,factor:r.factor}));
+function computePerf(fromD,toD){
+  return SERIES_META.map(row=>{
+    const s=statsForRange(row.series,fromD,toD);
+    return {...row, ...s, insufficient: s===null};
+  });
+}
+
+let currentPerf=[], curSort='CAGR', curAsc=false;
+
+function refreshPerf(fromD,toD){
+  currentPerf=computePerf(fromD,toD);
+  const ok=currentPerf.filter(r=>!r.insufficient);
+  const nBad=currentPerf.length-ok.length;
+  $('#perfRangeNote').textContent = nBad>0
+    ? `${ok.length}/${currentPerf.length} series have >=2 data points in this range (${nBad} excluded).`
+    : `${ok.length} series, common window default = ${commonStart} → ${commonEnd}.`;
+
+  const x=ok.map(r=>r.ann_vol*100), y=ok.map(r=>r.CAGR*100);
+  const size=ok.map(r=>8+Math.abs(r.max_drawdown)*40);
+  const col=ok.map(r=>FCOLOR[r.factor]);
+  const txt=ok.map(r=>`${r.series}<br>CAGR ${pct(r.CAGR)} · vol ${pct(r.ann_vol)}`
+    +`<br>Sharpe ${r.sharpe_rf0==null?'—':r.sharpe_rf0.toFixed(2)} · maxDD ${pct(r.max_drawdown)}`);
+  Plotly.react('scatter',[{x,y,text:txt,mode:'markers',type:'scatter',
     marker:{size,color:col,line:{color:'#0f1420',width:1}},hoverinfo:'text'}],
     {...P,xaxis:{title:'Annualized volatility %',gridcolor:'#26304a'},
      yaxis:{title:'CAGR %',gridcolor:'#26304a'}},{displayModeBar:false});
-  // cumulative
+
+  Plotly.relayout('cum',{shapes:[{type:'rect',xref:'x',yref:'paper',x0:fromD,x1:toD,y0:0,y1:1,
+    fillcolor:'rgba(91,157,255,.10)',line:{color:'#5b9dff',width:1,dash:'dot'},layer:'below'}]});
+
+  perfTable(curSort,curAsc);
+}
+
+(function(){
+  // cumulative growth (full history, always) — selected range shown as a shaded band
   const tr=Object.keys(DATA.levels.series).map(name=>{
     const fac=name.split(' | ')[1];
     return {x:DATA.levels.dates,y:DATA.levels.series[name],name,mode:'lines',
@@ -159,17 +221,29 @@ $('#t-perf').classList.add('on');
   Plotly.newPlot('cum',tr,{...P,margin:{l:55,r:10,t:10,b:40},
     yaxis:{type:'log',gridcolor:'#26304a'},xaxis:{gridcolor:'#26304a'},
     legend:{orientation:'h',font:{size:9},y:-0.12}},{displayModeBar:false});
-  // table
-  perfTable('cw_CAGR',false);
+
+  const from=$('#perfFrom'), to=$('#perfTo');
+  from.value=commonStart; to.value=commonEnd;
+  const onRangeChange=()=>refreshPerf(from.value,to.value);
+  from.onchange=onRangeChange; to.onchange=onRangeChange;
+  refreshPerf(commonStart,commonEnd);
 })();
+
+function resetPerfRange(){
+  $('#perfFrom').value=commonStart; $('#perfTo').value=commonEnd;
+  refreshPerf(commonStart,commonEnd);
+}
+
 function perfTable(sortKey,asc){
-  const rows=[...DATA.perf].sort((a,b)=>asc?a[sortKey]-b[sortKey]:b[sortKey]-a[sortKey]);
-  const cols=[['series','Series'],['cw_CAGR','CAGR'],['cw_ann_vol','Ann vol'],
-    ['cw_sharpe_rf0','Sharpe'],['cw_max_drawdown','Max DD'],['full_CAGR','Full CAGR']];
+  curSort=sortKey; curAsc=asc;
+  const rows=[...currentPerf].filter(r=>!r.insufficient)
+    .sort((a,b)=>asc?a[sortKey]-b[sortKey]:b[sortKey]-a[sortKey]);
+  const cols=[['series','Series'],['CAGR','CAGR'],['ann_vol','Ann vol'],
+    ['sharpe_rf0','Sharpe'],['max_drawdown','Max DD']];
   let h='<table><thead><tr>'+cols.map(c=>`<th data-k="${c[0]}">${c[1]}</th>`).join('')+'</tr></thead><tbody>';
   rows.forEach(r=>{h+='<tr><td>'+r.series+'</td>'
-    +`<td>${pct(r.cw_CAGR)}</td><td>${pct(r.cw_ann_vol)}</td><td>${r.cw_sharpe_rf0.toFixed(2)}</td>`
-    +`<td class="${r.cw_max_drawdown<-0.55?'warn':''}">${pct(r.cw_max_drawdown)}</td><td>${pct(r.full_CAGR)}</td></tr>`;});
+    +`<td>${pct(r.CAGR)}</td><td>${pct(r.ann_vol)}</td><td>${r.sharpe_rf0==null?'—':r.sharpe_rf0.toFixed(2)}</td>`
+    +`<td class="${r.max_drawdown<-0.55?'warn':''}">${pct(r.max_drawdown)}</td></tr>`;});
   h+='</tbody></table>';$('#perftbl').innerHTML=h;
   $('#perftbl').querySelectorAll('th').forEach(th=>th.onclick=()=>{
     const k=th.dataset.k;perfTable(k,k==='series'?true:(sortKey===k?!asc:false));});

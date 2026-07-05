@@ -69,11 +69,11 @@ python -m portfolio_lab.dashboard.build
 | `ingest/asia_images.py` | Appends the 2 AC Asia ex Japan factor indices with no PDF (transcribed from web screenshots, `source=msci_web_image`). **Run after factsheets.** |
 | `ingest/macro.py` | Historical macro indicators from **FRED** → `macro_monthly.csv` (+`macro_meta.csv`), month-end aligned. Official JSON API when `FRED_API_KEY` is set, else keyless CSV endpoint. Uses `certifi` for SSL. |
 | `analytics/regimes.py` | `REGIMES`: 10 macro regimes with dated boundaries + analyst annotations (macro/factors/regions/shift). Data only. |
-| `analytics/engine.py` | Performance summary, factor-vs-reference, per-regime performance, correlation matrices (full + per regime), 36m rolling correlation, and `REPORT.md`. |
+| `analytics/engine.py` | Performance summary (CAGR/vol/Sharpe/maxDD, one number per series over the common window — no more "cw_"/"full_" split), factor-vs-reference, per-regime performance, correlation matrices (full + per regime), 36m rolling correlation, and `REPORT.md`. |
 | `analytics/macro_link.py` | **Index↔macro correlation engine.** For each of the 21 return series × 12 indicators: contemporaneous + lagged (0/1/3/6/12m, macro leads) correlations on **two bases** — `chg` (Δ month-over-month, the sound basis) and `level` (regime context only) — plus univariate OLS betas. 36-month min-overlap guard flags short pairs as insufficient. Outputs to `outputs/analytics/macro/` (long CSV, two wide 21×12 matrices, betas, `REPORT_macro.md`). |
 | `portfolio/diversification.py` | `analyze_portfolio({index: weight})` → look-through sector/country/stock exposure, HHI, threshold flags. Reusable API + CLI. |
 | `dashboard/build.py` | Bakes all data as JSON into `outputs/dashboard.html`. Macro data is optional — the tab degrades gracefully when absent. |
-| `dashboard/template.py` | The static HTML shell + browser JS (`__DATA__`/`__JS__` placeholders). Edit here for UI. **6 tabs**: Performance, Factor vs Reference, Regimes, Correlations, **Macro** (regime-shaded indicator chart, index↔macro heatmap with level/Δ toggle, per-series top-drivers bar), Diversification (live what-if). |
+| `dashboard/template.py` | The static HTML shell + browser JS (`__DATA__`/`__JS__` placeholders). Edit here for UI. **6 tabs**: **Performance** (single CAGR/vol/Sharpe/maxDD driven by a live date-range picker — defaults to the common window, recomputed client-side in JS from the baked level series so the formula must stay in sync with `analytics/engine.py`'s `_perf_stats`), Factor vs Reference, Regimes, Correlations, Macro (regime-shaded indicator chart, index↔macro heatmap with level/Δ toggle, per-series top-drivers bar), Diversification (live what-if). |
 
 ## 5. Data flow
 
@@ -153,6 +153,11 @@ Macro ingest needs network; skip it (and macro_link) offline with
 11. **FRED terms of use prohibit using FRED data for AI/ML training.** Statistical/deterministic
     methods (correlations, optimization, regime rules) are fine; if vision.md Phase 4 (ML/RL)
     is ever built, its macro features must come from a different source than FRED.
+12. **The Performance tab's date-range stats are computed twice, independently** — once in Python
+    (`analytics/engine.py::_perf_stats`, for the default common-window CSV/report) and once in
+    JS (`dashboard/template.py::statsForRange`, for any user-picked range, from the baked level
+    series). They're verified to match (~5-6 significant figures). **If you change the stats
+    formula in one, update the other** — nothing enforces they stay in sync.
 
 ## 8. Extending it (conventions to keep)
 

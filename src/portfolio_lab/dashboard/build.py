@@ -23,7 +23,7 @@ def _rd(path):
 def _collect_data() -> dict:
     perf = _rd(C.PERFORMANCE_SUMMARY)
     for r in perf:
-        for k in ("cw_CAGR", "cw_ann_vol", "cw_sharpe_rf0", "cw_max_drawdown", "full_CAGR"):
+        for k in ("CAGR", "ann_vol", "sharpe_rf0", "max_drawdown"):
             r[k] = float(r[k])
     fvr = _rd(C.FACTOR_VS_REFERENCE)
     for r in fvr:

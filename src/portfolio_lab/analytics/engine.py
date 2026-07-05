@@ -1,7 +1,9 @@
 """Analytics engine: turns processed level series + regime map into metrics and a report.
 
 Outputs (to outputs/analytics/):
-  performance_summary.csv      CAGR, ann vol, Sharpe(rf=0), max drawdown (common window + full)
+  performance_summary.csv      CAGR, ann vol, Sharpe(rf=0), max drawdown over the common window
+                               (all 21 series present); the dashboard lets the user pick a
+                               different date range and recomputes these client-side
   factor_vs_reference.csv      each factor's excess CAGR & monthly hit-rate vs its region reference
   regime_performance.csv       per-regime total & annualized return, vol, annualized excess vs ref
   correlation_full.csv         static monthly-return correlation matrix (common window)
@@ -48,14 +50,14 @@ def run():
     lv_c = lv.loc[common_start:]
     rets_c = rets.loc[common_start:].dropna(how="any")
 
-    # 1. performance summary
+    # 1. performance summary — one CAGR/vol/Sharpe/maxDD per series, computed over the common
+    # window (all 21 series present) so every row is directly comparable. The dashboard lets the
+    # user pick a different date range and recomputes these same stats client-side; this CSV/
+    # report always reflects the default common window.
     rows = []
     for col in lv.columns:
-        cw = _perf_stats(lv_c[col])
-        full = _perf_stats(lv[col])
-        rows.append(dict(series=col, region=_region(col), factor=_factor(col),
-                         **{f"cw_{k}": v for k, v in cw.items()},
-                         full_CAGR=full["CAGR"], full_start=full["start"]))
+        stats = _perf_stats(lv_c[col])
+        rows.append(dict(series=col, region=_region(col), factor=_factor(col), **stats))
     perf = pd.DataFrame(rows).sort_values(["region", "factor"])
     perf.to_csv(C.PERFORMANCE_SUMMARY, index=False)
 
@@ -133,9 +135,9 @@ def _write_report(perf, fvr, regime_perf, roll_df, common_start, lv, rets_c):
          f"({len(rets_c)} months, all {lv.shape[1]} series present).\n",
          "## 1. Full-sample performance (common window)\n",
          "| Series | CAGR | Ann Vol | Sharpe(rf0) | Max DD |", "|---|---|---|---|---|"]
-    for _, r in perf.sort_values("cw_CAGR", ascending=False).iterrows():
-        L.append(f"| {r.series} | {pct(r.cw_CAGR)} | {pct(r.cw_ann_vol)} | "
-                 f"{r.cw_sharpe_rf0:.2f} | {pct(r.cw_max_drawdown)} |")
+    for _, r in perf.sort_values("CAGR", ascending=False).iterrows():
+        L.append(f"| {r.series} | {pct(r.CAGR)} | {pct(r.ann_vol)} | "
+                 f"{r.sharpe_rf0:.2f} | {pct(r.max_drawdown)} |")
     L += ["\n## 2. Does each factor beat its region reference? (full overlap)\n",
           "| Region | Factor | Ref CAGR | Factor CAGR | Excess | Monthly win-rate |",
           "|---|---|---|---|---|---|"]
