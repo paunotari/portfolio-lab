@@ -12,6 +12,18 @@ Check items off as completed. Add new ones as they come up; keep entries short a
 
 _(both done — see Portfolio optimization below for what builds on them next)_
 
+## Dashboard: Tier-1 essentials layer (vision.md "Product design principle")
+
+- [ ] Add a Tier-1 summary to each existing dashboard tab (Performance, Factor vs Reference /
+      Regimes, Correlations/Diversification, Macro) per `vision.md`'s layering table: a small set
+      of plain-language verdicts on top, with today's charts/tables becoming the Tier-2 detail
+      underneath (collapsed or scrolled-to, not removed). Needs a "verdict generation" step per
+      module (e.g. "led 1998–2010, has lagged since ~2010") — mostly template/text generation
+      from analytics already computed, not new analysis.
+- [ ] When the optimizer (Phase 3) exists, its Tier-1 output must be the recommended allocation +
+      a "why" using the same essential bullets per holding — not a separate simplified summary
+      disconnected from what the optimizer actually scored on.
+
 ## Portfolio optimization (vision.md Phase 3)
 
 - [ ] **Design the multi-objective portfolio optimizer.** Goal: given the return/risk/exposure

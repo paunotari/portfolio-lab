@@ -58,6 +58,44 @@ return. For the four macro quadrants (e.g. **inflationary / deflationary / growt
 The optimizer then finds an allocation whose *regime-conditional* behaviour matches that target —
 using the per-regime returns and correlations the engine already computes.
 
+## Product design principle — layered UI, essentials on top
+
+**The problem this solves:** existing tools (Portfolio Visualizer, screeners) hand you a pile of
+data and expect *you* to interpret it and pick the %. Most people — even people who understand
+investing — don't know what to do with a correlation matrix or a factor-loading regression. The
+platform should never force that. But it also shouldn't hide real analysis behind a dumbed-down
+toy; the depth should still be there, just underneath.
+
+**The rule: every module in the UI has exactly two tiers.**
+
+- **Tier 1 (top, always visible, default view).** A small number of plain-language verdicts,
+  reduced from the underlying analysis — not a chart to interpret, a sentence or a headline
+  number to read. This tier is also, deliberately, **the same thing the optimizer scores on** —
+  there's one set of "what matters" per index/factor, not a separate simplified display and a
+  separate real calculation.
+- **Tier 2 (below, collapsed/secondary — "basic advanced").** The existing real analysis —
+  correlation matrices, regime tables, macro betas, rolling charts — for anyone who wants to
+  click in and see the work. This is genuinely useful, informed-investor-level depth, but it
+  stops there deliberately: **not** hedge-fund/quant-desk depth (no raw factor-regression
+  loadings, VaR/CVaR, skew/kurtosis, optimizer solver internals, Greeks, Monte Carlo path dumps).
+  Those stay internal to the engine — usable by the optimizer's math, never a primary or
+  secondary UI surface. If a genuine power user wants that later, it's a CSV export, not a tab.
+
+**Per module (Tier 1 → Tier 2, current build in parentheses):**
+
+| Module | Tier 1 — essential verdict | Tier 2 — basic-advanced detail (already built) |
+|---|---|---|
+| Performance | 4 numbers (CAGR, vol, Sharpe, max DD) + one line: *"led 1998–2010, has lagged since ~2010"* | Date-range picker, rebased cumulative growth chart, full per-series table |
+| Factor vs Reference / Regimes | One line per factor: *"Momentum has beaten its regional benchmark in ~56% of months, especially in [state]"* | Regime explorer, factor-excess heatmap, per-regime performance table |
+| Correlation / Diversification | One "diversification benefit" verdict (*"reduces portfolio vol by X%"*) + concentration flags (*"pushes Info Tech to 62%"*) | Full correlation matrix, rolling correlation chart, sector/country/stock look-through bars |
+| Macro | Plain-language regime fingerprint per index/factor + a "current regime + trend" read (see TODO.md) | Index↔macro correlation heatmap, per-indicator time series with regime shading |
+| Optimizer (future) | The recommended allocation + its "why," as the same essential bullets per holding | Exposed knobs for a curious user (max sector %, per-objective priority weighting) — still not solver internals |
+
+This is a **display principle for later UI work**, not a rebuild of what exists — today's
+dashboard tabs already are Tier 2. What's missing is the Tier-1 layer on top of each, and the
+one-sentence "why" generation that turns the quant work into something a normal investor reads
+in five seconds before deciding to trust the optimizer's number.
+
 ## Roadmap (rough, to be refined)
 
 **Phase 0 — Foundation (DONE / in progress)**
