@@ -68,9 +68,10 @@ read of *why*, tying directly into the regime-targeted optimizer above.
 first, as free supporting data for the classifier. See `info/CLAUDE.md` §4 for module details and
 §7 caveats #13-15 for the two real bugs found and fixed along the way (pandas NaN-comparison
 pitfall in the trend classifier; depression-era history needed clipping out of the frequency
-stats). **Not yet done:** wiring any of this into the dashboard (still CLI/report-only — see the
-Tier-1 essentials section above; this is real Tier-2 depth waiting on a display layer, not
-forgotten).
+stats). **Now in the dashboard too** (2026-07): the "Macro State" tab shows the Tier-1
+current-quadrant verdict, the colored month-by-month state timeline, per-state index performance,
+factor edge by state, and the Monte Carlo scenario ranges — the first tab actually built to the
+Tier-1/Tier-2 layering principle.
 
 - [x] **Per-regime macro correlations** — `analytics/macro_link.py::regime_correlations()`, one
       matrix per named regime (chg basis, lag 0), written to `correlation_by_regime/*.csv`.

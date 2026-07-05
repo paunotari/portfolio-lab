@@ -109,6 +109,24 @@ padding:2px 10px;margin:2px;font-size:12px}
      <div id="macrodrv" style="height:360px"></div></div>
  </section>
 
+ <section class="tab" id="t-state">
+   <div class="card"><h2>Current macro state</h2><div id="statecur"></div></div>
+   <div class="card"><h2>Macro-state timeline <span class="muted">(which quadrant each month was in, 1997 → latest)</span></h2>
+     <div id="statetimeline" style="height:150px"></div>
+     <div class="muted">Quadrants: growth trend × inflation trend. Goldilocks = growth accelerating, inflation decelerating; Reflation = both accelerating; Stagflation = growth decelerating, inflation accelerating; Deflationary bust = both decelerating.</div></div>
+   <div class="card"><h2>Index performance by state <span class="muted">(annualized, pooled non-contiguous months)</span></h2>
+     <select id="statesel"></select>
+     <div id="stateperf" style="height:520px"></div>
+     <div class="muted">Pooled months "like this state," not a literal contiguous investment path. Bar color = factor type.</div></div>
+   <div class="card"><h2>Factor edge by state <span class="muted">(does each factor beat its region's reference?)</span></h2>
+     <div id="stateattr" style="height:340px"></div>
+     <div class="muted">Average monthly excess return vs own-region reference, weighted across regions. Above 0 = the factor consistently added value in that state.</div></div>
+   <div class="card"><h2>Scenario simulation <span class="muted" id="scennote"></span></h2>
+     <select id="scensel"></select>
+     <div id="scenchart" style="height:560px"></div>
+     <div class="muted">Dot = median simulated CAGR; bar = 5th–95th percentile range across trials. Bootstrapped by reshuffling real historical months weighted by macro-quadrant probabilities — <b>assumes the future resembles reshuffled 1997–2026 history; a stated assumption, not a forecast.</b></div></div>
+ </section>
+
  <section class="tab" id="t-div">
    <div class="grid g2">
      <div class="card"><h2>Portfolio sleeves (weights, %)</h2>
@@ -148,7 +166,7 @@ $('#sub').textContent=`${allDates[0]} → ${allDates[allDates.length-1]} · ${DA
 
 // nav/tabs
 const TABS=[['perf','Performance'],['fvr','Factor vs Reference'],['reg','Regimes'],
-  ['corr','Correlations'],['macro','Macro'],['div','Diversification']];
+  ['corr','Correlations'],['macro','Macro'],['state','Macro State'],['div','Diversification']];
 const nav=$('#nav');
 TABS.forEach(([id,label],i)=>{const b=document.createElement('button');b.textContent=label;
   b.onclick=()=>show(id,b);if(i==0)b.classList.add('on');nav.appendChild(b);});
@@ -403,6 +421,94 @@ function drawCorr(k){const c=DATA.corr[k];
   dsel.onchange=drawDrivers;
   bsel.addEventListener('change',drawDrivers);
   drawDrivers();
+})();
+
+// ---------- Macro State (4-quadrant) + Scenario simulation ----------
+(function(){
+  if(!DATA.macro_state){ $('#t-state').innerHTML='<div class="card"><h2>Macro State</h2>'
+    +'<div class="muted">No macro-state data baked — run the pipeline with the macro steps (macro_state, scenario).</div></div>'; return; }
+  const MS=DATA.macro_state;
+  const SCOLOR={'Goldilocks (disinflationary growth)':'#39d98a',
+    'Reflation (overheating)':'#f4a259',
+    'Stagflation (growth-inflation squeeze)':'#ff6b6b',
+    'Deflationary bust (recession/slowdown)':'#5b9dff'};
+  const SORDER=Object.keys(SCOLOR);
+
+  // (1) current state — Tier-1 plain-language verdict
+  const cur=MS.current;
+  $('#statecur').innerHTML=
+    `<div style="font-size:22px;font-weight:650;color:${SCOLOR[cur.state]||'#e6ebf5'}">${cur.state}</div>`
+   +`<div class="muted" style="margin:4px 0 10px">as of ${cur.as_of} · in this state for ${cur.months_in_state} consecutive month(s)</div>`
+   +`<div class="metric">Growth <b>${cur.growth_dir}</b><div class="muted">industrial production ${cur.growth_value}% YoY</div></div>`
+   +`<div class="metric">Inflation <b>${cur.inflation_dir}</b><div class="muted">core PCE ${cur.inflation_value}% YoY</div></div>`
+   +`<div class="muted" style="margin-top:10px">Historical share of months: `
+   +SORDER.filter(s=>MS.freq[s]!=null).map(s=>`<span class="pill" style="border-color:${SCOLOR[s]}">${s.split(' ')[0]} ${MS.freq[s]}%</span>`).join(' ')
+   +`</div><div class="muted" style="margin-top:6px">Based on the latest complete macro print (data lags ~1 month). Descriptive trend read — not a forecast.</div>`;
+
+  // (2) timeline — 1-row heatmap, one colored cell per month
+  const sIdx=MS.states.map(s=>SORDER.indexOf(s));
+  Plotly.newPlot('statetimeline',[{x:MS.dates,y:[''],z:[sIdx],type:'heatmap',
+    zmin:-0.5,zmax:3.5,showscale:false,
+    colorscale:SORDER.flatMap((s,i)=>[[i/4,SCOLOR[s]],[(i+1)/4,SCOLOR[s]]]),
+    hovertext:[MS.states.map((s,i)=>`${MS.dates[i]} — ${s}`)],hoverinfo:'text'}],
+    {...P,margin:{l:10,r:10,t:6,b:40},xaxis:{gridcolor:'#26304a'},
+     yaxis:{showticklabels:false}},{displayModeBar:false});
+
+  // (3) per-state index performance
+  const ssel=$('#statesel');
+  SORDER.filter(s=>MS.performance.some(r=>r.state===s)).forEach(s=>{
+    const o=document.createElement('option');o.value=s;o.textContent=s;ssel.appendChild(o);});
+  function drawStatePerf(){
+    const rows=MS.performance.filter(r=>r.state===ssel.value)
+      .sort((a,b)=>b.annualized_return-a.annualized_return);
+    Plotly.react('stateperf',[{type:'bar',orientation:'h',
+      y:rows.map(r=>r.series),x:rows.map(r=>+(r.annualized_return*100).toFixed(1)),
+      marker:{color:rows.map(r=>FCOLOR[r.factor])},
+      text:rows.map(r=>`${r.n_months} months`),hovertemplate:'%{y}: %{x}% (%{text})<extra></extra>'}],
+      {...P,margin:{l:210,r:20,t:6,b:40},xaxis:{title:'Annualized return % in this state',gridcolor:'#26304a'},
+       yaxis:{autorange:'reversed',tickfont:{size:10}}},{displayModeBar:false});
+  }
+  ssel.onchange=drawStatePerf; drawStatePerf();
+
+  // (4) factor attribution: grouped bars, state x factor avg monthly excess
+  const facs=['Momentum','Enhanced Value','Quality'];
+  const statesAvail=SORDER.filter(s=>MS.attribution.some(r=>r.state===s));
+  Plotly.newPlot('stateattr',facs.map(f=>({name:f,type:'bar',marker:{color:FCOLOR[f]},
+    x:statesAvail.map(s=>s.split(' (')[0]),
+    y:statesAvail.map(s=>{const m=MS.attribution.find(r=>r.state===s&&r.factor===f);
+      return m?+(m.avg_monthly_excess*100).toFixed(2):null;}),
+    text:statesAvail.map(s=>{const m=MS.attribution.find(r=>r.state===s&&r.factor===f);
+      return m?`hit rate ${(m.hit_rate*100).toFixed(0)}%`:'';}),
+    hovertemplate:'%{x} · '+f+': %{y}pp/mo (%{text})<extra></extra>'})),
+    {...P,barmode:'group',margin:{l:55,r:20,t:6,b:60},
+     yaxis:{title:'Avg monthly excess vs reference (pp)',gridcolor:'#26304a'},
+     xaxis:{gridcolor:'#26304a'}},{displayModeBar:false});
+
+  // (5) scenario simulation — median dot + p5..p95 range per series
+  if(!DATA.scenario){ $('#scensel').style.display='none';
+    $('#scenchart').innerHTML='<div class="muted">No scenario data baked.</div>'; return; }
+  const SC=DATA.scenario;
+  $('#scennote').textContent=`(${SC.trials} bootstrap trials × ${SC.years}-year horizon)`;
+  const scnames=[...new Set(SC.rows.map(r=>r.scenario))];
+  scnames.forEach(n=>{const o=document.createElement('option');o.value=n;
+    o.textContent=n.replace(/_/g,' ');$('#scensel').appendChild(o);});
+  function drawScenario(){
+    const rows=SC.rows.filter(r=>r.scenario===$('#scensel').value)
+      .sort((a,b)=>b.cagr_p50-a.cagr_p50);
+    Plotly.react('scenchart',[{type:'scatter',mode:'markers',
+      y:rows.map(r=>r.series),x:rows.map(r=>+(r.cagr_p50*100).toFixed(1)),
+      error_x:{type:'data',symmetric:false,
+        array:rows.map(r=>+((r.cagr_p95-r.cagr_p50)*100).toFixed(1)),
+        arrayminus:rows.map(r=>+((r.cagr_p50-r.cagr_p5)*100).toFixed(1)),
+        color:'#8b97ad',thickness:1.2,width:3},
+      marker:{size:9,color:rows.map(r=>FCOLOR[r.factor]),line:{color:'#0f1420',width:1}},
+      text:rows.map(r=>`P(loss over ${SC.years}y) ${(r.prob_cumulative_loss*100).toFixed(1)}% · median maxDD ${(r.maxdd_p50*100).toFixed(0)}%`),
+      hovertemplate:'%{y}: median %{x}%/y<br>%{text}<extra></extra>'}],
+      {...P,margin:{l:210,r:20,t:6,b:40},
+       xaxis:{title:'Simulated CAGR %/yr (dot = median, bar = 5th–95th pct)',gridcolor:'#26304a',zeroline:true,zerolinecolor:'#3a4663'},
+       yaxis:{autorange:'reversed',tickfont:{size:10}}},{displayModeBar:false});
+  }
+  $('#scensel').onchange=drawScenario; drawScenario();
 })();
 
 // ---------- Diversification (live) ----------

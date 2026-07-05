@@ -84,12 +84,51 @@ def _collect_data() -> dict:
         macro_corr = {"level": load_wide(C.MACRO_CORR_CONTEMP_LEVEL),
                       "chg": load_wide(C.MACRO_CORR_CONTEMP_CHG)}
 
+    # 4-quadrant macro-state + scenario simulation (optional: skipped when absent)
+    macro_state = scenario = None
+    if C.MACRO_STATE_MONTHLY.exists() and C.MACRO_STATE_PERFORMANCE.exists():
+        ms = pd.read_csv(C.MACRO_STATE_MONTHLY, index_col=0, parse_dates=True)
+        last = ms.iloc[-1]
+        months_in = int((ms.state[::-1] == last.state).cumprod().sum())
+        perf_state = _rd(C.MACRO_STATE_PERFORMANCE)
+        for r in perf_state:
+            for k in ("mean_monthly_return", "annualized_return", "ann_vol"):
+                r[k] = float(r[k])
+            r["n_months"] = int(r["n_months"])
+        attr = _rd(C.MACRO_STATE_FACTOR_ATTRIBUTION) if C.MACRO_STATE_FACTOR_ATTRIBUTION.exists() else []
+        for r in attr:
+            for k in ("avg_monthly_excess", "hit_rate"):
+                r[k] = float(r[k])
+        freq = (ms.state.value_counts(normalize=True) * 100).round(1).to_dict()
+        macro_state = {
+            "dates": [str(d.date()) for d in ms.index],
+            "states": list(ms.state),
+            "freq": freq,
+            "current": {
+                "as_of": str(ms.index[-1].date()), "state": last.state,
+                "months_in_state": months_in,
+                "growth_dir": "accelerating" if last.growth_up else "decelerating",
+                "growth_value": round(float(last.growth_value), 2),
+                "inflation_dir": "accelerating" if last.inflation_up else "decelerating",
+                "inflation_value": round(float(last.inflation_value), 2),
+            },
+            "performance": perf_state, "attribution": attr,
+        }
+    if C.SCENARIO_SUMMARY.exists():
+        rows = _rd(C.SCENARIO_SUMMARY)
+        for r in rows:
+            for k in ("cagr_p5", "cagr_p25", "cagr_p50", "cagr_p75", "cagr_p95",
+                      "maxdd_p5", "maxdd_p50", "maxdd_p95", "prob_cumulative_loss"):
+                r[k] = float(r[k])
+        scenario = {"rows": rows, "years": C.SCENARIO_YEARS, "trials": C.SCENARIO_TRIALS}
+
     return dict(perf=perf, fvr=fvr, regperf=regperf, regime_meta=regime_meta, levels=levels,
                 corr=corr, rolling=rolling, sec_by=sec_by, ctry_by=ctry_by, stk_by=stk_by,
                 usa_idx=usa_idx, indices=sorted(sec_by.keys()), idx_series_key=idx_series_key,
                 thresh=C.CONCENTRATION_THRESHOLDS, country_fix=C.COUNTRY_FIX,
                 weight_tolerance_pct=C.PORTFOLIO_WEIGHT_TOLERANCE_PCT,
-                macro=macro, macro_meta=macro_meta, macro_corr=macro_corr)
+                macro=macro, macro_meta=macro_meta, macro_corr=macro_corr,
+                macro_state=macro_state, scenario=scenario)
 
 
 def run():

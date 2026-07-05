@@ -13,7 +13,7 @@ pip install -r requirements.txt     # installs the package (editable) + its deps
 cp .env.example .env                 # optional: add a FRED_API_KEY for macro data
 python scripts/run_pipeline.py      # rebuild processed data, analytics, and dashboard
 python tests/test_pipeline.py       # data-integrity checks
-open outputs/dashboard.html         # 6 tabs: Performance / Factor vs Reference / Regimes / Correlations / Macro / Diversification
+open outputs/dashboard.html         # 7 tabs: Performance / Factor vs Reference / Regimes / Correlations / Macro / Macro State / Diversification
 ```
 
 Without a FRED key the macro steps fall back to the keyless endpoint; skip them entirely with
