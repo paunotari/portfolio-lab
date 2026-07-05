@@ -58,8 +58,8 @@ padding:2px 10px;margin:2px;font-size:12px}
    </div>
    <div class="card"><h2>Risk / return</h2><div id="scatter" style="height:420px"></div>
      <div class="muted">Bubble size = max drawdown depth, over the selected date range.</div></div>
-   <div class="card"><h2>Cumulative growth (base 100, log scale)</h2>
-     <div class="muted">Toggle series in the legend. Click a legend item to hide. Shaded band = selected date range.</div>
+   <div class="card"><h2>Cumulative growth <span class="muted">(rebased to 100 at the start of the selected range, log scale)</span></h2>
+     <div class="muted">Toggle series in the legend. Click a legend item to hide. Every line starts at 100 so the comparison is fair regardless of each index's own inception date.</div>
      <div id="cum" style="height:460px"></div></div>
    <div class="card"><h2>Performance table</h2><div id="perftbl"></div></div>
  </section>
@@ -188,6 +188,27 @@ function computePerf(fromD,toD){
 
 let currentPerf=[], curSort='CAGR', curAsc=false;
 
+// Rebase every series to 100 at its own first available point within [fromD,toD] — that's what
+// makes the growth chart a FAIR comparison: a series with a strong 1997-98 doesn't start "ahead"
+// just because the raw base-100 index level happened to already be higher by the range start.
+function rebasedTraces(fromD,toD){
+  const dates=allDates;
+  let i0=dates.findIndex(d=>d>=fromD);
+  if(i0<0) i0=0;
+  let i1=dates.length-1;
+  while(i1>i0 && dates[i1]>toD) i1--;
+  const xs=dates.slice(i0,i1+1);
+  return Object.keys(DATA.levels.series).map(name=>{
+    const fac=name.split(' | ')[1];
+    const raw=DATA.levels.series[name].slice(i0,i1+1);
+    const baseIdx=raw.findIndex(v=>v!=null);
+    const base=baseIdx<0?null:raw[baseIdx];
+    const y=raw.map(v=>(v==null||base==null)?null:(v/base*100));
+    return {x:xs,y,name,mode:'lines',connectgaps:false,
+      line:{width:1.3,color:FCOLOR[fac]||'#5b9dff'},opacity:.85};
+  });
+}
+
 function refreshPerf(fromD,toD){
   currentPerf=computePerf(fromD,toD);
   const ok=currentPerf.filter(r=>!r.insufficient);
@@ -206,22 +227,14 @@ function refreshPerf(fromD,toD){
     {...P,xaxis:{title:'Annualized volatility %',gridcolor:'#26304a'},
      yaxis:{title:'CAGR %',gridcolor:'#26304a'}},{displayModeBar:false});
 
-  Plotly.relayout('cum',{shapes:[{type:'rect',xref:'x',yref:'paper',x0:fromD,x1:toD,y0:0,y1:1,
-    fillcolor:'rgba(91,157,255,.10)',line:{color:'#5b9dff',width:1,dash:'dot'},layer:'below'}]});
+  Plotly.react('cum',rebasedTraces(fromD,toD),{...P,margin:{l:55,r:10,t:10,b:40},
+    yaxis:{type:'log',gridcolor:'#26304a',title:'Growth of 100'},xaxis:{gridcolor:'#26304a'},
+    legend:{orientation:'h',font:{size:9},y:-0.12}},{displayModeBar:false});
 
   perfTable(curSort,curAsc);
 }
 
 (function(){
-  // cumulative growth (full history, always) — selected range shown as a shaded band
-  const tr=Object.keys(DATA.levels.series).map(name=>{
-    const fac=name.split(' | ')[1];
-    return {x:DATA.levels.dates,y:DATA.levels.series[name],name,mode:'lines',
-      line:{width:1.3,color:FCOLOR[fac]||'#5b9dff'},opacity:.85};});
-  Plotly.newPlot('cum',tr,{...P,margin:{l:55,r:10,t:10,b:40},
-    yaxis:{type:'log',gridcolor:'#26304a'},xaxis:{gridcolor:'#26304a'},
-    legend:{orientation:'h',font:{size:9},y:-0.12}},{displayModeBar:false});
-
   const from=$('#perfFrom'), to=$('#perfTo');
   from.value=commonStart; to.value=commonEnd;
   const onRangeChange=()=>refreshPerf(from.value,to.value);
