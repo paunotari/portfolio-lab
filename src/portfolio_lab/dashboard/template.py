@@ -472,9 +472,9 @@ function recompute(){
     return;
   }
   if(!validTotal){
-    $('#divsummary').innerHTML=`<div class="warn">Weights sum to ${tot.toFixed(1)}%, not 100% `
-      +`(tolerance ±${DATA.weight_tolerance_pct}pp). A portfolio can't hold more or less than `
-      +`itself — adjust the sleeve weights above so they add up to 100.</div>`;
+    $('#divsummary').innerHTML=`<div class="warn">Weights sum to ${tot.toFixed(1)}%, not 100%. `
+      +`A portfolio can't hold more or less than itself — adjust the sleeve weights above so `
+      +`they add up to 100.</div>`;
     $('#divperf').innerHTML='';
     ['divsector','divcountry','divstock'].forEach(id=>Plotly.purge(id));
     return;
