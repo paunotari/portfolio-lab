@@ -1,8 +1,29 @@
+# --- Python ---
 __pycache__/
-*.pyc
-.DS_Store
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# --- virtual environments ---
 .venv/
-# regenerable outputs (rebuild with scripts/run_pipeline.py)
+venv/
+env/
+
+# --- secrets ---
+.env
+
+# --- OS / editor ---
+.DS_Store
+.idea/
+.vscode/
+
+# --- Claude Code local/tooling (skills are reinstallable; launch.json stays tracked) ---
+.claude/settings.local.json
+.claude/skills/
+.claude/plans/
+
+# --- regenerable pipeline output (rebuild with scripts/run_pipeline.py) ---
 /outputs/
 /data/processed/
-.env

@@ -9,11 +9,15 @@ planner + optimizer + tracker for individual investors. See **[info/vision.md](i
 ## Quick start
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements.txt     # installs the package (editable) + its deps
+cp .env.example .env                 # optional: add a FRED_API_KEY for macro data
 python scripts/run_pipeline.py      # rebuild processed data, analytics, and dashboard
 python tests/test_pipeline.py       # data-integrity checks
-open outputs/dashboard.html         # 5 tabs: Performance / Factor vs Reference / Regimes / Correlations / Diversification
+open outputs/dashboard.html         # 6 tabs: Performance / Factor vs Reference / Regimes / Correlations / Macro / Diversification
 ```
+
+Without a FRED key the macro steps fall back to the keyless endpoint; skip them entirely with
+`python scripts/run_pipeline.py --no-macro`.
 
 ## Where things are
 

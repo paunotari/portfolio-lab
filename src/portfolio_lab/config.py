@@ -12,7 +12,7 @@ PACKAGE_DIR = Path(__file__).resolve().parent          # src/portfolio_lab
 PROJECT_ROOT = PACKAGE_DIR.parents[1]                   # repo root
 
 # Load secrets (e.g. FRED_API_KEY) from a local, gitignored .env file at the repo root, if
-# present. Never hardcode keys here or anywhere in the codebase — see .env.example.
+# present. Copy .env.example -> .env and fill it in. Never hardcode secrets in the codebase.
 try:
     from dotenv import load_dotenv
     load_dotenv(PROJECT_ROOT / ".env")

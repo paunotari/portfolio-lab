@@ -2,7 +2,7 @@
 
 MSCI does not publish factsheets for AC Asia ex Japan Enhanced Value / Momentum, so these
 weights were transcribed from the MSCI website screenshots (1-decimal precision -> sector sums
-round to ~99.5%, not a data error). Marked source='msci_web_image'. Run AFTER factsheets.build().
+round to ~99.5%, not a data error). Marked source='msci_web_image'. Run AFTER factsheets.run().
 
 Run:  python -m portfolio_lab.ingest.asia_images
 """
@@ -42,7 +42,7 @@ DATA = {
 }
 
 
-def build():
+def run():
     asof = C.FACTSHEET_ASOF
 
     def append(path, rows):
@@ -58,4 +58,4 @@ def build():
 
 
 if __name__ == "__main__":
-    build()
+    run()

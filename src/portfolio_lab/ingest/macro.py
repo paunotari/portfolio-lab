@@ -17,7 +17,6 @@ import os
 import io
 import ssl
 import urllib.request
-import urllib.error
 import json
 import pandas as pd
 
@@ -83,14 +82,14 @@ def _transform(s: pd.Series, how: str) -> pd.Series:
     return s  # level
 
 
-def build() -> pd.DataFrame:
+def run() -> pd.DataFrame:
     C.ensure_dirs()
     key_mode = "api" if os.environ.get("FRED_API_KEY") else "csv(keyless)"
     cols, meta = {}, []
     for sid, name, how, units in SERIES:
         try:
             raw = _to_month_end(_fetch_raw(sid))
-        except (urllib.error.URLError, Exception) as e:  # noqa: BLE001 - report & continue
+        except Exception as e:  # noqa: BLE001 - network/parse failure: report and skip this series
             print(f"[macro] WARN {sid} ({name}) failed: {e}")
             continue
         series = _transform(raw, how).dropna()
@@ -111,4 +110,4 @@ def build() -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-    build()
+    run()

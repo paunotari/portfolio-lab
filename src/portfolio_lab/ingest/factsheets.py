@@ -88,7 +88,7 @@ def _parse_pdf(path, region):
     return idx_name, ft, sectors, countries, constituents
 
 
-def build():
+def run():
     C.ensure_dirs()
     sec_rows, ctry_rows, cons_rows, meta_rows = [], [], [], []
     n_pdf = 0
@@ -118,4 +118,4 @@ def build():
 
 
 if __name__ == "__main__":
-    build()
+    run()

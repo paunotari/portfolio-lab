@@ -132,7 +132,7 @@ Macro ingest needs network; skip it (and macro_link) offline with
 ## 8. Extending it (conventions to keep)
 
 - New paths/constants → `config.py` only.
-- New processed dataset → add a `build()` in an `ingest/` module and wire it into `run_pipeline.py`.
+- New pipeline stage → expose a uniform `run()` entrypoint in the module and wire it into `run_pipeline.py`.
 - Keep generated artifacts out of `data/raw/`; keep hand-authored facts in code, not in CSVs.
 - After any change, `python scripts/run_pipeline.py && python tests/test_pipeline.py` must pass.
 - The dashboard is self-contained by design (single HTML). Keep new tabs data-driven from the

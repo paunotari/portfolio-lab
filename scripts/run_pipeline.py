@@ -33,17 +33,17 @@ def main():
     ap.add_argument("--no-macro", action="store_true", help="skip FRED macro fetch (needs network)")
     args = ap.parse_args()
 
-    print("=== 1/8 ingest returns ===");     returns.build()
-    print("=== 2/8 ingest factsheets ===");  factsheets.build()
-    print("=== 3/8 ingest asia images ==="); asia_images.build()
+    print("=== 1/8 ingest returns ===");     returns.run()
+    print("=== 2/8 ingest factsheets ===");  factsheets.run()
+    print("=== 3/8 ingest asia images ==="); asia_images.run()
     if not args.no_macro:
-        print("=== 4/8 ingest macro (FRED) ==="); macro.build()
+        print("=== 4/8 ingest macro (FRED) ==="); macro.run()
     print("=== 5/8 analytics ===");          engine.run()
     if not args.no_macro:
         print("=== 6/8 macro-link ===");     macro_link.run()
-    print("=== 7/8 diversification ===");    diversification.main()
+    print("=== 7/8 diversification ===");    diversification.run()
     if not args.no_dashboard:
-        print("=== 8/8 dashboard ===");      dashboard_build.build()
+        print("=== 8/8 dashboard ===");      dashboard_build.run()
     print("\nPipeline complete.")
 
 

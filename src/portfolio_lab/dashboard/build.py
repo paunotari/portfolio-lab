@@ -87,7 +87,7 @@ def _collect_data() -> dict:
                 macro=macro, macro_meta=macro_meta, macro_corr=macro_corr)
 
 
-def build():
+def run():
     C.ensure_dirs()
     data = _collect_data()
     html = HTML.replace("__DATA__", json.dumps(data)).replace("__JS__", JS)
@@ -96,4 +96,4 @@ def build():
 
 
 if __name__ == "__main__":
-    build()
+    run()

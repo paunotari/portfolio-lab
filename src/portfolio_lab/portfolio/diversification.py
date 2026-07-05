@@ -118,7 +118,8 @@ def _load_portfolio_csv(path):
     return {r["index_name"]: float(r["weight"]) for r in _load(path)}
 
 
-def main():
+def run():
+    """CLI entrypoint: analyze data/processed/portfolio.csv if present, else the built-in example."""
     pf = C.PROCESSED_DIR / "portfolio.csv"
     if pf.exists():
         weights, name = _load_portfolio_csv(pf), "portfolio"
@@ -130,4 +131,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    run()

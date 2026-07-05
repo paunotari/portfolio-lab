@@ -34,7 +34,7 @@ def _read_workbook(path):
     return idx_name, out
 
 
-def build() -> pd.DataFrame:
+def run() -> pd.DataFrame:
     C.ensure_dirs()
     rows = []
     for region in C.REGIONS:
@@ -61,4 +61,4 @@ def build() -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-    build()
+    run()
