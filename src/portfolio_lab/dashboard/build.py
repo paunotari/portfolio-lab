@@ -61,7 +61,11 @@ def _collect_data() -> dict:
     sec_by = by_index(_rd(C.SECTOR_WEIGHTS), "sector")
     ctry_by = by_index(_rd(C.COUNTRY_WEIGHTS), "country")
     stk_by = by_index(_rd(C.TOP_CONSTITUENTS), "constituent")
-    usa_idx = [r["index_name"] for r in _rd(C.INDEX_META) if r["region"] == "USA"]
+    index_meta_rows = _rd(C.INDEX_META)
+    usa_idx = [r["index_name"] for r in index_meta_rows if r["region"] == "USA"]
+    # index_name -> "<region> | <factor_type>" — the column key in levels_wide.csv / DATA.levels,
+    # so the dashboard's live diversification widget can blend each sleeve's own return series.
+    idx_series_key = {r["index_name"]: f"{r['region']} | {r['factor_type']}" for r in index_meta_rows}
 
     # macro series + meta + index<->macro correlation matrices (optional: skipped when absent)
     macro = macro_meta = macro_corr = None
@@ -82,8 +86,9 @@ def _collect_data() -> dict:
 
     return dict(perf=perf, fvr=fvr, regperf=regperf, regime_meta=regime_meta, levels=levels,
                 corr=corr, rolling=rolling, sec_by=sec_by, ctry_by=ctry_by, stk_by=stk_by,
-                usa_idx=usa_idx, indices=sorted(sec_by.keys()),
+                usa_idx=usa_idx, indices=sorted(sec_by.keys()), idx_series_key=idx_series_key,
                 thresh=C.CONCENTRATION_THRESHOLDS, country_fix=C.COUNTRY_FIX,
+                weight_tolerance_pct=C.PORTFOLIO_WEIGHT_TOLERANCE_PCT,
                 macro=macro, macro_meta=macro_meta, macro_corr=macro_corr)
 
 

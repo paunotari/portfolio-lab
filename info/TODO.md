@@ -10,15 +10,7 @@ Check items off as completed. Add new ones as they come up; keep entries short a
 
 ## Now / quick wins
 
-- [ ] **Enforce portfolio weights sum to 100%** in `portfolio/diversification.py`. Today
-      `analyze_portfolio()` silently normalizes any input (e.g. weights summing to 340% are
-      accepted and rescaled) — that's misleading; a portfolio can't hold more than 100% of
-      itself. Validate and reject (or clearly warn) instead of silently normalizing.
-- [ ] **Add portfolio-level return stats for a given weight combination** to the diversification
-      module — currently it only reports look-through sector/country/stock exposure, not
-      performance. For a set of sleeve weights, compute the blended CAGR, vol, Sharpe, max
-      drawdown (reuse `analytics/engine.py`'s stats helpers) over the common window, and surface
-      it alongside the concentration report (CLI + dashboard Diversification tab).
+_(both done — see Portfolio optimization below for what builds on them next)_
 
 ## Portfolio optimization (vision.md Phase 3)
 
@@ -36,9 +28,10 @@ Check items off as completed. Add new ones as they come up; keep entries short a
     give me the allocation with maximum diversification and minimum risk subject to achieving at
     least 12%/yr."
   - This is explicitly complex and depends on other pieces landing first (see Depends-on below).
-  - **Depends on:** the 100%-weight constraint (quick win above); a settled set of risk metrics
-    (vol, max DD, maybe CVaR); ideally the regime-conditional data from Phase 2 if we want
-    regime-aware optimization, not just full-sample optimization.
+  - **Depends on:** ✅ the 100%-weight constraint and portfolio-level performance stats (both now
+    in `portfolio/diversification.py`); a settled set of risk metrics (vol, max DD, maybe CVaR);
+    ideally the regime-conditional data from Phase 2 if we want regime-aware optimization, not
+    just full-sample optimization.
   - **Open question (from vision.md):** optimization backend — `scipy.optimize`, `cvxpy`, or
     `Riskfolio-Lib`. Needs a decision before implementation starts.
 - [ ] **Regime-targeted allocation** (the signature feature). Let the user express a desired

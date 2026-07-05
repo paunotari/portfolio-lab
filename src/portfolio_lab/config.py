@@ -87,6 +87,11 @@ COUNTRY_FIX = {"South Korea": "Korea", "Hong Kong SAR China": "Hong Kong"}
 # concentration thresholds (%) for the diversification look-through flags
 CONCENTRATION_THRESHOLDS = {"sector": 30.0, "country": 35.0, "stock": 5.0}
 
+# a portfolio's sleeve weights must sum to 100% within this tolerance (percentage points) —
+# a portfolio cannot hold more or less than itself. Shared by the Python API and the dashboard's
+# live diversification widget so both reject/accept the same range.
+PORTFOLIO_WEIGHT_TOLERANCE_PCT = 0.5
+
 ROLLING_WINDOW_MONTHS = 36
 FACTSHEET_ASOF = "2026-06-30"
 

@@ -112,12 +112,17 @@ padding:2px 10px;margin:2px;font-size:12px}
  <section class="tab" id="t-div">
    <div class="grid g2">
      <div class="card"><h2>Portfolio sleeves (weights, %)</h2>
-       <div class="muted">Type weights (need not sum to 100 — auto-normalized). Set 0 to drop a sleeve.</div>
+       <div class="muted">Weights must sum to 100% — a portfolio can't hold more or less than
+         itself. Set 0 to drop a sleeve.</div>
        <div id="winputs" style="margin-top:10px;max-height:420px;overflow:auto"></div>
-       <div style="margin-top:10px"><button onclick="preset()">example preset</button>
-        <button onclick="clearw()">clear</button></div></div>
+       <div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <button onclick="preset()">example preset</button>
+        <button onclick="clearw()">clear</button>
+        <span id="wtotal" class="pill"></span></div></div>
      <div class="card"><h2>Concentration summary</h2><div id="divsummary"></div></div>
    </div>
+   <div class="card"><h2>Portfolio performance <span class="muted">(constant-mix blend, over the selected sleeves' overlapping history)</span></h2>
+     <div id="divperf"></div></div>
    <div class="grid g2">
      <div class="card"><h2>Sector look-through</h2><div id="divsector" style="height:340px"></div></div>
      <div class="card"><h2>Country look-through</h2><div id="divcountry" style="height:340px"></div></div>
@@ -160,11 +165,13 @@ const commonStart=(()=>{ const names=Object.keys(DATA.levels.series);
   return allDates[0]; })();
 const commonEnd=allDates[allDates.length-1];
 
-function statsForRange(name,fromD,toD){
-  const dates=allDates, vals=DATA.levels.series[name];
-  const idx=[]; for(let i=0;i<dates.length;i++){ if(dates[i]>=fromD&&dates[i]<=toD&&vals[i]!=null) idx.push(i); }
-  if(idx.length<2) return null;
-  const lv=idx.map(i=>vals[i]);
+// Shared stats formula (CAGR/vol/Sharpe/maxDD from a dense level array + its parallel dates
+// array) — mirrors analytics/engine.py's _perf_stats. Used by both the Performance tab's
+// date-range recompute AND the Diversification tab's blended-portfolio recompute, so there is
+// exactly one JS implementation of this math to keep in sync with the Python one (see
+// info/CLAUDE.md caveat on stats being computed in two places).
+function computeSeriesStats(lv,dates){
+  if(lv.length<2) return null;
   const n=lv.length-1;
   const cagr=Math.pow(lv[lv.length-1]/lv[0],12/n)-1;
   const rets=[]; for(let i=1;i<lv.length;i++) rets.push(lv[i]/lv[i-1]-1);
@@ -175,7 +182,14 @@ function statsForRange(name,fromD,toD){
   let peak=-Infinity, maxDD=0;
   for(const v of lv){ peak=Math.max(peak,v); maxDD=Math.min(maxDD, v/peak-1); }
   return {CAGR:cagr, ann_vol:annVol, sharpe_rf0:sharpe, max_drawdown:maxDD,
-          months:n, start:dates[idx[0]], end:dates[idx[idx.length-1]]};
+          months:n, start:dates[0], end:dates[dates.length-1]};
+}
+
+function statsForRange(name,fromD,toD){
+  const dates=allDates, vals=DATA.levels.series[name];
+  const idx=[]; for(let i=0;i<dates.length;i++){ if(dates[i]>=fromD&&dates[i]<=toD&&vals[i]!=null) idx.push(i); }
+  if(idx.length<2) return null;
+  return computeSeriesStats(idx.map(i=>vals[i]), idx.map(i=>dates[i]));
 }
 
 const SERIES_META=DATA.perf.map(r=>({series:r.series,region:r.region,factor:r.factor}));
@@ -405,14 +419,36 @@ function hhi(obj){const f=Object.values(obj).map(v=>v/100);const h=f.reduce((a,x
 function rollup(){
   const w={};let tot=0;
   $('#winputs').querySelectorAll('input').forEach(i=>{const v=+i.value||0;if(v>0){w[i.dataset.idx]=v;tot+=v;}});
+  const validTotal=tot>0 && Math.abs(tot-100)<=DATA.weight_tolerance_pct;
   const sec={},ctry={},stk={};
-  for(const idx in w){const sw=w[idx]/tot;
-    const S=DATA.sec_by[idx]||{};for(const s in S)sec[s]=(sec[s]||0)+sw*S[s];
-    let C=DATA.ctry_by[idx];if(!C)C=DATA.usa_idx.includes(idx)?{"United States":100}:{};
-    for(let c in C){c=DATA.country_fix[c]||c;} // normalize keys below
-    for(const c0 in C){const c=DATA.country_fix[c0]||c0;ctry[c]=(ctry[c]||0)+sw*C[c0];}
-    const K=DATA.stk_by[idx]||{};for(const k in K)stk[k]=(stk[k]||0)+sw*K[k];}
-  return{w,tot,sec,ctry,stk};}
+  if(validTotal){
+    for(const idx in w){const sw=w[idx]/100; // weights sum to ~100 -> this is the fraction, no rescaling
+      const S=DATA.sec_by[idx]||{};for(const s in S)sec[s]=(sec[s]||0)+sw*S[s];
+      let C=DATA.ctry_by[idx];if(!C)C=DATA.usa_idx.includes(idx)?{"United States":100}:{};
+      for(const c0 in C){const c=DATA.country_fix[c0]||c0;ctry[c]=(ctry[c]||0)+sw*C[c0];}
+      const K=DATA.stk_by[idx]||{};for(const k in K)stk[k]=(stk[k]||0)+sw*K[k];}
+  }
+  return{w,tot,validTotal,sec,ctry,stk};}
+
+// Blended (constant-mix) portfolio performance from the sleeves' own return series, over their
+// overlapping history — mirrors portfolio/diversification.py::portfolio_performance in Python.
+function portfolioPerf(w){
+  const idxs=Object.keys(w);
+  const keys=idxs.map(i=>DATA.idx_series_key[i]);
+  if(!idxs.length || keys.some(k=>k==null)) return null;
+  const dates=allDates, okIdx=[];
+  for(let i=0;i<dates.length;i++){ if(keys.every(k=>DATA.levels.series[k][i]!=null)) okIdx.push(i); }
+  if(okIdx.length<2) return null;
+  let level=100; const path=[level];
+  for(let j=1;j<okIdx.length;j++){
+    const i0=okIdx[j-1], i1=okIdx[j]; let r=0;
+    for(const idx of idxs){ const key=DATA.idx_series_key[idx];
+      const v0=DATA.levels.series[key][i0], v1=DATA.levels.series[key][i1];
+      r += (w[idx]/100)*(v1/v0-1); }
+    level*=(1+r); path.push(level);
+  }
+  return computeSeriesStats(path, okIdx.map(i=>dates[i]));
+}
 function sortObj(o){return Object.entries(o).sort((a,b)=>b[1]-a[1]);}
 function barh(el,entries,thr,color){
   const over=entries.filter(([k,v])=>v>thr).map(e=>e[0]);
@@ -422,11 +458,29 @@ function barh(el,entries,thr,color){
      yaxis:{autorange:'reversed',tickfont:{size:10}}},{displayModeBar:false});
   return over;}
 function recompute(){
-  const {w,tot,sec,ctry,stk}=rollup();
+  const {w,tot,validTotal,sec,ctry,stk}=rollup();
   const T=DATA.thresh;
+
+  const totalPill=$('#wtotal');
+  totalPill.textContent=`Total: ${tot.toFixed(1)}%`;
+  totalPill.className='pill'+(tot===0?'':(validTotal?' good':' warn'));
+
+  if(tot===0){
+    $('#divsummary').innerHTML='<div class="muted">No sleeves selected.</div>';
+    $('#divperf').innerHTML='';
+    ['divsector','divcountry','divstock'].forEach(id=>Plotly.purge(id));
+    return;
+  }
+  if(!validTotal){
+    $('#divsummary').innerHTML=`<div class="warn">Weights sum to ${tot.toFixed(1)}%, not 100% `
+      +`(tolerance ±${DATA.weight_tolerance_pct}pp). A portfolio can't hold more or less than `
+      +`itself — adjust the sleeve weights above so they add up to 100.</div>`;
+    $('#divperf').innerHTML='';
+    ['divsector','divcountry','divstock'].forEach(id=>Plotly.purge(id));
+    return;
+  }
+
   const se=sortObj(sec),ce=sortObj(ctry),ke=sortObj(stk).slice(0,22);
-  if(tot===0){$('#divsummary').innerHTML='<div class="muted">No sleeves selected.</div>';
-    ['divsector','divcountry','divstock'].forEach(id=>Plotly.purge(id));return;}
   const so=barh('divsector',se,T.sector,'#5b9dff');
   const co=barh('divcountry',ce,T.country,'#f4a259');
   const ko=barh('divstock',ke,T.stock,'#39d98a');
@@ -439,6 +493,15 @@ function recompute(){
    +`<h3>Flags (sector>${T.sector}%, country>${T.country}%, stock>${T.stock}%)</h3>`
    +`<p>Sector: ${flag(so)}</p><p>Country: ${flag(co)}</p><p>Single-stock: ${flag(ko)}</p>`
    +`<div class="muted">Top-1 sector ${se[0][1].toFixed(1)}% · top-1 country ${ce[0][1].toFixed(1)}% · top-3 stocks ${(ke[0][1]+ke[1][1]+ke[2][1]).toFixed(1)}%</div>`;
+
+  const perf=portfolioPerf(w);
+  $('#divperf').innerHTML = perf==null
+    ? '<div class="muted">Insufficient overlapping history among the selected sleeves.</div>'
+    : `<div class="metric">CAGR <b>${pct(perf.CAGR)}</b></div>`
+     +`<div class="metric">Ann vol <b>${pct(perf.ann_vol)}</b></div>`
+     +`<div class="metric">Sharpe(rf0) <b>${perf.sharpe_rf0==null?'—':perf.sharpe_rf0.toFixed(2)}</b></div>`
+     +`<div class="metric">Max drawdown <b>${pct(perf.max_drawdown)}</b></div>`
+     +`<div class="muted">Window: ${perf.start} → ${perf.end} (${perf.months} months)</div>`;
 }
 buildInputs();recompute();
 """
