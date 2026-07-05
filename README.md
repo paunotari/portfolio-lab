@@ -17,7 +17,9 @@ open outputs/dashboard.html         # 6 tabs: Performance / Factor vs Reference 
 ```
 
 Without a FRED key the macro steps fall back to the keyless endpoint; skip them entirely with
-`python scripts/run_pipeline.py --no-macro`.
+`python scripts/run_pipeline.py --no-macro` (this also skips macro-link, the 4-quadrant macro-state
+classifier, and the scenario simulation, all of which depend on FRED data — see
+[info/CLAUDE.md](info/CLAUDE.md) §4-5 for what each does).
 
 ## Where things are
 

@@ -63,36 +63,36 @@ backdrop was each era in, and can we read the current backdrop to reason about w
 to work now." That's the goal of this section — go beyond who-won-historically to a macro-aware
 read of *why*, tying directly into the regime-targeted optimizer above.
 
-- [ ] **Per-regime macro correlations** — extend `analytics/macro_link.py` to compute one
-      index↔macro correlation matrix per regime (currently only full-sample). Cheap, additive.
-- [ ] **4-quadrant macro-state classification** (inflationary / deflationary / growth /
-      stagnation) with per-state historical performance **broken down by factor AND region**, not
-      just in aggregate — so we can explicitly show e.g. "EM/Asia Enhanced Value led during
-      [state X, which dominated 1998–2010]" vs. "USA Quality/Momentum led during [state Y, which
-      has dominated since ~2010]." This is the direct input the regime-targeted optimizer needs —
-      do this before or alongside that optimizer work.
-- [ ] **Regime-attribution narrative report**: walk the full history labeled by macro state,
-      identify the leading factor/region in each stretch, and quantify how consistently a given
-      state favors a given factor/region (e.g. is Quality reliably strongest in disinflationary/
-      slow-growth periods? Is EM/Value reliably strongest in weak-USD, reflationary periods?).
-      This turns "look, EM won 1998–2010 and USA Quality won since" from an eyeballed observation
-      into a measured, regime-conditional pattern — and is what tells us whether the recent
-      USA-Quality/Momentum leadership is a *structural* macro-driven pattern or just the current
-      cycle.
-- [ ] **Current-regime + trend read**: classify the *most recent* data into a macro state and
-      describe the trend direction of the key inputs (inflation rising/falling, rate-hike vs
-      cutting cycle, yield-curve steepening/inverting, credit spreads widening/tightening) so we
-      have a descriptive "which state are we in, and which way are things moving" signal — a
-      trend-following read, explicitly **not** a forecast/prediction model. Combined with the
-      regime-attribution report above, this is what lets us reason about which factors/regions
-      are more likely to be favored *if* the current trend continues.
-- [ ] **Scenario simulation**: simulate future index/factor behaviour conditioned on a chosen
-      macro characteristic or state, building on the correlations already computed.
-- [ ] *(Explicitly out of scope for now, noted per the user's own framing)* an actual predictive
-      model (ML/probabilistic) that forecasts regime transitions or forward returns — this is
-      vision.md Phase 4 territory: same FRED-ToS constraint as the deferred ML/RL item below (any
-      such model's macro features would need a non-FRED source). The items above are descriptive/
-      correlational only, not predictive.
+**Status (2026-07): all 5 items below are DONE.** Added `breakeven_10y`/`breakeven_5y`
+(T10YIE/T5YIE, market inflation expectations) and `us_recession` (NBER USREC) to `ingest/macro.py`
+first, as free supporting data for the classifier. See `info/CLAUDE.md` §4 for module details and
+§7 caveats #13-15 for the two real bugs found and fixed along the way (pandas NaN-comparison
+pitfall in the trend classifier; depression-era history needed clipping out of the frequency
+stats). **Not yet done:** wiring any of this into the dashboard (still CLI/report-only — see the
+Tier-1 essentials section above; this is real Tier-2 depth waiting on a display layer, not
+forgotten).
+
+- [x] **Per-regime macro correlations** — `analytics/macro_link.py::regime_correlations()`, one
+      matrix per named regime (chg basis, lag 0), written to `correlation_by_regime/*.csv`.
+- [x] **4-quadrant macro-state classification** — `analytics/macro_state.py`, growth (indpro_yoy)
+      × inflation (core_pce_yoy) trend → Goldilocks/Reflation/Deflationary-bust/Stagflation, with
+      per-state performance broken down by series (region+factor) in `macro_state_performance.csv`.
+- [x] **Regime-attribution narrative report** — same module's `factor_attribution()`: for each
+      state, does each factor type consistently beat its own region's reference, averaged across
+      regions (`macro_state_factor_attribution.csv`). Confirms e.g. Value leads in Deflationary
+      bust (61.5% hit rate), Momentum leads in Goldilocks/Reflation but notably lags in Stagflation
+      (-0.1% excess) — matching the known 2022 rate-shock pattern.
+- [x] **Current-regime + trend read** — `macro_state.current_state()`: as of the latest complete
+      macro print, which quadrant, which direction growth/inflation are trending, and how many
+      consecutive months in that state. Explicitly labeled descriptive, not a forecast.
+- [x] **Scenario simulation** — `analytics/scenario.py`: bootstrap Monte Carlo, resampling whole
+      historical months (preserving real cross-series correlation) weighted by quadrant
+      probability. Two built-in scenarios (historical-frequency-weighted, even 25/25/25/25);
+      `simulate_scenario()` takes arbitrary custom weights for later optimizer use.
+- [x] *(Explicitly out of scope, confirmed)* an actual predictive model (ML/probabilistic) of
+      regime transitions or forward returns stays vision.md Phase 4 territory — same FRED-ToS
+      constraint as the deferred ML/RL item below. Everything built here is descriptive/
+      correlational + a stated-assumption bootstrap, not a forecast.
 
 ## Data sources
 

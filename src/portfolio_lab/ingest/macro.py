@@ -30,7 +30,7 @@ except ImportError:  # pragma: no cover
     _SSL_CTX = ssl.create_default_context()
 
 # id, output name, transform, human units. transform in {level, yoy}
-#   level = use the value as-is (rates, spreads, indices)
+#   level = use the value as-is (rates, spreads, indices, binary flags)
 #   yoy   = 12-month % change of a price/level index (inflation, real-activity growth)
 SERIES = [
     ("CPIAUCSL",     "cpi_yoy",          "yoy",   "CPI inflation YoY %"),
@@ -45,6 +45,10 @@ SERIES = [
     ("DTWEXBGS",     "usd_broad",        "level", "Broad USD index (2006+)"),
     ("DCOILWTICO",   "wti_oil",          "level", "WTI crude oil $/bbl"),
     ("PPIACO",       "ppi_commodities_yoy", "yoy", "PPI all commodities YoY %"),
+    # added for the 4-quadrant macro-state classifier (analytics/macro_state.py):
+    ("T10YIE",       "breakeven_10y",    "level", "10Y breakeven inflation expectation % (1997+)"),
+    ("T5YIE",        "breakeven_5y",     "level", "5Y breakeven inflation expectation % (2003+)"),
+    ("USREC",        "us_recession",     "level", "NBER US recession indicator (0/1)"),
 ]
 
 FRED_API = "https://api.stlouisfed.org/fred/series/observations"

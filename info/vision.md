@@ -105,17 +105,26 @@ in five seconds before deciding to trust the optimizer's number.
 - Self-contained dashboard. ✅
 
 **Phase 1 — Live data & macro (macro part DONE)**
-- ✅ **FRED** ingest: 12 historical indicators (inflation, rates, curve, growth, unemployment,
-  credit spread, VIX, USD, oil, PPI), month-end aligned, API-key or keyless. (`ingest/macro.py`)
+- ✅ **FRED** ingest: 15 historical indicators (inflation, rates, curve, growth, unemployment,
+  credit spread, VIX, USD, oil, PPI, breakeven inflation expectations, NBER recession flag),
+  month-end aligned, API-key or keyless. (`ingest/macro.py`)
 - Live index / holdings data feed. *Open question: where to source reliable live index data.*
 - Compare each index's **current** behaviour vs its own history.
 
-**Phase 2 — Macro correlation & simulation (correlation part DONE)**
+**Phase 2 — Macro correlation & simulation (DONE)**
 - ✅ Correlations of individual indices **and factors** to the macro indicators over history —
-  contemporaneous + lead/lag, level + change bases, with betas (`analytics/macro_link.py`,
-  visualized in the dashboard's Macro tab).
-- Per-regime macro correlations; 4-quadrant macro-state classification (next).
-- Simulate future behaviour/returns conditioned on macro characteristics (scenario engine).
+  contemporaneous + lead/lag, level + change bases, with betas, **plus per-named-regime
+  correlation matrices** (`analytics/macro_link.py`, full-sample part visualized in the
+  dashboard's Macro tab).
+- ✅ **4-quadrant macro-state classification** (growth × inflation trend → Goldilocks / Reflation
+  / Deflationary bust / Stagflation), with per-state performance by region+factor and
+  factor-level attribution (does Momentum/Value/Quality consistently beat its reference within a
+  given state) — confirms e.g. Value leads in Deflationary bust, Momentum lags in Stagflation.
+  Plus a current-regime + trend read. (`analytics/macro_state.py`, CLI/report only so far.)
+- ✅ **Scenario simulation**: bootstrap Monte Carlo conditioned on macro-quadrant probability
+  weights, resampling whole historical months to preserve real cross-series correlation.
+  Explicitly a stated-assumption exercise ("future resembles reshuffled history"), not a
+  forecast. (`analytics/scenario.py`, CLI/report only so far.)
 
 **Phase 3 — Optimization**
 - Deterministic optimizers: max-Sharpe, min-vol, min-drawdown, target-return, and **multi-objective

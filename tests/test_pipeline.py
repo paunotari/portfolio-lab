@@ -102,11 +102,84 @@ def test_macro_link_correlations_valid():
 def test_macro_link_wide_matrices_shape():
     if not C.MACRO_CORR_CONTEMP_CHG.exists():
         return
+    n_indicators = len(_rows(C.MACRO_META))
     for path in (C.MACRO_CORR_CONTEMP_LEVEL, C.MACRO_CORR_CONTEMP_CHG):
         rows = _rows(path)
         assert len(rows) == 21, f"{path.name}: expected 21 series rows, got {len(rows)}"
         n_ind = len(rows[0]) - 1  # minus the series index column
-        assert n_ind == 12, f"{path.name}: expected 12 indicator cols, got {n_ind}"
+        assert n_ind == n_indicators, f"{path.name}: expected {n_indicators} indicator cols, got {n_ind}"
+
+
+def test_macro_link_per_regime_matrices_valid():
+    if not C.MACRO_CORR_BY_REGIME_DIR.exists():
+        return
+    files = list(C.MACRO_CORR_BY_REGIME_DIR.glob("*.csv"))
+    assert files, "no per-regime macro correlation matrices found"
+    for f in files:
+        rows = _rows(f)
+        assert len(rows) == 21, f"{f.name}: expected 21 series rows, got {len(rows)}"
+        for r in rows:
+            for k, v in r.items():
+                if k == "" or v == "":
+                    continue
+                c = float(v)
+                assert -1.0 <= c <= 1.0, f"{f.name}: corr out of bounds {k}={v}"
+
+
+def test_macro_state_classification_valid():
+    if not C.MACRO_STATE_MONTHLY.exists():
+        return
+    rows = _rows(C.MACRO_STATE_MONTHLY)
+    assert rows, "macro_state_monthly.csv is empty"
+    valid_states = {
+        "Goldilocks (disinflationary growth)", "Reflation (overheating)",
+        "Deflationary bust (recession/slowdown)", "Stagflation (growth-inflation squeeze)",
+    }
+    for r in rows:
+        assert r["state"] in valid_states, f"unknown state label: {r['state']}"
+        assert r["growth_up"] in ("True", "False"), f"non-boolean growth_up: {r['growth_up']}"
+        assert r["inflation_up"] in ("True", "False"), f"non-boolean inflation_up: {r['inflation_up']}"
+
+
+def test_macro_state_performance_valid():
+    if not C.MACRO_STATE_PERFORMANCE.exists():
+        return
+    rows = _rows(C.MACRO_STATE_PERFORMANCE)
+    assert rows, "macro_state_performance.csv is empty"
+    series_per_state = defaultdict(int)
+    for r in rows:
+        series_per_state[r["state"]] += 1
+        assert int(r["n_months"]) >= 3, f"{r['state']}/{r['series']}: n_months < 3"
+    for state, n in series_per_state.items():
+        assert n == 21, f"{state}: expected 21 series, got {n}"
+
+
+def test_macro_state_factor_attribution_valid():
+    if not C.MACRO_STATE_FACTOR_ATTRIBUTION.exists():
+        return
+    rows = _rows(C.MACRO_STATE_FACTOR_ATTRIBUTION)
+    assert rows, "macro_state_factor_attribution.csv is empty"
+    for r in rows:
+        hr = float(r["hit_rate"])
+        assert 0.0 <= hr <= 1.0, f"hit_rate out of bounds: {r['state']}/{r['factor']} = {hr}"
+        assert r["factor"] in ("Momentum", "Enhanced Value", "Quality"), f"bad factor: {r['factor']}"
+
+
+def test_scenario_summary_valid():
+    if not C.SCENARIO_SUMMARY.exists():
+        return
+    rows = _rows(C.SCENARIO_SUMMARY)
+    assert rows, "scenario_summary.csv is empty"
+    scenarios = defaultdict(int)
+    for r in rows:
+        scenarios[r["scenario"]] += 1
+        p5, p25, p50, p75, p95 = (float(r[k]) for k in
+                                  ("cagr_p5", "cagr_p25", "cagr_p50", "cagr_p75", "cagr_p95"))
+        assert p5 <= p25 <= p50 <= p75 <= p95, f"{r['scenario']}/{r['series']}: percentiles out of order"
+        pl = float(r["prob_cumulative_loss"])
+        assert 0.0 <= pl <= 1.0, f"{r['scenario']}/{r['series']}: prob_cumulative_loss out of bounds"
+    for name, n in scenarios.items():
+        assert n == 21, f"scenario {name}: expected 21 series, got {n}"
 
 
 if __name__ == "__main__":

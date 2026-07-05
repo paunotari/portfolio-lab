@@ -67,12 +67,14 @@ python -m portfolio_lab.dashboard.build
 | `ingest/returns.py` | Iterates the **registry**; reads each index's `*Monthly.xlsx` → `returns_monthly_long.csv` (+`ret`) and `levels_wide.csv`. |
 | `ingest/factsheets.py` | Iterates registry rows with a PDF; parses each factsheet `*.pdf` → `sector_weights / country_weights / top_constituents / index_meta`. Handles 3 constituent-table layouts; `clean_name()` fixes pdfplumber row-merge. |
 | `ingest/asia_images.py` | Appends the 2 AC Asia ex Japan factor indices with no PDF (transcribed from web screenshots, `source=msci_web_image`). **Run after factsheets.** |
-| `ingest/macro.py` | Historical macro indicators from **FRED** → `macro_monthly.csv` (+`macro_meta.csv`), month-end aligned. Official JSON API when `FRED_API_KEY` is set, else keyless CSV endpoint. Uses `certifi` for SSL. |
-| `analytics/regimes.py` | `REGIMES`: 10 macro regimes with dated boundaries + analyst annotations (macro/factors/regions/shift). Data only. |
+| `ingest/macro.py` | Historical macro indicators from **FRED** → `macro_monthly.csv` (+`macro_meta.csv`), month-end aligned. **15 indicators** (added `breakeven_10y`/`breakeven_5y` = T10YIE/T5YIE market inflation expectations, and `us_recession` = NBER USREC, for the 4-quadrant classifier below). Official JSON API when `FRED_API_KEY` is set, else keyless CSV endpoint. Uses `certifi` for SSL. |
+| `analytics/regimes.py` | `REGIMES`: 10 hand-dated historical eras with analyst annotations (macro/factors/regions/shift) — event-driven narrative labels ("GFC," "dot-com bust"). Data only. Distinct from the systematic classifier below. |
 | `analytics/engine.py` | Performance summary (CAGR/vol/Sharpe/maxDD, one number per series over the common window — no more "cw_"/"full_" split), factor-vs-reference, per-regime performance, correlation matrices (full + per regime), 36m rolling correlation, and `REPORT.md`. |
-| `analytics/macro_link.py` | **Index↔macro correlation engine.** For each of the 21 return series × 12 indicators: contemporaneous + lagged (0/1/3/6/12m, macro leads) correlations on **two bases** — `chg` (Δ month-over-month, the sound basis) and `level` (regime context only) — plus univariate OLS betas. 36-month min-overlap guard flags short pairs as insufficient. Outputs to `outputs/analytics/macro/` (long CSV, two wide 21×12 matrices, betas, `REPORT_macro.md`). |
+| `analytics/macro_link.py` | **Index↔macro correlation engine.** For each of the 21 return series × 15 indicators: contemporaneous + lagged (0/1/3/6/12m, macro leads) correlations on **two bases** — `chg` (Δ month-over-month, the sound basis) and `level` (regime context only) — plus univariate OLS betas. 36-month min-overlap guard flags short pairs as insufficient. Also computes **per-(named)-regime** correlation matrices (chg basis, lag 0; lower 6-month overlap floor since regimes run as short as ~15 months — `regime_correlations()`). Outputs to `outputs/analytics/macro/` (long CSV, two wide 21×15 matrices, betas, `correlation_by_regime/*.csv`, `REPORT_macro.md`). |
+| `analytics/macro_state.py` | **4-quadrant macro-state classifier** — systematic, month-by-month (growth trend × inflation trend → Goldilocks/Reflation/Deflationary-bust/Stagflation), using `indpro_yoy` and `core_pce_yoy` smoothed-and-lagged trend direction. `classify_states()` is reused by `analytics/scenario.py`. Also computes per-state performance for all 21 series and **factor-level attribution** (does Momentum/Value/Quality consistently beat its own region's reference within a given state's months, weighted across regions). Outputs to `outputs/analytics/macro_state/` (`macro_state_monthly.csv`, `macro_state_performance.csv`, `macro_state_factor_attribution.csv`, `REPORT_macro_state.md`). See caveats §7 for the pandas NaN-comparison pitfall this hit and fixed. |
+| `analytics/scenario.py` | **Bootstrap scenario simulation** conditioned on macro-quadrant probability weights. Monte Carlo: samples *whole historical months* (not each series independently) from each quadrant's real observed pool, preserving actual cross-series correlation. Two built-in scenarios (`historical_frequency`, `even_25_25_25_25`); `simulate_scenario(weights, ...)` accepts custom weights for future optimizer use. Outputs simulated CAGR/maxDD percentiles + probability of cumulative loss per series, to `outputs/analytics/scenario/` (`scenario_summary.csv`, `REPORT_scenario.md`). Explicitly non-ML (plain resampling) — see caveat §11. |
 | `portfolio/diversification.py` | `analyze_portfolio({index: weight})` → look-through sector/country/stock exposure, HHI, threshold flags, **plus blended portfolio performance** (`portfolio_performance()`: constant-mix CAGR/vol/Sharpe/maxDD over the sleeves' overlapping history, via `analytics.engine._perf_stats`). **Weights must sum to 100%** (`config.PORTFOLIO_WEIGHT_TOLERANCE_PCT`) — raises `ValueError` rather than silently rescaling (e.g. a 340%-summing input is rejected, not renormalized). Reusable API + CLI. |
-| `dashboard/build.py` | Bakes all data as JSON into `outputs/dashboard.html`. Macro data is optional — the tab degrades gracefully when absent. |
+| `dashboard/build.py` | Bakes all data as JSON into `outputs/dashboard.html`. Macro data is optional — the tab degrades gracefully when absent. **Does not yet bake `macro_state`/`scenario` output** — those exist only as CSVs + `.md` reports for now (per the layered-UI principle in vision.md, this is Tier-2 depth waiting on a Tier-1 summary design, not an oversight). |
 | `dashboard/template.py` | The static HTML shell + browser JS (`__DATA__`/`__JS__` placeholders). Edit here for UI. **6 tabs**: **Performance** (single CAGR/vol/Sharpe/maxDD driven by a live date-range picker, defaulting to the common window; the cumulative-growth chart **rebases every series to 100 at the start of whatever range is selected** — `rebasedTraces()` — so the comparison is fair regardless of each index's own inception date; recomputed client-side in JS from the baked level series, so the formula must stay in sync with `analytics/engine.py`'s `_perf_stats`), Factor vs Reference, Regimes, Correlations, Macro (regime-shaded indicator chart, index↔macro heatmap with level/Δ toggle, per-series top-drivers bar), Diversification (live what-if — sleeve weights must sum to 100%, shown as a red/green total pill; blended portfolio CAGR/vol/Sharpe/maxDD computed live via the shared `computeSeriesStats()` helper, same one the Performance tab uses). |
 
 ## 5. Data flow
@@ -86,6 +88,8 @@ data/raw/msci_indexes/<REGION>/<weights_file>.pdf  ─ingest.factsheets► secto
 FRED (network) ─ingest.macro──► macro_monthly.csv, macro_meta.csv
 levels_wide.csv + regimes ─analytics.engine──► outputs/analytics/*  (+ REPORT.md)
 levels_wide.csv + macro_monthly.csv ─analytics.macro_link──► outputs/analytics/macro/*  (+ REPORT_macro.md)
+macro_monthly.csv ─analytics.macro_state──► outputs/analytics/macro_state/*  (+ REPORT_macro_state.md)
+macro_state's classify_states() + levels_wide.csv ─analytics.scenario──► outputs/analytics/scenario/*
 weights CSVs ─portfolio.diversification──► outputs/diversification/*
 all of the above ─dashboard.build──► outputs/dashboard.html
 ```
@@ -111,8 +115,9 @@ explicit, not implied by which folders happen to exist. Columns:
 **To add an API-sourced index (future):** add a row with `source=api` (using `returns_file` /
 `weights_file` to hold a ticker or endpoint) and implement one new branch in `ingest/returns.py`
 keyed on `source`. The registry contract stays the same — see TODO.md.
-Macro ingest needs network; skip it (and macro_link) offline with
-`python scripts/run_pipeline.py --no-macro`. Pipeline is 8 steps; see `scripts/run_pipeline.py`.
+Macro ingest needs network; skip it (and macro_link/macro_state/scenario, which all depend on
+macro data) offline with `python scripts/run_pipeline.py --no-macro`. Pipeline is 10 steps; see
+`scripts/run_pipeline.py`.
 
 ## 6. Data model / conventions
 
@@ -160,6 +165,31 @@ Macro ingest needs network; skip it (and macro_link) offline with
     recompute and the Diversification tab's blended-portfolio recompute — one JS implementation,
     not three). Verified to match Python (~5-6 significant figures). **If you change the formula
     in one, update the other** — nothing enforces they stay in sync.
+13. **`breakeven_10y`/`breakeven_5y` only start 2003** (TIPS breakeven inflation didn't exist as a
+    published series before then). **`us_recession`, unusually, has genuine data back to 1854**
+    (NBER's full business-cycle dating). `macro_state.py` clips its classification to the return
+    series' own start (1997+) precisely so "historical frequency of each state" isn't distorted by
+    depression-era history.
+14. **pandas' `>`/`<` comparison silently returns `False` (not `NaN`) when either side is `NaN`.**
+    `macro_state.py`'s trend classification hit this directly: months with not-yet-released
+    macro prints (industrial production / core PCE lag ~1-2 months behind e.g. VIX) were being
+    silently classified as "decelerating" instead of excluded, because the raw boolean comparison
+    doesn't propagate NaN like arithmetic does. Fixed via an explicit `.where(...notna() & ...notna())`
+    mask — **any new trend/threshold comparison on a possibly-NaN macro series needs the same
+    guard**, the bug is easy to reintroduce.
+15. **Scenario simulation assumes history repeats, and says so.** `analytics/scenario.py`
+    bootstraps future paths by reshuffling *actual* 1997-2026 monthly returns, weighted by macro
+    quadrant. This is explicitly not a forecast — it's "what would a similar macro mix have
+    historically produced," a stated assumption, not a hidden one. It samples whole historical
+    months (not each series independently) specifically to preserve real cross-series correlation
+    within each simulated month.
+16. **`ingest/macro.py` silently skips a series if its FRED fetch fails** (broad `except
+    Exception`, prints a `[macro] WARN ... failed` line and continues without that column). This
+    was hit once during development — a transient fetch blip dropped `cpi_yoy` for one run, fixed
+    on retry, no code bug. It means: if a downstream module using a specific column (e.g.
+    `macro_state.py` hardcodes `indpro_yoy`/`core_pce_yoy`) runs right after a partial fetch
+    failure, it will `KeyError` rather than degrade gracefully. Re-run `ingest.macro` (or the
+    pipeline) if you see a `WARN` line before trusting the rest of the macro-dependent steps.
 
 ## 8. Extending it (conventions to keep)
 

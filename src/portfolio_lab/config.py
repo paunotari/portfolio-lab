@@ -56,12 +56,36 @@ MACRO_CORR_CONTEMP_LEVEL = MACRO_ANALYTICS_DIR / "macro_corr_contemp_level.csv"
 MACRO_CORR_CONTEMP_CHG = MACRO_ANALYTICS_DIR / "macro_corr_contemp_chg.csv"
 MACRO_BETA = MACRO_ANALYTICS_DIR / "macro_sensitivity_beta.csv"
 MACRO_REPORT = MACRO_ANALYTICS_DIR / "REPORT_macro.md"
+MACRO_CORR_BY_REGIME_DIR = MACRO_ANALYTICS_DIR / "correlation_by_regime"
+
+# 4-quadrant macro-state classifier (analytics/macro_state.py) output file handles
+MACRO_STATE_DIR = ANALYTICS_DIR / "macro_state"
+MACRO_STATE_MONTHLY = MACRO_STATE_DIR / "macro_state_monthly.csv"
+MACRO_STATE_PERFORMANCE = MACRO_STATE_DIR / "macro_state_performance.csv"
+MACRO_STATE_FACTOR_ATTRIBUTION = MACRO_STATE_DIR / "macro_state_factor_attribution.csv"
+MACRO_STATE_REPORT = MACRO_STATE_DIR / "REPORT_macro_state.md"
+
+# 4-quadrant classifier settings: growth = indpro_yoy, inflation = core_pce_yoy (Fed's preferred
+# gauge). Trend = smoothed value now vs smoothed value N months ago (accelerating/decelerating,
+# not the raw level) -- this is the standard growth/inflation quadrant framework.
+MACRO_STATE_GROWTH_INDICATOR = "indpro_yoy"
+MACRO_STATE_INFLATION_INDICATOR = "core_pce_yoy"
+MACRO_STATE_SMOOTH_MONTHS = 3
+MACRO_STATE_TREND_LAG_MONTHS = 6
+
+# scenario simulation (analytics/scenario.py) output file handles
+SCENARIO_DIR = ANALYTICS_DIR / "scenario"
+SCENARIO_SUMMARY = SCENARIO_DIR / "scenario_summary.csv"
+SCENARIO_REPORT = SCENARIO_DIR / "REPORT_scenario.md"
+SCENARIO_YEARS = 10
+SCENARIO_TRIALS = 2000
+SCENARIO_SEED = 42
 
 
 def ensure_dirs() -> None:
     """Create all writable output directories if missing (idempotent)."""
     for d in (PROCESSED_DIR, ANALYTICS_DIR, CORR_REGIME_DIR, DIVERSIFICATION_DIR,
-              MACRO_ANALYTICS_DIR):
+              MACRO_ANALYTICS_DIR, MACRO_CORR_BY_REGIME_DIR, MACRO_STATE_DIR, SCENARIO_DIR):
         d.mkdir(parents=True, exist_ok=True)
 
 
@@ -100,6 +124,10 @@ FACTSHEET_ASOF = "2026-06-30"
 # macro-link engine settings
 MACRO_MIN_OVERLAP_MONTHS = 36        # pairs with fewer overlapping months are flagged insufficient
 MACRO_LAGS = [0, 1, 3, 6, 12]        # months by which macro LEADS returns (0 = contemporaneous)
+# per-regime macro correlations use a much shorter window (regimes are as short as ~15 months),
+# so a separate, lower overlap floor applies -- these are noisier/smaller-sample by nature and
+# reported as such, not to be read with the same confidence as the full-sample numbers above.
+MACRO_REGIME_MIN_OVERLAP_MONTHS = 6
 
 
 def factor_type(index_name: str) -> str:
