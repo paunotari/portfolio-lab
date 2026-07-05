@@ -1,8 +1,9 @@
 # CLAUDE.md — how this project works
 
 Orientation doc for Claude (or any agent / the author) picking up this repo. Read this first.
-For the *product vision and roadmap*, see [vision.md](vision.md). For the *conceptual diversification
-thesis*, see [factor-diversification-thesis.md](factor-diversification-thesis.md).
+For the *product vision and roadmap*, see [vision.md](vision.md). For the *actionable task
+backlog*, see [TODO.md](TODO.md). For the *conceptual diversification thesis*, see
+[factor-diversification-thesis.md](factor-diversification-thesis.md).
 
 ---
 
@@ -62,9 +63,9 @@ python -m portfolio_lab.dashboard.build
 
 | Module | Responsibility |
 |---|---|
-| `config.py` | **All paths and domain constants.** Regions, factor types, GICS sectors, country-name fixes, concentration thresholds, macro-link settings (`MACRO_MIN_OVERLAP_MONTHS`, `MACRO_LAGS`), `factor_type()`. Loads `.env` (e.g. `FRED_API_KEY`) at import. Import paths from here — never hard-code. |
-| `ingest/returns.py` | `*Monthly.xlsx` → `returns_monthly_long.csv` (+`ret`) and `levels_wide.csv`. |
-| `ingest/factsheets.py` | Factsheet `*.pdf` → `sector_weights / country_weights / top_constituents / index_meta`. Region from folder; handles 3 constituent-table layouts; `clean_name()` fixes pdfplumber row-merge. |
+| `config.py` | **All paths and domain constants.** Regions, factor types, GICS sectors, country-name fixes, concentration thresholds, macro-link settings (`MACRO_MIN_OVERLAP_MONTHS`, `MACRO_LAGS`), `factor_type()`, and **`load_registry()`** (reads the index manifest). Loads `.env` (e.g. `FRED_API_KEY`) at import. Import paths from here — never hard-code. |
+| `ingest/returns.py` | Iterates the **registry**; reads each index's `*Monthly.xlsx` → `returns_monthly_long.csv` (+`ret`) and `levels_wide.csv`. |
+| `ingest/factsheets.py` | Iterates registry rows with a PDF; parses each factsheet `*.pdf` → `sector_weights / country_weights / top_constituents / index_meta`. Handles 3 constituent-table layouts; `clean_name()` fixes pdfplumber row-merge. |
 | `ingest/asia_images.py` | Appends the 2 AC Asia ex Japan factor indices with no PDF (transcribed from web screenshots, `source=msci_web_image`). **Run after factsheets.** |
 | `ingest/macro.py` | Historical macro indicators from **FRED** → `macro_monthly.csv` (+`macro_meta.csv`), month-end aligned. Official JSON API when `FRED_API_KEY` is set, else keyless CSV endpoint. Uses `certifi` for SSL. |
 | `analytics/regimes.py` | `REGIMES`: 10 macro regimes with dated boundaries + analyst annotations (macro/factors/regions/shift). Data only. |
@@ -77,15 +78,39 @@ python -m portfolio_lab.dashboard.build
 ## 5. Data flow
 
 ```
-data/raw/msci_indexes/<REGION>/*.xlsx ─ingest.returns──► returns_monthly_long.csv, levels_wide.csv
-data/raw/msci_indexes/<REGION>/*.pdf  ─ingest.factsheets► sector/country/top_constituents/index_meta.csv
-                                       ─ingest.asia_images (append 2 rows-sets)
+data/index_registry.csv ──drives which indexes exist & where their data comes from──┐
+                                                                                     ▼
+data/raw/msci_indexes/<REGION>/<returns_file>.xlsx ─ingest.returns──► returns_monthly_long.csv, levels_wide.csv
+data/raw/msci_indexes/<REGION>/<weights_file>.pdf  ─ingest.factsheets► sector/country/top_constituents/index_meta.csv
+                                                    ─ingest.asia_images (webweights rows: append 2 index sets)
 FRED (network) ─ingest.macro──► macro_monthly.csv, macro_meta.csv
 levels_wide.csv + regimes ─analytics.engine──► outputs/analytics/*  (+ REPORT.md)
 levels_wide.csv + macro_monthly.csv ─analytics.macro_link──► outputs/analytics/macro/*  (+ REPORT_macro.md)
 weights CSVs ─portfolio.diversification──► outputs/diversification/*
 all of the above ─dashboard.build──► outputs/dashboard.html
 ```
+
+### The index registry — single source of truth for tracked indexes
+`data/index_registry.csv` lists every tracked index (one row each) so "what indexes exist" is
+explicit, not implied by which folders happen to exist. Columns:
+
+| column | meaning |
+|---|---|
+| `index_id` | MSCI numeric code (also prefixes the returns filename) |
+| `display_name` | full index name (as it appears in the returns xlsx) |
+| `region`, `factor_type` | the series key — **unique together** |
+| `source` | how ingest loads it: `msci_local` (xlsx + factsheet pdf) · `msci_local_webweights` (xlsx local, weights via `ingest/asia_images.py`) · *(future: `api`)* |
+| `returns_file` | xlsx basename inside `data/raw/msci_indexes/<region>/` |
+| `weights_file` | factsheet pdf basename, or empty (webweights / none) |
+
+**To add a new MSCI index (manual):** drop its xlsx (and factsheet pdf) into
+`data/raw/msci_indexes/<region>/`, append one row to `index_registry.csv`, and rerun
+`python scripts/run_pipeline.py`. No code edit. (A genuinely new *region* also needs one line in
+`config.REGIONS` for display ordering.)
+
+**To add an API-sourced index (future):** add a row with `source=api` (using `returns_file` /
+`weights_file` to hold a ticker or endpoint) and implement one new branch in `ingest/returns.py`
+keyed on `source`. The registry contract stays the same — see TODO.md.
 Macro ingest needs network; skip it (and macro_link) offline with
 `python scripts/run_pipeline.py --no-macro`. Pipeline is 8 steps; see `scripts/run_pipeline.py`.
 

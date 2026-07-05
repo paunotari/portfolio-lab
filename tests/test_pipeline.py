@@ -24,6 +24,28 @@ def _sums(path, key):
     return s
 
 
+def test_registry_files_exist_and_are_consistent():
+    reg = C.load_registry()
+    assert reg, "index_registry.csv is empty"
+    for idx in reg:
+        assert idx["region"] in C.REGIONS, f"{idx['index_id']}: unknown region {idx['region']}"
+        assert idx["factor_type"] in C.FACTOR_TYPES, f"{idx['index_id']}: bad factor {idx['factor_type']}"
+        rf = C.RAW_DIR / idx["region"] / idx["returns_file"]
+        assert rf.exists(), f"{idx['index_id']}: missing returns file {rf}"
+        if idx["weights_file"]:
+            wf = C.RAW_DIR / idx["region"] / idx["weights_file"]
+            assert wf.exists(), f"{idx['index_id']}: missing weights file {wf}"
+    # each (region, factor) is unique — that pair is the series key downstream
+    keys = [(idx["region"], idx["factor_type"]) for idx in reg]
+    assert len(keys) == len(set(keys)), "duplicate (region, factor_type) in registry"
+
+
+def test_registry_matches_return_series():
+    reg_keys = {(idx["region"], idx["factor_type"]) for idx in C.load_registry()}
+    ret_keys = {(r["region"], r["factor_type"]) for r in _rows(C.RETURNS_LONG)}
+    assert reg_keys == ret_keys, f"registry vs returns mismatch: {reg_keys ^ ret_keys}"
+
+
 def test_sector_weights_sum_to_100():
     for idx, tot in _sums(C.SECTOR_WEIGHTS, "sector").items():
         assert 98.0 <= tot <= 102.0, f"{idx} sector weights sum to {tot:.1f}%"

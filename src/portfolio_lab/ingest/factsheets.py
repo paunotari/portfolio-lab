@@ -92,18 +92,23 @@ def run():
     C.ensure_dirs()
     sec_rows, ctry_rows, cons_rows, meta_rows = [], [], [], []
     n_pdf = 0
-    for region in C.REGIONS:
-        for path in sorted((C.RAW_DIR / region).glob("*.pdf")):
-            n_pdf += 1
-            idx_name, ft, sectors, countries, cons = _parse_pdf(path, region)
-            src, asof = "factsheet_pdf", C.FACTSHEET_ASOF
-            for s, p in sectors:
-                sec_rows.append([idx_name, region, ft, s, p, asof, src])
-            for c, p in countries:
-                ctry_rows.append([idx_name, region, ft, c, p, asof, src])
-            for nm, cc, mc, wt, sec in cons:
-                cons_rows.append([idx_name, region, ft, nm, cc, mc, wt, sec, asof, src])
-            meta_rows.append([idx_name, region, ft, path.name, "", asof, src])
+    # only registry rows that point to a factsheet PDF; webweights indexes are handled by
+    # ingest/asia_images.py. (Names/factors are taken from the PDF to preserve exact output.)
+    for idx in C.load_registry():
+        if not idx["weights_file"]:
+            continue
+        region = idx["region"]
+        path = C.RAW_DIR / region / idx["weights_file"]
+        n_pdf += 1
+        idx_name, ft, sectors, countries, cons = _parse_pdf(path, region)
+        src, asof = "factsheet_pdf", C.FACTSHEET_ASOF
+        for s, p in sectors:
+            sec_rows.append([idx_name, region, ft, s, p, asof, src])
+        for c, p in countries:
+            ctry_rows.append([idx_name, region, ft, c, p, asof, src])
+        for nm, cc, mc, wt, sec in cons:
+            cons_rows.append([idx_name, region, ft, nm, cc, mc, wt, sec, asof, src])
+        meta_rows.append([idx_name, region, ft, path.name, "", asof, src])
 
     def dump(path, header, rows):
         with open(path, "w", newline="") as f:

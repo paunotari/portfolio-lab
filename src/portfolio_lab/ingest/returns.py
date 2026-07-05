@@ -1,7 +1,9 @@
 """Ingest monthly index-level series from the MSCI '...FULL...Monthly.xlsx' exports.
 
-Each workbook has a header row (col A = 'Date', col B = index name) followed by month-end
-levels rebased to 100. We emit two tidy files:
+Indexes are driven by the registry (data/index_registry.csv) — this module iterates its rows
+rather than scanning folders blindly, so the set of tracked indexes is explicit and editable.
+Each workbook has a header row (col A = 'Date', col B = index name) followed by month-end levels
+rebased to 100. We emit two tidy files:
 
   returns_monthly_long.csv : date, index_id, index_name, region, factor_type, level, ret
   levels_wide.csv          : date index x one column per series ("<region> | <factor_type>")
@@ -18,12 +20,12 @@ from portfolio_lab import config as C
 _DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
 
 
-def _read_workbook(path):
+def _read_levels(path):
+    """Return [(date, level)] from an MSCI monthly workbook (skips header + non-date rows)."""
     wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
     ws = wb[wb.sheetnames[0]]
     data = list(ws.iter_rows(values_only=True))
     hdr = next(i for i, r in enumerate(data) if r and r[0] == "Date")
-    idx_name = data[hdr][1]
     out = []
     for r in data[hdr + 1:]:
         if not r or r[0] is None or r[1] is None:
@@ -31,19 +33,17 @@ def _read_workbook(path):
         d = str(r[0])[:10]
         if _DATE_RE.match(d):
             out.append((d, float(r[1])))
-    return idx_name, out
+    return out
 
 
 def run() -> pd.DataFrame:
     C.ensure_dirs()
     rows = []
-    for region in C.REGIONS:
-        for f in sorted((C.RAW_DIR / region).glob("*FULL*.xlsx")):
-            index_id = f.name.split(" - ")[0].strip()
-            idx_name, series = _read_workbook(f)
-            ft = C.factor_type(idx_name)
-            for d, lvl in series:
-                rows.append([d, index_id, idx_name, region, ft, lvl])
+    for idx in C.load_registry():
+        path = C.RAW_DIR / idx["region"] / idx["returns_file"]
+        for d, lvl in _read_levels(path):
+            rows.append([d, idx["index_id"], idx["display_name"],
+                         idx["region"], idx["factor_type"], lvl])
 
     df = pd.DataFrame(rows, columns=["date", "index_id", "index_name",
                                      "region", "factor_type", "level"])

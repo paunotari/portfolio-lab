@@ -1,0 +1,22 @@
+index_id,display_name,region,factor_type,source,returns_file,weights_file
+892400,MSCI ACWI Index,ACWI,Reference,msci_local,892400 - MSCI ACWI Index  - FULL - 1998-12-31 - 2026-07-03  - Monthly.xlsx,msci-acwi-net.pdf
+703026,MSCI ACWI Momentum Index,ACWI,Momentum,msci_local,703026 - MSCI ACWI Momentum Index  - FULL - 1997-01-31 - 2026-07-03  - Monthly.xlsx,msci-acwi-momentum-index-usd-net.pdf
+706767,MSCI ACWI Enhanced Value Index,ACWI,Enhanced Value,msci_local,706767 - MSCI ACWI Enhanced Value Index  - FULL - 1997-11-28 - 2026-07-03  - Monthly.xlsx,msci-acwi-enhanced-value-index-usd-net.pdf
+702786,MSCI ACWI Quality Index,ACWI,Quality,msci_local,702786 - MSCI ACWI Quality Index  - FULL - 1997-01-31 - 2026-07-03  - Monthly.xlsx,msci-acwi-quality-index-usd-net.pdf
+990100,MSCI World Index,World,Reference,msci_local,990100 - MSCI World Index  - FULL - 1998-12-31 - 2026-07-03  - Monthly.xlsx,msci-world-index-usd-net.pdf
+703755,MSCI World Momentum Index,World,Momentum,msci_local,703755 - MSCI World Momentum Index  - FULL - 1997-01-31 - 2026-07-03  - Monthly.xlsx,msci-world-momentum-index-usd-net.pdf
+702787,MSCI World Quality Index,World,Quality,msci_local,702787 - MSCI World Quality Index  - FULL - 1997-01-31 - 2026-07-03  - Monthly.xlsx,msci-world-quality-index-usd-net.pdf
+991000,MSCI World ex USA Index,World_ex_USA,Reference,msci_local,991000 - MSCI World ex USA Index  - FULL - 1998-12-31 - 2026-07-03  - Monthly.xlsx,msci-world-ex-usa-index-net.pdf
+705971,MSCI World ex USA Enhanced Value Index,World_ex_USA,Enhanced Value,msci_local,705971 - MSCI World ex USA Enhanced Value Index  - FULL - 1997-11-28 - 2026-07-03  - Monthly.xlsx,msci-world-ex-usa-enhanced-value-index-usd-net.pdf
+984000,MSCI USA Index,USA,Reference,msci_local,984000 - MSCI USA Index  - FULL - 1998-12-31 - 2026-07-03  - Monthly.xlsx,msci-usa-index-net.pdf
+703025,MSCI USA Momentum Index,USA,Momentum,msci_local,703025 - MSCI USA Momentum Index  - FULL - 1997-01-31 - 2026-07-03  - Monthly.xlsx,msci-usa-momentum-index-usd-net.pdf
+702789,MSCI USA Quality Index,USA,Quality,msci_local,702789 - MSCI USA Quality Index  - FULL - 1997-01-31 - 2026-07-03  - Monthly.xlsx,msci-usa-quality-index-usd-net.pdf
+891800,MSCI EM (Emerging Markets) Index,EM,Reference,msci_local,891800 - MSCI EM (Emerging Markets) Index  - FULL - 1998-12-31 - 2026-07-03  - Monthly.xlsx,msci-emerging-markets-index-usd-net.pdf
+703757,MSCI EM (Emerging Markets) Momentum Index,EM,Momentum,msci_local,703757 - MSCI EM (Emerging Markets) Momentum Index  - FULL - 1997-01-31 - 2026-07-03  - Monthly.xlsx,msci-emerging-markets-momentum-index-usd-net.pdf
+707170,MSCI EM (Emerging Markets) Enhanced Value Index,EM,Enhanced Value,msci_local,707170 - MSCI EM (Emerging Markets) Enhanced Value Index  - FULL - 1997-11-28 - 2026-07-03  - Monthly.xlsx,msci-emerging-markets-enhanced-value-index-usd-net.pdf
+990500,MSCI Europe Index,Europe,Reference,msci_local,990500 - MSCI Europe Index  - FULL - 1998-12-31 - 2026-07-03  - Monthly.xlsx,msci-europe-index-net.pdf
+703764,MSCI Europe Momentum Index,Europe,Momentum,msci_local,703764 - MSCI Europe Momentum Index  - FULL - 1997-01-31 - 2026-07-03  - Monthly.xlsx,msci-europe-momentum-index-usd-net.pdf
+705382,MSCI Europe Enhanced Value Index,Europe,Enhanced Value,msci_local,705382 - MSCI Europe Enhanced Value Index  - FULL - 1997-11-28 - 2026-07-03  - Monthly.xlsx,msci-europe-enhanced-value-index-usd-net.pdf
+899800,MSCI AC Asia ex Japan Index,AC_Asia_ex_Japan,Reference,msci_local,899800 - MSCI AC Asia ex Japan Index  - FULL - 1998-12-31 - 2026-07-03  - Monthly.xlsx,msci-ac-asia-ex-japan-index-usd-net.pdf
+703774,MSCI AC Asia ex Japan Momentum Index,AC_Asia_ex_Japan,Momentum,msci_local_webweights,703774 - MSCI AC Asia ex Japan Momentum Index  - FULL - 1997-01-31 - 2026-07-03  - Monthly.xlsx,
+707700,MSCI AC Asia ex Japan Enhanced Value Index,AC_Asia_ex_Japan,Enhanced Value,msci_local_webweights,707700 - MSCI AC Asia ex Japan Enhanced Value Index  - FULL - 1997-11-28 - 2026-07-03  - Monthly.xlsx,

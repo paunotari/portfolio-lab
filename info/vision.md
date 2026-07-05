@@ -3,6 +3,7 @@
 > Status: north-star document. The current codebase (see [CLAUDE.md](CLAUDE.md)) is the empirical
 > foundation — step 1 of this vision. This file records where we are going so it can be amplified
 > and checked over time. It is intentionally broader than what is built today.
+> For the concrete, checkable task list, see **[TODO.md](TODO.md)**.
 
 ## The problem
 

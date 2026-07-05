@@ -5,6 +5,7 @@ current working directory. Paths are derived from this file's location, so the p
 the same regardless of where it is invoked from.
 """
 from __future__ import annotations
+import csv
 from pathlib import Path
 
 # --- paths ---------------------------------------------------------------
@@ -22,6 +23,7 @@ except ImportError:
 DATA_DIR = PROJECT_ROOT / "data"
 RAW_DIR = DATA_DIR / "raw" / "msci_indexes"             # region subfolders: xlsx + pdf
 PROCESSED_DIR = DATA_DIR / "processed"                  # tidy CSVs (regenerable)
+INDEX_REGISTRY = DATA_DIR / "index_registry.csv"        # the manifest of tracked indexes
 
 OUTPUT_DIR = PROJECT_ROOT / "outputs"
 ANALYTICS_DIR = OUTPUT_DIR / "analytics"
@@ -103,3 +105,17 @@ def factor_type(index_name: str) -> str:
     if "quality" in n:
         return "Quality"
     return "Reference"
+
+
+def load_registry() -> list[dict]:
+    """Read the index registry (data/index_registry.csv) — the single source of truth for which
+    indexes are tracked and where each one's data comes from. One dict per index with keys:
+    index_id, display_name, region, factor_type, source, returns_file, weights_file.
+
+    To add an index: append a row here and drop its file(s) in data/raw/msci_indexes/<region>/.
+    'source' selects how ingest loads it (msci_local = xlsx+pdf in the region folder;
+    msci_local_webweights = xlsx local, weights supplied by ingest/asia_images.py). A future
+    'api' source would add one branch in ingest without changing this contract.
+    """
+    with open(INDEX_REGISTRY, newline="") as f:
+        return list(csv.DictReader(f))
