@@ -132,6 +132,38 @@ Tier-1/Tier-2 layering principle.
       forecasts, EM-fitted HMMs, ML) = Phase 4, non-FRED data. v2 stays entirely on the allowed
       side.
 
+### Next: 2–3 month probabilistic quadrant outlook (backtest evidence gathered 2026-07)
+
+A walk-forward backtest (~230 eval months, warmup 120) of the dashboard arrow vs alternatives was
+run 2026-07 to decide how to upgrade "a simple arrow" into a proper short-horizon cone. Findings
+worth keeping (statistics only, no ML — all within the caveat-#11 line):
+
+- **Arrow (momentum extrapolation):** best *hard* single-quadrant call at every horizon — h=3 hit
+  rate 57.4% vs 51.7% persistence — and the best transition-catcher (21.6% of actual quadrant
+  flips at h=3 vs 0% for persistence). BUT in score space it overshoots: extrapolated dot position
+  is *worse* than assuming no movement (MAE 1.50 vs 1.10 at h=3). Direction useful, length
+  exaggerated.
+- **Markov h-step (P^h from the transition matrix):** argmax collapses to persistence, but as a
+  *probability distribution* it is the best-calibrated forecast at every horizon (Brier 0.168 at
+  h=3 vs 0.241 persistence / 0.213 arrow). This is the natural "cone" — and the matrix is already
+  computed and baked into the dashboard.
+- **Analog (k=20 nearest past months by scores+velocities):** competitive Brier (0.175 at h=3),
+  catches 15–20% of transitions, and doubles as narrative ("today most resembles …, here's what
+  followed"). Slight full-sample standardization leakage in the quick test — redo clean if built.
+
+- [ ] Dashboard: add a **3-month probabilistic outlook** to the Macro State tab — P^3 applied to
+      today's soft probability vector, shown as probability bars ("in 3 months: X% still
+      Stagflation, Y% Deflationary bust…"). Cheapest win, best-calibrated method, zero new math.
+- [ ] Quadrant chart: replace/augment the raw arrow with an **empirical cone/fan** — percentile
+      envelope (e.g. 25–75 + 10–90) of realized (Δgrowth, Δinflation) over the next 3 months
+      across all historical months in the current state (or the k analogs). Honest range instead
+      of a single overshooting line; keep the arrow direction, damp its length.
+- [ ] Optional Tier-2: an **"analog months" panel** — list the k most similar past months and
+      their forward paths on the quadrant chart. Interpretable, counting-only.
+- ML verdict (recorded): not warranted at this horizon — ~350 monthly obs and ~50–80 observed
+  transitions is too small for ML to beat counting; more/longer/higher-frequency data (non-FRED,
+  Phase 4) would matter more than model class.
+
 ## Data sources
 
 - [x] **Index registry** (`data/index_registry.csv`) — explicit manifest of tracked indexes;
