@@ -36,6 +36,13 @@ _(both done — see Portfolio optimization below for what builds on them next)_
 
 ## Portfolio optimization (vision.md Phase 3)
 
+> **Design is written up separately in [portfolio_optimization.md](portfolio_optimization.md)**
+> (2026-07): three Tier-1 preferences + one optional hard target, normalized-score blend solved
+> with multi-start SLSQP (`scipy` chosen — resolves the backend open question below), regime
+> targeting incl. a maximin "robust across all quadrants" mode, scenario engine as validator,
+> guardrails against hindsight-fitting, and a 3a/3b/3c build order. **To implement next.** The two
+> checklist items below are what that doc plans to deliver.
+
 - [ ] **Design the multi-objective portfolio optimizer.** Goal: given the return/risk/exposure
       data already computed, find weights that best satisfy user-specified objectives, not just
       a single fixed formula. Needs to support, at minimum:
@@ -54,8 +61,10 @@ _(both done — see Portfolio optimization below for what builds on them next)_
     in `portfolio/diversification.py`); a settled set of risk metrics (vol, max DD, maybe CVaR);
     ideally the regime-conditional data from Phase 2 if we want regime-aware optimization, not
     just full-sample optimization.
-  - **Open question (from vision.md):** optimization backend — `scipy.optimize`, `cvxpy`, or
-    `Riskfolio-Lib`. Needs a decision before implementation starts.
+  - ~~**Open question:** optimization backend~~ — **DECIDED: `scipy.optimize`** (multi-start
+    SLSQP). cvxpy can't express max-drawdown / per-regime objectives; Riskfolio-Lib is too heavy
+    and opaque for the house style. Rationale in
+    [portfolio_optimization.md](portfolio_optimization.md) §2.
 - [ ] **Regime-targeted allocation** (the signature feature). Let the user express a desired
       performance profile *per macro regime/quadrant* rather than only an average — e.g. split
       evenly (25/25/25/25 across inflationary/deflationary/growth/stagnation), weight by each
@@ -218,8 +227,8 @@ trends, not just the quadrant summary. Walk-forward results (h=3, k=20, ~230 eva
 
 - Additional macro data APIs beyond FRED (OECD, World Bank, ECB, BLS?).
 - How to define & detect the macro regime **in real time**, not just label history after the fact.
-- Optimization backend choice (`scipy` / `cvxpy` / `Riskfolio-Lib`) — also listed above since it
-  directly blocks the optimizer task.
+- ~~Optimization backend choice (`scipy` / `cvxpy` / `Riskfolio-Lib`)~~ — **RESOLVED: `scipy`**,
+  see [portfolio_optimization.md](portfolio_optimization.md) §2.
 
 ## Deferred / explicitly out of scope for now
 

@@ -3,7 +3,9 @@
 Orientation doc for Claude (or any agent / the author) picking up this repo. Read this first.
 For the *product vision and roadmap*, see [vision.md](vision.md). For the *actionable task
 backlog*, see [TODO.md](TODO.md). For the *conceptual diversification thesis*, see
-[factor-diversification-thesis.md](factor-diversification-thesis.md).
+[factor-diversification-thesis.md](factor-diversification-thesis.md). For the *Phase 3 portfolio
+optimizer design* (agreed, not yet built), see
+[portfolio_optimization.md](portfolio_optimization.md).
 
 ---
 
