@@ -135,7 +135,7 @@ padding:2px 10px;margin:2px;font-size:12px}
        <input type="checkbox" id="analogoverlay"> overlay the 5 closest analogs' actual 3-month paths on the quadrant chart</label>
      <details><summary class="muted" style="cursor:pointer">Show the 10 closest analog months</summary>
        <div id="analogtable" style="margin-top:8px"></div></details>
-     <div class="muted" style="margin-top:8px">The selected month is compared to every other month by position + 6-month velocity of both composite scores (z-scored, nearest-neighbor distance). What those look-alike months did next is counted above — a pure counting cross-check of the Markov outlook, and every analog is a real episode you can inspect.</div>
+     <div class="muted" style="margin-top:8px">The selected month is compared to every other month by position, 6-month velocity AND 3-month acceleration of both composite scores (z-scored nearest-neighbor distance) — trajectory-aware, so a month <i>entering</i> a quadrant doesn't match one <i>exiting</i> it. Richer feature sets (raw indicator trends, index returns) were backtested and performed worse — the composite scores already summarize them. What the look-alike months did next is counted above — a pure counting cross-check of the Markov outlook, and every analog is a real episode you can inspect.</div>
    </div>
    <div class="card"><h2>Macro-state timeline <span class="muted">(which quadrant each month was in, 1997 → latest)</span></h2>
      <div id="statetimeline" style="height:150px"></div>
@@ -502,20 +502,25 @@ function drawCorr(k){const c=DATA.corr[k];
   let quadIdx=QD.length-1;
   function pctile(a,p){const s=[...a].sort((x,y)=>x-y);const k=(s.length-1)*p/100;
     const lo=Math.floor(k),hi=Math.ceil(k);return s[lo]+(s[hi]-s[lo])*(k-lo);}
-  // analog features: position + 6m velocity of both scores, z-scaled by full-sample std
-  const AMo=MM.forecast_momentum_months;
-  const feat=t=>[GS[t],IS[t],(GS[t]-GS[t-AMo])/AMo,(IS[t]-IS[t-AMo])/AMo];
-  const FSD=(()=>{const fs=[];for(let u=AMo;u<QD.length;u++)fs.push(feat(u));
-    return [0,1,2,3].map(j=>{const v=fs.map(f=>f[j]);const m=v.reduce((a,b)=>a+b,0)/v.length;
+  // analog features: position + 6m velocity + 3m acceleration of both scores, z-scaled by
+  // full-sample std. Velocity separates "entering" from "exiting" a quadrant; acceleration was
+  // added after a 2026-07 walk-forward test showed it lifts transition-catching 16%->24% at 3m
+  // (richer feature sets -- raw indicator trends, index returns -- tested WORSE; see info/TODO.md).
+  const AMo=MM.forecast_momentum_months, AMIN=AMo+3;
+  const AV=(a,t)=>(a[t]-a[t-AMo])/AMo;
+  const feat=t=>[GS[t],IS[t],AV(GS,t),AV(IS,t),AV(GS,t)-AV(GS,t-3),AV(IS,t)-AV(IS,t-3)];
+  const NF=6;
+  const FSD=(()=>{const fs=[];for(let u=AMIN;u<QD.length;u++)fs.push(feat(u));
+    return [...Array(NF).keys()].map(j=>{const v=fs.map(f=>f[j]);const m=v.reduce((a,b)=>a+b,0)/v.length;
       return Math.sqrt(v.reduce((a,b)=>a+(b-m)*(b-m),0)/v.length)||1;});})();
   function analogsFor(i){
     const OH=MM.outlook_months,X=MM.analog_exclude_months,K=MM.analog_k;
-    if(i<AMo) return [];
+    if(i<AMIN) return [];
     const fi=feat(i), out=[];
-    for(let u=AMo;u<QD.length-OH;u++){
+    for(let u=AMIN;u<QD.length-OH;u++){
       if(Math.abs(u-i)<=X) continue;
       const fu=feat(u); let d=0;
-      for(let j=0;j<4;j++){const z=(fu[j]-fi[j])/FSD[j];d+=z*z;}
+      for(let j=0;j<NF;j++){const z=(fu[j]-fi[j])/FSD[j];d+=z*z;}
       out.push([u,Math.sqrt(d)]);
     }
     return out.sort((a,b)=>a[1]-b[1]).slice(0,K);
@@ -656,7 +661,7 @@ function drawCorr(k){const c=DATA.corr[k];
      +`Best-calibrated method in the same backtest (Brier 0.168 at 3 months vs 0.241 persistence). Matrix power of counted history — nothing fitted.<br>`
      +`<b>Cone (shaded boxes + faint dots).</b> Every past month sharing the selected month's hard state contributes its real (Δgrowth, Δinflation) over the following ${MM.outlook_months} months, re-anchored to the selected position. `
      +`Inner box = middle 50% of those moves per axis, outer = middle 80%; each faint dot is one actual historical outcome, colored by the quadrant it landed in.<br>`
-     +`<b>Analogs.</b> The ${MM.analog_k} nearest past months by position + ${MM.forecast_momentum_months}-month velocity of both scores (z-scaled Euclidean distance, months within ±${MM.analog_exclude_months} of the anchor excluded). `
+     +`<b>Analogs.</b> The ${MM.analog_k} nearest past months by position, ${MM.forecast_momentum_months}-month velocity and 3-month acceleration of both scores (z-scaled Euclidean distance, months within ±${MM.analog_exclude_months} of the anchor excluded) — trajectory-aware, so entering vs exiting a quadrant are different situations. `
      +`Their outcomes ${MM.outlook_months} months later are counted in the panel below the chart — an independent, counting-only cross-check of the Markov outlook.<br>`
      +`<b>Lag.</b> Positions are as fresh as the released macro prints — industrial production and core PCE lag ~1–2 months.<br>`
      +`<b>Known simplifications.</b> z-scoring uses each component's full-sample std (a mild look-ahead that only affects scale, never the trend's direction); `

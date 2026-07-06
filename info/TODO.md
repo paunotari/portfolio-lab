@@ -168,6 +168,28 @@ worth keeping (statistics only, no ML — all within the caveat-#11 line):
   transitions is too small for ML to beat counting; more/longer/higher-frequency data (non-FRED,
   Phase 4) would matter more than model class.
 
+**Round 2 (2026-07): "should the prediction condition on more information?" — tested.** User
+hypothesis: analogs/outlook should use trajectory, the underlying macro indicators, and index
+trends, not just the quadrant summary. Walk-forward results (h=3, k=20, ~230 eval months):
+
+- [x] **Trajectory: confirmed, shipped.** Analog features already included 6m velocities
+      (entering ≠ exiting); adding 3m *accelerations* lifted transition-catching 16.2%→24.3% at
+      no calibration cost → now in the dashboard (6-dim feature space).
+- **Raw indicator trends in the k-NN: tested, REJECTED.** Adding the 9 component z-trends made
+  everything worse (hit 42.2%→39.1%, Brier 0.177→0.192); + index features worse still. The
+  composite scores already summarize the indicators — re-adding them as raw dimensions
+  double-counts noise (curse of dimensionality at ~350 candidate months). More conditioning
+  variables ≠ more signal at this sample size; more DATA would be the lever (Phase 4).
+- **Border-distance conditioning: real signal, marginal gain, not implemented.** P(quadrant
+  change within 3m) is 64% for months nearest the border vs 32–40% deepest in the quadrant —
+  the quadrant label alone is indeed "vague." But an 8-state (quadrant × near/deep) transition
+  matrix only improves Brier 0.168→0.161, because the soft-start vector already encodes border
+  proximity. Left out for KISS; revisit if a use-case needs the extra ~4% calibration.
+- **Markov outlook calibration (answer to "is it precise?"):** predicted 10–20% → realized
+  10.6%; 20–30% → 20.7%; 30–40% → 46%; 50–70% → 71%. Mid-range is well calibrated; when it
+  leans hard it is *under*confident (errs safe). Hard 3-month calls are right ~52–57% of the
+  time vs 25% chance — probabilities honest, certainty impossible at this sample.
+
 ## Data sources
 
 - [x] **Index registry** (`data/index_registry.csv`) — explicit manifest of tracked indexes;
