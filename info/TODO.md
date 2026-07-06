@@ -151,15 +151,19 @@ worth keeping (statistics only, no ML — all within the caveat-#11 line):
   catches 15–20% of transitions, and doubles as narrative ("today most resembles …, here's what
   followed"). Slight full-sample standardization leakage in the quick test — redo clean if built.
 
-- [ ] Dashboard: add a **3-month probabilistic outlook** to the Macro State tab — P^3 applied to
-      today's soft probability vector, shown as probability bars ("in 3 months: X% still
-      Stagflation, Y% Deflationary bust…"). Cheapest win, best-calibrated method, zero new math.
-- [ ] Quadrant chart: replace/augment the raw arrow with an **empirical cone/fan** — percentile
-      envelope (e.g. 25–75 + 10–90) of realized (Δgrowth, Δinflation) over the next 3 months
-      across all historical months in the current state (or the k analogs). Honest range instead
-      of a single overshooting line; keep the arrow direction, damp its length.
-- [ ] Optional Tier-2: an **"analog months" panel** — list the k most similar past months and
-      their forward paths on the quadrant chart. Interpretable, counting-only.
+- [x] Dashboard: **3-month probabilistic outlook** — DONE 2026-07. `quadrant_outlook()` (soft
+      vector × P^3) in the report; outlook pills in the verdict card AND a per-selected-month
+      outlook line on the quadrant chart (recomputed client-side from the baked matrix, so it
+      follows the date picker).
+- [x] Quadrant chart **empirical cone** — DONE 2026-07. 25–75 + 10–90 percentile boxes of
+      realized (Δg, Δi) over the next 3 months across all months sharing the selected month's
+      state, plus the individual re-anchored outcome dots colored by landing quadrant. Arrow
+      kept at FULL length but relabeled direction-only: the damping sweep showed λ=1 gives the
+      best hard quadrant call while ANY λ>0 worsens position MAE — so no damping constant,
+      direction from the arrow, range from the cone.
+- [x] **"Analog months" panel** — DONE 2026-07. k=20 nearest past months (scores + 6m
+      velocities, z-scaled, ±6m exclusion), outcome summary pills, top-10 table, optional
+      top-5 path overlay on the chart. Follows the date picker.
 - ML verdict (recorded): not warranted at this horizon — ~350 monthly obs and ~50–80 observed
   transitions is too small for ML to beat counting; more/longer/higher-frequency data (non-FRED,
   Phase 4) would matter more than model class.

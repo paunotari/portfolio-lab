@@ -140,6 +140,9 @@ def _collect_data() -> dict:
                 "trend_lag_months": C.MACRO_STATE_TREND_LAG_MONTHS,
                 "forecast_momentum_months": C.MACRO_STATE_FORECAST_MOMENTUM_MONTHS,
                 "forecast_horizon_months": C.MACRO_STATE_FORECAST_HORIZON_MONTHS,
+                "outlook_months": C.MACRO_STATE_OUTLOOK_MONTHS,
+                "analog_k": C.MACRO_STATE_ANALOG_K,
+                "analog_exclude_months": C.MACRO_STATE_ANALOG_EXCLUDE_MONTHS,
             },
         }
     if C.SCENARIO_SUMMARY.exists():

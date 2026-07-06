@@ -245,6 +245,22 @@ def nber_overlap(states: pd.DataFrame) -> pd.Series:
     return rec.groupby(states.state).mean()
 
 
+def quadrant_outlook(states: pd.DataFrame, trans: pd.DataFrame, months: int = None) -> dict:
+    """P(quadrant in `months` months) = soft probability vector today x transition matrix^months.
+
+    Chosen by a 2026-07 walk-forward backtest (info/TODO.md): of persistence, momentum-arrow
+    extrapolation, Markov and nearest-analog methods, this h-step Markov distribution had the
+    best calibration (Brier score) at every tested horizon. Starting from the SOFT vector (not
+    the one-hot hard label) carries today's border-straddling uncertainty into the outlook.
+    Still counting statistics -- matrix power of empirical transition counts, nothing fitted.
+    """
+    months = months or C.MACRO_STATE_OUTLOOK_MONTHS
+    v = states.iloc[-1][[PROB_COLS[s] for s in STATE_ORDER]].values.astype(float)
+    P = trans.loc[STATE_ORDER, STATE_ORDER].values
+    out = v @ np.linalg.matrix_power(P, months)
+    return dict(zip(STATE_ORDER, out.astype(float)))
+
+
 def current_state(states: pd.DataFrame, trans: pd.DataFrame) -> dict:
     last = states.iloc[-1]
     prior = states.iloc[-1 - C.MACRO_STATE_TREND_LAG_MONTHS] if len(states) > C.MACRO_STATE_TREND_LAG_MONTHS else None
@@ -283,7 +299,8 @@ def run():
     attr.to_csv(C.MACRO_STATE_FACTOR_ATTRIBUTION, index=False)
 
     cur = current_state(states, trans)
-    _write_report(states, perf, attr, cur, trans)
+    outlook = quadrant_outlook(states, trans)
+    _write_report(states, perf, attr, cur, trans, outlook)
 
     freq = states.state.value_counts(normalize=True) * 100
     print(f"[macro_state] {len(states)} months classified ({states.index[0].date()}.."
@@ -294,7 +311,7 @@ def run():
         print(f"    {pct:5.1f}%  {s}")
 
 
-def _write_report(states, perf, attr, cur, trans):
+def _write_report(states, perf, attr, cur, trans, outlook):
     def pct(x): return "n/a" if pd.isna(x) else f"{x*100:,.1f}%"
     freq = states.state.value_counts(normalize=True) * 100
     g_parts = ", ".join(f"{n} ({'+' if s > 0 else '-'})" for n, s in C.MACRO_STATE_GROWTH_COMPONENTS.items())
@@ -325,7 +342,13 @@ def _write_report(states, perf, attr, cur, trans):
          f"- Persistence: historically this state continues month-over-month with "
          f"{pct(cur['stay_prob'])} probability (expected duration ~{cur['expected_duration_months']:.1f} months); "
          f"most likely next state: {cur['likely_next']}\n",
-         "## Historical frequency of each state\n"]
+         f"## {C.MACRO_STATE_OUTLOOK_MONTHS}-month outlook (Markov)\n",
+         "Soft probability vector today x transition matrix^"
+         f"{C.MACRO_STATE_OUTLOOK_MONTHS}. Best-calibrated method in the 2026-07 walk-forward "
+         "backtest (see info/TODO.md) — counting statistics, not a fitted model.\n"]
+    for s, p in sorted(outlook.items(), key=lambda x: -x[1]):
+        L.append(f"- {pct(p)}  {s}")
+    L += ["", "## Historical frequency of each state\n"]
     for s, p in freq.items():
         L.append(f"- {p:.1f}%  {s}")
 

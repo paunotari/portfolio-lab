@@ -91,9 +91,22 @@ MACRO_STATE_SMOOTH_MONTHS = 3
 MACRO_STATE_TREND_LAG_MONTHS = 6
 # dashboard forecast arrow: linear momentum extrapolation of the composite scores' average
 # monthly change over the last MOMENTUM months, projected HORIZON months ahead (a trend read
-# computed live in the browser, not a fitted model -- see dashboard/template.py)
+# computed live in the browser, not a fitted model -- see dashboard/template.py).
+# Walk-forward backtest (2026-07, see info/TODO.md): the FULL-length arrow gives the best hard
+# quadrant call (57.4% at 3m vs 51.7% persistence) but ANY extrapolated length worsens the
+# position estimate vs no-change -- so the arrow is displayed as DIRECTION-ONLY guidance and the
+# honest position range comes from the empirical cone + Markov outlook below.
 MACRO_STATE_FORECAST_MOMENTUM_MONTHS = 6
 MACRO_STATE_FORECAST_HORIZON_MONTHS = 6
+
+# short-horizon probabilistic outlook + analogs (backtest-selected methods, 2026-07):
+# outlook = transition matrix ^ OUTLOOK_MONTHS applied to the soft probability vector (best
+# Brier score of all tested methods); analogs = the K nearest past months by (scores + 6m
+# velocities, z-scored), excluding +/- ANALOG_EXCLUDE months around the anchor so "last month"
+# doesn't trivially count as an analog.
+MACRO_STATE_OUTLOOK_MONTHS = 3
+MACRO_STATE_ANALOG_K = 20
+MACRO_STATE_ANALOG_EXCLUDE_MONTHS = 6
 
 # scenario simulation (analytics/scenario.py) output file handles
 SCENARIO_DIR = ANALYTICS_DIR / "scenario"

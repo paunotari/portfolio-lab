@@ -120,12 +120,22 @@ padding:2px 10px;margin:2px;font-size:12px}
          <option value="36">36 months</option><option value="0">full history</option></select></label>
        <span class="muted" id="quadNote"></span>
      </div>
+     <div id="quadOutlook" style="margin:2px 0 6px"></div>
      <div id="quadplot" style="height:520px"></div>
      <div class="muted">Dot = position as of the selected month (border-straddling positions are real — near 0 means genuinely between quadrants).
-       Trail = the actual path taken to get there. Arrow = momentum extrapolation, <b>a trend read, not a model forecast</b>.
+       Trail = the actual path taken to get there. Arrow = <b>direction-only</b> momentum read (backtested: its direction helps call the next quadrant, its length overstates the move).
+       Shaded boxes + faint dots = the honest range: where months like this one actually ended up 3 months later (inner box = middle 50% of history, outer = middle 80%; dots colored by the quadrant they landed in).
        Pick a past month to also see the actual forward path from that point (hollow dots).</div>
      <details style="margin-top:8px"><summary class="muted" style="cursor:pointer">How is this computed? (full methodology)</summary>
        <div class="muted" id="quadmethod" style="margin-top:8px;line-height:1.7"></div></details>
+   </div>
+   <div class="card"><h2>Similar past months <span class="muted">(analogs — the "tale" behind the outlook, follows the month picker above)</span></h2>
+     <div id="analogsummary"></div>
+     <label class="muted" style="display:block;margin:8px 0;cursor:pointer">
+       <input type="checkbox" id="analogoverlay"> overlay the 5 closest analogs' actual 3-month paths on the quadrant chart</label>
+     <details><summary class="muted" style="cursor:pointer">Show the 10 closest analog months</summary>
+       <div id="analogtable" style="margin-top:8px"></div></details>
+     <div class="muted" style="margin-top:8px">The selected month is compared to every other month by position + 6-month velocity of both composite scores (z-scored, nearest-neighbor distance). What those look-alike months did next is counted above — a pure counting cross-check of the Markov outlook, and every analog is a real episode you can inspect.</div>
    </div>
    <div class="card"><h2>Macro-state timeline <span class="muted">(which quadrant each month was in, 1997 → latest)</span></h2>
      <div id="statetimeline" style="height:150px"></div>
@@ -457,14 +467,29 @@ function drawCorr(k){const c=DATA.corr[k];
     p_stagflation:'Stagflation (growth-inflation squeeze)',
     p_deflationary_bust:'Deflationary bust (recession/slowdown)'};
   const short=s=>s.split(' (')[0];
+  const STATE2PROB=Object.fromEntries(Object.entries(PROB2STATE).map(([c,s])=>[s,c]));
+  const TR=MS.transitions;
+  // h-step Markov outlook: month t's SOFT probability vector x transition matrix^h — the
+  // best-calibrated short-horizon method in the 2026-07 walk-forward backtest (info/TODO.md).
+  function outlookFrom(t,h){
+    if(!TR) return null;
+    let v=TR.states.map(s=>MS.probs[STATE2PROB[s]][t]);
+    for(let step=0;step<h;step++)
+      v=TR.states.map((_,k)=>v.reduce((a,x,j)=>a+x*TR.z[j][k],0));
+    return TR.states.map((s,j)=>[s,v[j]]).sort((a,b)=>b[1]-a[1]);
+  }
+  const statePills=arr=>arr.map(([s,p])=>`<span class="pill" style="border-color:${SCOLOR[s]}">${short(s)} ${(p*100).toFixed(0)}%</span>`).join(' ');
   const probPills=cur.probs?Object.entries(cur.probs).sort((a,b)=>b[1]-a[1])
     .map(([c,p])=>`<span class="pill" style="border-color:${SCOLOR[PROB2STATE[c]]}">${short(PROB2STATE[c])} ${(p*100).toFixed(0)}%</span>`).join(' '):'';
+  const outCur=outlookFrom(MS.dates.length-1,MS.method.outlook_months);
+  const outlookLine=outCur?`<div style="margin:0 0 10px">Where this is heading — ${MS.method.outlook_months}-month outlook (Markov, backtested): ${statePills(outCur)}</div>`:'';
   const persist=(cur.stay_prob!=null)
     ?`<div class="muted" style="margin-top:6px">Persistence: historically this state continues month-over-month with ${(cur.stay_prob*100).toFixed(0)}% probability (expected duration ~${cur.expected_duration} months).</div>`:'';
   $('#statecur').innerHTML=
     `<div style="font-size:22px;font-weight:650;color:${SCOLOR[cur.state]||'#e6ebf5'}">${cur.state}</div>`
    +`<div class="muted" style="margin:4px 0 10px">as of ${cur.as_of} · in this state for ${cur.months_in_state} consecutive month(s)</div>`
    +(probPills?`<div style="margin:0 0 10px">Soft read (not a forced bucket): ${probPills}</div>`:'')
+   +outlookLine
    +`<div class="metric">Growth <b>${cur.growth_dir}</b><div class="muted">composite score ${cur.growth_score>0?'+':''}${cur.growth_score} · indpro ${cur.growth_value}% YoY</div></div>`
    +`<div class="metric">Inflation <b>${cur.inflation_dir}</b><div class="muted">composite score ${cur.inflation_score>0?'+':''}${cur.inflation_score} · core PCE ${cur.inflation_value}% YoY</div></div>`
    +persist
@@ -475,6 +500,42 @@ function drawCorr(k){const c=DATA.corr[k];
   // (1b) 4-quadrant position chart: current dot + trail + date picker + momentum arrow
   const GS=MS.growth_score, IS=MS.inflation_score, QD=MS.dates, MM=MS.method;
   let quadIdx=QD.length-1;
+  function pctile(a,p){const s=[...a].sort((x,y)=>x-y);const k=(s.length-1)*p/100;
+    const lo=Math.floor(k),hi=Math.ceil(k);return s[lo]+(s[hi]-s[lo])*(k-lo);}
+  // analog features: position + 6m velocity of both scores, z-scaled by full-sample std
+  const AMo=MM.forecast_momentum_months;
+  const feat=t=>[GS[t],IS[t],(GS[t]-GS[t-AMo])/AMo,(IS[t]-IS[t-AMo])/AMo];
+  const FSD=(()=>{const fs=[];for(let u=AMo;u<QD.length;u++)fs.push(feat(u));
+    return [0,1,2,3].map(j=>{const v=fs.map(f=>f[j]);const m=v.reduce((a,b)=>a+b,0)/v.length;
+      return Math.sqrt(v.reduce((a,b)=>a+(b-m)*(b-m),0)/v.length)||1;});})();
+  function analogsFor(i){
+    const OH=MM.outlook_months,X=MM.analog_exclude_months,K=MM.analog_k;
+    if(i<AMo) return [];
+    const fi=feat(i), out=[];
+    for(let u=AMo;u<QD.length-OH;u++){
+      if(Math.abs(u-i)<=X) continue;
+      const fu=feat(u); let d=0;
+      for(let j=0;j<4;j++){const z=(fu[j]-fi[j])/FSD[j];d+=z*z;}
+      out.push([u,Math.sqrt(d)]);
+    }
+    return out.sort((a,b)=>a[1]-b[1]).slice(0,K);
+  }
+  function renderAnalogs(i){
+    const OH=MM.outlook_months, an=analogsFor(i);
+    if(!an.length){$('#analogsummary').innerHTML='<div class="muted">Not enough history at this date for analogs.</div>';
+      $('#analogtable').innerHTML='';return;}
+    const counts={};
+    an.forEach(([u])=>{const s=MS.states[u+OH];counts[s]=(counts[s]||0)+1;});
+    $('#analogsummary').innerHTML=`Of the ${an.length} past months most similar to ${QD[i]}, ${OH} months later they were in: `
+      +statePills(Object.entries(counts).map(([s,n])=>[s,n/an.length]).sort((a,b)=>b[1]-a[1]));
+    let h='<table><thead><tr><th style="text-align:left">Analog month</th><th style="text-align:left">State then</th>'
+      +`<th style="text-align:left">State ${OH}m later</th><th>Similarity distance</th></tr></thead><tbody>`;
+    an.slice(0,10).forEach(([u,d])=>{h+=`<tr><td>${QD[u]}</td>`
+      +`<td style="text-align:left;color:${SCOLOR[MS.states[u]]}">${short(MS.states[u])}</td>`
+      +`<td style="text-align:left;color:${SCOLOR[MS.states[u+OH]]}">${short(MS.states[u+OH])}</td>`
+      +`<td>${d.toFixed(2)}</td></tr>`;});
+    $('#analogtable').innerHTML=h+'</tbody></table>';
+  }
   function quadHover(i){
     const best=Object.entries(MS.probs).reduce((a,[c,v])=>v[i]>a[1]?[c,v[i]]:a,[null,-1]);
     return `${QD[i]} — ${MS.states[i]}<br>growth ${GS[i]>0?'+':''}${GS[i]} · inflation ${IS[i]>0?'+':''}${IS[i]}`
@@ -497,6 +558,26 @@ function drawCorr(k){const c=DATA.corr[k];
     const annotations=[qlab(-R*.55,R*.92,SORDER[0]),qlab(R*.55,R*.92,SORDER[1]),
       qlab(R*.55,-R*.92,SORDER[2]),qlab(-R*.55,-R*.92,SORDER[3])];
     const traces=[];
+    // empirical cone: where months with this hard state actually sat OH months later, re-anchored
+    // to the selected position. Boxes = middle 50% / 80% of those historical moves; faint dots =
+    // the individual outcomes, colored by the quadrant they landed in.
+    const OH=MM.outlook_months, st=MS.states[i];
+    const dg=[],di=[];
+    for(let u=0;u<QD.length-OH;u++)
+      if(u!==i&&MS.states[u]===st){dg.push(GS[u+OH]-GS[u]);di.push(IS[u+OH]-IS[u]);}
+    if(dg.length>=15){
+      const box=(pl,ph,fill,line)=>shapes.push({type:'rect',
+        x0:IS[i]+pctile(di,pl),x1:IS[i]+pctile(di,ph),
+        y0:GS[i]+pctile(dg,pl),y1:GS[i]+pctile(dg,ph),
+        fillcolor:fill,line:{color:line,width:1,dash:'dot'}});
+      box(10,90,'rgba(230,235,245,.04)','rgba(230,235,245,.30)');
+      box(25,75,'rgba(230,235,245,.07)','rgba(230,235,245,.45)');
+      const dx=di.map(v=>IS[i]+v), dy=dg.map(v=>GS[i]+v);
+      traces.push({x:dx,y:dy,mode:'markers',
+        marker:{size:4,opacity:.35,color:dx.map((x,k)=>SCOLOR[SORDER[(dy[k]>0)?(x<0?0:1):(x<0?3:2)]])},
+        hovertext:dx.map(()=>`a real ${OH}-month move from a past ${short(st)} month, re-anchored here`),
+        hoverinfo:'text',showlegend:false});
+    }
     // trail: the actual path into the selected month (older = smaller/fainter)
     const ti=[...Array(i-i0+1).keys()].map(k=>i0+k);
     traces.push({x:ti.map(k=>IS[k]),y:ti.map(k=>GS[k]),mode:'lines+markers',
@@ -524,6 +605,18 @@ function drawCorr(k){const c=DATA.corr[k];
         hovertext:[`momentum read: where the last ${Mo}m trend carries the scores in ${H} months<br>(linear extrapolation — not a model forecast)`],
         hoverinfo:'text',showlegend:false});
     }
+    // overlay the closest analogs' actual OH-month paths (at their own historical positions)
+    if($('#analogoverlay').checked){
+      analogsFor(i).slice(0,5).forEach(([u])=>{
+        const px=[],py=[],ht=[];
+        for(let k=0;k<=OH;k++){px.push(IS[u+k]);py.push(GS[u+k]);
+          ht.push(`analog ${QD[u]} +${k}m — ${short(MS.states[u+k])}`);}
+        traces.push({x:px,y:py,mode:'lines+markers',
+          line:{color:'rgba(199,146,255,.55)',width:1,dash:'dash'},
+          marker:{size:px.map((_,k)=>k===OH?7:4),color:'rgba(199,146,255,.7)'},
+          hovertext:ht,hoverinfo:'text',showlegend:false});
+      });
+    }
     // the selected month itself, on top
     traces.push({x:[IS[i]],y:[GS[i]],mode:'markers',
       marker:{size:16,color:SCOLOR[MS.states[i]],line:{color:'#e6ebf5',width:2}},
@@ -531,6 +624,9 @@ function drawCorr(k){const c=DATA.corr[k];
     const best=Object.entries(MS.probs).reduce((a,[c,v])=>v[i]>a[1]?[c,v[i]]:a,[null,-1]);
     $('#quadNote').textContent=`${QD[i]} — ${short(MS.states[i])} (${(best[1]*100).toFixed(0)}%)`
       +(i<QD.length-1?' · showing actual forward path':'');
+    const ol=outlookFrom(i,OH);
+    $('#quadOutlook').innerHTML=ol?`<span class="muted">${OH}-month Markov outlook from ${QD[i]}:</span> ${statePills(ol)}`:'';
+    renderAnalogs(i);
     Plotly.react('quadplot',traces,{...P,margin:{l:60,r:20,t:10,b:50},shapes,annotations,
       xaxis:{title:'Inflation trend → (composite score, σ units)',range:[-R,R],gridcolor:'#1c2436',zeroline:false},
       yaxis:{title:'Growth trend →',range:[-R,R],gridcolor:'#1c2436',zeroline:false}},
@@ -542,6 +638,7 @@ function drawCorr(k){const c=DATA.corr[k];
     inp.onchange=()=>{ if(!inp.value) return;
       let k=QD.length-1; while(k>0&&QD[k].slice(0,7)>inp.value)k--; quadIdx=k; drawQuad(); };
     $('#quadTrail').onchange=drawQuad;
+    $('#analogoverlay').onchange=drawQuad;
     const comps=o=>Object.entries(o).map(([n,s])=>`${n} (${s>0?'+':'−'})`).join(', ');
     $('#quadmethod').innerHTML=
       `<b>Axes.</b> Each axis is a composite <i>trend</i> score, in standard-deviation units. Per component: `
@@ -552,11 +649,19 @@ function drawCorr(k){const c=DATA.corr[k];
      +`<b>Inflation components:</b> ${comps(MM.inflation_components)} — core_pce_yoy required.<br>`
      +`<b>Soft probabilities.</b> p(growth accelerating) = Φ(growth score) (normal CDF: score 0 → 50/50, +1σ → 84%); same for inflation; `
      +`quadrant probability = product of the two. The hard label (timeline, per-state performance, scenarios) is simply the most probable quadrant — the sign of the two scores.<br>`
-     +`<b>Momentum arrow.</b> Average monthly change of each score over the last ${MM.forecast_momentum_months} months, projected ${MM.forecast_horizon_months} months ahead. `
-     +`Pure linear extrapolation of recent momentum — deliberately not a fitted/predictive model (FRED terms of use; see info/CLAUDE.md).<br>`
+     +`<b>Momentum arrow — direction only.</b> Average monthly change of each score over the last ${MM.forecast_momentum_months} months, projected ${MM.forecast_horizon_months} months ahead. `
+     +`A walk-forward backtest (~230 months) found its <i>direction</i> gives the best single-quadrant call (57% at 3 months vs 52% for "no change") but its <i>length</i> overstates the real move — `
+     +`any extrapolated length predicts the dot's position worse than assuming no movement. Read the arrow as "which way we're leaning," never "where we'll be."<br>`
+     +`<b>${MM.outlook_months}-month Markov outlook.</b> The selected month's soft probability vector multiplied by the empirical transition matrix ${MM.outlook_months} times (P^${MM.outlook_months}). `
+     +`Best-calibrated method in the same backtest (Brier 0.168 at 3 months vs 0.241 persistence). Matrix power of counted history — nothing fitted.<br>`
+     +`<b>Cone (shaded boxes + faint dots).</b> Every past month sharing the selected month's hard state contributes its real (Δgrowth, Δinflation) over the following ${MM.outlook_months} months, re-anchored to the selected position. `
+     +`Inner box = middle 50% of those moves per axis, outer = middle 80%; each faint dot is one actual historical outcome, colored by the quadrant it landed in.<br>`
+     +`<b>Analogs.</b> The ${MM.analog_k} nearest past months by position + ${MM.forecast_momentum_months}-month velocity of both scores (z-scaled Euclidean distance, months within ±${MM.analog_exclude_months} of the anchor excluded). `
+     +`Their outcomes ${MM.outlook_months} months later are counted in the panel below the chart — an independent, counting-only cross-check of the Markov outlook.<br>`
      +`<b>Lag.</b> Positions are as fresh as the released macro prints — industrial production and core PCE lag ~1–2 months.<br>`
      +`<b>Known simplifications.</b> z-scoring uses each component's full-sample std (a mild look-ahead that only affects scale, never the trend's direction); `
-     +`the two axes are treated as independent when multiplying probabilities. Full method + transition matrix: outputs/analytics/macro_state/REPORT_macro_state.md.`;
+     +`the two axes are treated as independent when multiplying probabilities; when exploring a past date, the transition matrix, cone pool and analog search use the full 1997→today sample (fine for exploration, not a true out-of-sample replay — the backtest that validated these methods WAS walk-forward). `
+     +`Full method + transition matrix: outputs/analytics/macro_state/REPORT_macro_state.md.`;
     drawQuad();
   })();
   function resetQuad(){const inp=$('#quadDate');inp.value=inp.max;quadIdx=QD.length-1;drawQuad();}
