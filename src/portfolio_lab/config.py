@@ -63,15 +63,37 @@ MACRO_STATE_DIR = ANALYTICS_DIR / "macro_state"
 MACRO_STATE_MONTHLY = MACRO_STATE_DIR / "macro_state_monthly.csv"
 MACRO_STATE_PERFORMANCE = MACRO_STATE_DIR / "macro_state_performance.csv"
 MACRO_STATE_FACTOR_ATTRIBUTION = MACRO_STATE_DIR / "macro_state_factor_attribution.csv"
+MACRO_STATE_TRANSITIONS = MACRO_STATE_DIR / "macro_state_transitions.csv"
 MACRO_STATE_REPORT = MACRO_STATE_DIR / "REPORT_macro_state.md"
 
-# 4-quadrant classifier settings: growth = indpro_yoy, inflation = core_pce_yoy (Fed's preferred
-# gauge). Trend = smoothed value now vs smoothed value N months ago (accelerating/decelerating,
-# not the raw level) -- this is the standard growth/inflation quadrant framework.
-MACRO_STATE_GROWTH_INDICATOR = "indpro_yoy"
-MACRO_STATE_INFLATION_INDICATOR = "core_pce_yoy"
+# 4-quadrant classifier settings. Growth and inflation are each a COMPOSITE of several
+# indicators' trends (smoothed value now vs N months ago, z-scored per indicator, sign-adjusted,
+# averaged) -- not a single hard-thresholded series. The map value is the SIGN: +1 means "this
+# indicator rising = growth (or inflation) accelerating," -1 the opposite (e.g. unemployment
+# rising = growth decelerating). The *_PRIMARY indicator must be present for a month to be
+# classified at all; the other components are optional extras (they have shorter histories).
+MACRO_STATE_GROWTH_PRIMARY = "indpro_yoy"
+MACRO_STATE_GROWTH_COMPONENTS = {
+    "indpro_yoy": +1,       # industrial production growth (primary real-activity proxy)
+    "unemployment": -1,     # labor market (rising unemployment = slowing growth)
+    "yc_10y_2y": +1,        # yield-curve slope (steepening = improving growth expectations)
+    "vix": -1,              # equity risk stress (rising VIX = deteriorating environment)
+    "baa10y_spread": -1,    # credit stress (widening spreads = deteriorating growth), 1986+
+}
+MACRO_STATE_INFLATION_PRIMARY = "core_pce_yoy"
+MACRO_STATE_INFLATION_COMPONENTS = {
+    "core_pce_yoy": +1,     # Fed's preferred gauge (primary)
+    "cpi_yoy": +1,          # headline CPI
+    "ppi_commodities_yoy": +1,  # pipeline/commodity pressure
+    "breakeven_10y": +1,    # market-implied inflation expectations, 2003+
+}
 MACRO_STATE_SMOOTH_MONTHS = 3
 MACRO_STATE_TREND_LAG_MONTHS = 6
+# dashboard forecast arrow: linear momentum extrapolation of the composite scores' average
+# monthly change over the last MOMENTUM months, projected HORIZON months ahead (a trend read
+# computed live in the browser, not a fitted model -- see dashboard/template.py)
+MACRO_STATE_FORECAST_MOMENTUM_MONTHS = 6
+MACRO_STATE_FORECAST_HORIZON_MONTHS = 6
 
 # scenario simulation (analytics/scenario.py) output file handles
 SCENARIO_DIR = ANALYTICS_DIR / "scenario"

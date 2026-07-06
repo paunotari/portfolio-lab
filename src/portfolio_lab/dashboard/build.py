@@ -100,19 +100,47 @@ def _collect_data() -> dict:
             for k in ("avg_monthly_excess", "hit_rate"):
                 r[k] = float(r[k])
         freq = (ms.state.value_counts(normalize=True) * 100).round(1).to_dict()
+        prob_cols = ["p_goldilocks", "p_reflation", "p_stagflation", "p_deflationary_bust"]
+        # empirical monthly transition matrix (rows/cols in the CSV's canonical state order)
+        transitions = None
+        if C.MACRO_STATE_TRANSITIONS.exists():
+            tm = pd.read_csv(C.MACRO_STATE_TRANSITIONS, index_col=0)
+            transitions = {"states": list(tm.index),
+                           "z": [[round(float(v), 4) for v in row] for row in tm.values]}
+        cur = {
+            "as_of": str(ms.index[-1].date()), "state": last.state,
+            "months_in_state": months_in,
+            "growth_dir": "accelerating" if last.growth_up else "decelerating",
+            "growth_value": round(float(last.growth_value), 2),
+            "growth_score": round(float(last.growth_score), 3),
+            "inflation_dir": "accelerating" if last.inflation_up else "decelerating",
+            "inflation_value": round(float(last.inflation_value), 2),
+            "inflation_score": round(float(last.inflation_score), 3),
+            "probs": {c: round(float(last[c]), 3) for c in prob_cols},
+        }
+        if transitions:
+            stay = float(pd.read_csv(C.MACRO_STATE_TRANSITIONS, index_col=0).loc[last.state, last.state])
+            cur["stay_prob"] = round(stay, 3)
+            cur["expected_duration"] = round(1.0 / (1.0 - stay), 1) if stay < 1 else None
         macro_state = {
             "dates": [str(d.date()) for d in ms.index],
             "states": list(ms.state),
+            "growth_score": [round(float(x), 3) for x in ms.growth_score],
+            "inflation_score": [round(float(x), 3) for x in ms.inflation_score],
+            "probs": {c: [round(float(x), 3) for x in ms[c]] for c in prob_cols},
             "freq": freq,
-            "current": {
-                "as_of": str(ms.index[-1].date()), "state": last.state,
-                "months_in_state": months_in,
-                "growth_dir": "accelerating" if last.growth_up else "decelerating",
-                "growth_value": round(float(last.growth_value), 2),
-                "inflation_dir": "accelerating" if last.inflation_up else "decelerating",
-                "inflation_value": round(float(last.inflation_value), 2),
-            },
+            "transitions": transitions,
+            "current": cur,
             "performance": perf_state, "attribution": attr,
+            # methodology, surfaced verbatim in the dashboard's "how is this computed" block
+            "method": {
+                "growth_components": C.MACRO_STATE_GROWTH_COMPONENTS,
+                "inflation_components": C.MACRO_STATE_INFLATION_COMPONENTS,
+                "smooth_months": C.MACRO_STATE_SMOOTH_MONTHS,
+                "trend_lag_months": C.MACRO_STATE_TREND_LAG_MONTHS,
+                "forecast_momentum_months": C.MACRO_STATE_FORECAST_MOMENTUM_MONTHS,
+                "forecast_horizon_months": C.MACRO_STATE_FORECAST_HORIZON_MONTHS,
+            },
         }
     if C.SCENARIO_SUMMARY.exists():
         rows = _rd(C.SCENARIO_SUMMARY)

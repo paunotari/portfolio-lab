@@ -49,6 +49,11 @@ SERIES = [
     ("T10YIE",       "breakeven_10y",    "level", "10Y breakeven inflation expectation % (1997+)"),
     ("T5YIE",        "breakeven_5y",     "level", "5Y breakeven inflation expectation % (2003+)"),
     ("USREC",        "us_recession",     "level", "NBER US recession indicator (0/1)"),
+    # full-history credit-stress gauge: BAMLH0A0HYM2 above only has data from 2023 (ICE
+    # redistribution restriction — see info/CLAUDE.md caveat), Moody's Baa - 10Y Treasury is the
+    # standard substitute with history from 1986. Used by the composite growth signal in
+    # analytics/macro_state.py.
+    ("BAA10Y",       "baa10y_spread",    "level", "Moody's Baa - 10Y Treasury credit spread % (1986+)"),
 ]
 
 FRED_API = "https://api.stlouisfed.org/fred/series/observations"

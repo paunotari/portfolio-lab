@@ -24,6 +24,16 @@ _(both done — see Portfolio optimization below for what builds on them next)_
       a "why" using the same essential bullets per holding — not a separate simplified summary
       disconnected from what the optimizer actually scored on.
 
+## Dashboard: Macro State quadrant visualization
+
+- [x] **4-quadrant position chart with trajectory and forecast** — DONE 2026-07. Lives at the top
+      of the Macro State tab (right under the Tier-1 verdict card): current dot on continuous
+      composite scores (can straddle borders), selectable trail (12/24/36m/full), month picker
+      that also shows the actual forward path from any past date (hollow dots), momentum
+      extrapolation arrow, and a collapsible "How is this computed?" block documenting smoothing,
+      lag, z-scoring, probability mapping and the forecast method. Enabled by the classifier v2
+      redesign below (continuous scores + soft probabilities).
+
 ## Portfolio optimization (vision.md Phase 3)
 
 - [ ] **Design the multi-objective portfolio optimizer.** Goal: given the return/risk/exposure
@@ -97,36 +107,30 @@ Tier-1/Tier-2 layering principle.
 
 ### Follow-up: revisit both methods — likely too simple as-is (2026-07)
 
-User's own framing after reviewing this: the classifier and the simulation both currently use a
-narrow, mechanical rule, and there's probably real signal being left on the table before this is
-good enough to lean on. Needs a proper review/redesign pass, not just tweaking constants.
+**Status: DONE 2026-07 — both methods redesigned (v2), all three items landed.** See
+`analytics/macro_state.py` / `analytics/scenario.py` docstrings and `info/CLAUDE.md` §4 + caveats
+#11/#17 for the full method; the dashboard's "How is this computed?" block mirrors it for users.
 
-- [ ] **4-quadrant classifier is currently only 2 inputs** (`indpro_yoy` growth trend ×
-      `core_pce_yoy` inflation trend, both hard-thresholded into just "up/down"). Worth
-      reconsidering:
-  - Bring in more of the 15 macro indicators we already have (yield curve slope, credit spreads,
-    unemployment trend, VIX, breakeven inflation, PPI) rather than 2 in isolation — a composite
-    growth/inflation signal, not a single proxy series each.
-  - Hard up/down threshold throws away magnitude and creates artificial certainty right at the
-    boundary — a continuous/graded signal (or a soft probability of each quadrant, e.g. "70%
-    Reflation / 30% Goldilocks") would be more honest than a forced hard bucket.
-  - No persistence/transition modeling at all — real macro regimes last months to years, but
-    nothing here captures how likely a transition is from one quadrant to another. A historical
-    state-transition (Markov) matrix is the natural, still-non-ML way to add this.
-- [ ] **Monte Carlo simulation draws each future month independently (i.i.d.)** — it has zero
-      memory of the previous simulated month's state, so a simulated path can flip quadrant every
-      single month, which doesn't look like real macro history (regimes persist). Candidates:
-  - Use a historical transition matrix (see above) instead of a single static probability vector,
-    so simulated sequences have realistic regime *duration*, not just correct long-run frequency.
-  - Consider block-bootstrap (multi-month chunks) instead of single-month draws within a state, to
-    preserve some within-regime serial correlation/momentum.
-  - Consider conditioning the *starting* quadrant probabilities on where we currently are/where
-    trend is heading (from `current_state()`) rather than always starting from the unconditional
-    scenario weights — a simulation run today should plausibly reflect that we're already inside
-    a state, not agnostic to it.
-- [ ] Before redesigning, explicitly decide: how much of this can use richer statistics/Markov
-      models (still not "AI" under FRED's terms) vs. where the line to Phase 4 ML actually is —
-      revisit `info/CLAUDE.md` caveat #11 when scoping this so we don't accidentally cross it.
+- [x] **Classifier v2 — composite, continuous, with persistence.** Growth = z-scored trend
+      composite of indpro_yoy, unemployment(−), yield-curve slope, VIX(−), Baa−10Y credit
+      spread(−) (BAA10Y newly ingested — full history, unlike the 2023+ HY OAS); inflation =
+      core PCE, CPI, PPI commodities, 10y breakeven. Continuous scores + soft quadrant
+      probabilities (Φ-mapped, e.g. "45% Stagflation / 38% Reflation") instead of a forced
+      bucket; hard label = most probable quadrant, keeping downstream compatibility. Empirical
+      monthly Markov transition matrix (`macro_state_transitions.csv`) with per-state persistence
+      and expected durations (~4–6 months), plus an NBER-recession overlap sanity check.
+- [x] **Scenario v2 — regime-persistent simulation.** Paths are built in regime *spells*
+      (geometric durations from the transition matrix) with contiguous block bootstrap within
+      each spell — no more month-by-month i.i.d. quadrant flipping. New headline scenario
+      `current_conditions` starts from today's actual quadrant and evolves by historical
+      transition probabilities; the weighted scenarios (historical/even/custom via
+      `simulate_scenario(weights)`) still converge to target long-run month shares (q ∝
+      w·(1−p_stay)), so the future optimizer API is unchanged.
+- [x] **Statistics-vs-ML line decided** and recorded in `info/CLAUDE.md` caveat #11: counting/
+      normalizing/resampling history (z-scores, transition counts, bootstrap, momentum
+      extrapolation) = fine under FRED ToS; anything fitted/trained to predict (regression
+      forecasts, EM-fitted HMMs, ML) = Phase 4, non-FRED data. v2 stays entirely on the allowed
+      side.
 
 ## Data sources
 

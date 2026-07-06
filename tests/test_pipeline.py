@@ -135,10 +135,31 @@ def test_macro_state_classification_valid():
         "Goldilocks (disinflationary growth)", "Reflation (overheating)",
         "Deflationary bust (recession/slowdown)", "Stagflation (growth-inflation squeeze)",
     }
+    prob_cols = ("p_goldilocks", "p_reflation", "p_stagflation", "p_deflationary_bust")
     for r in rows:
         assert r["state"] in valid_states, f"unknown state label: {r['state']}"
         assert r["growth_up"] in ("True", "False"), f"non-boolean growth_up: {r['growth_up']}"
         assert r["inflation_up"] in ("True", "False"), f"non-boolean inflation_up: {r['inflation_up']}"
+        # composite scores are finite and the hard label is their sign
+        g, i = float(r["growth_score"]), float(r["inflation_score"])
+        assert (g > 0) == (r["growth_up"] == "True"), f"growth_up inconsistent with score at {r['']}"
+        assert (i > 0) == (r["inflation_up"] == "True"), f"inflation_up inconsistent with score at {r['']}"
+        # the 4 soft quadrant probabilities are a distribution
+        total = sum(float(r[c]) for c in prob_cols)
+        assert 0.99 <= total <= 1.01, f"quadrant probs sum to {total} at {r['']}"
+        for c in prob_cols:
+            assert 0.0 <= float(r[c]) <= 1.0, f"{c} out of [0,1] at {r['']}"
+
+
+def test_macro_state_transition_matrix_valid():
+    if not C.MACRO_STATE_TRANSITIONS.exists():
+        return
+    rows = _rows(C.MACRO_STATE_TRANSITIONS)
+    assert len(rows) == 4, f"expected 4 transition rows, got {len(rows)}"
+    for r in rows:
+        probs = [float(v) for k, v in r.items() if k not in ("", "from")]
+        assert all(0.0 <= p <= 1.0 for p in probs), f"transition prob out of bounds: {r}"
+        assert 0.99 <= sum(probs) <= 1.01, f"transition row sums to {sum(probs)}: {r}"
 
 
 def test_macro_state_performance_valid():

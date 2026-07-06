@@ -111,6 +111,22 @@ padding:2px 10px;margin:2px;font-size:12px}
 
  <section class="tab" id="t-state">
    <div class="card"><h2>Current macro state</h2><div id="statecur"></div></div>
+   <div class="card"><h2>4-quadrant position <span class="muted">(where we are · the path here · where momentum points)</span></h2>
+     <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:4px">
+       <label class="muted">As of <input type="month" id="quadDate"></label>
+       <button onclick="resetQuad()">latest</button>
+       <label class="muted">Trail <select id="quadTrail">
+         <option value="12">12 months</option><option value="24" selected>24 months</option>
+         <option value="36">36 months</option><option value="0">full history</option></select></label>
+       <span class="muted" id="quadNote"></span>
+     </div>
+     <div id="quadplot" style="height:520px"></div>
+     <div class="muted">Dot = position as of the selected month (border-straddling positions are real — near 0 means genuinely between quadrants).
+       Trail = the actual path taken to get there. Arrow = momentum extrapolation, <b>a trend read, not a model forecast</b>.
+       Pick a past month to also see the actual forward path from that point (hollow dots).</div>
+     <details style="margin-top:8px"><summary class="muted" style="cursor:pointer">How is this computed? (full methodology)</summary>
+       <div class="muted" id="quadmethod" style="margin-top:8px;line-height:1.7"></div></details>
+   </div>
    <div class="card"><h2>Macro-state timeline <span class="muted">(which quadrant each month was in, 1997 → latest)</span></h2>
      <div id="statetimeline" style="height:150px"></div>
      <div class="muted">Quadrants: growth trend × inflation trend. Goldilocks = growth accelerating, inflation decelerating; Reflation = both accelerating; Stagflation = growth decelerating, inflation accelerating; Deflationary bust = both decelerating.</div></div>
@@ -124,7 +140,7 @@ padding:2px 10px;margin:2px;font-size:12px}
    <div class="card"><h2>Scenario simulation <span class="muted" id="scennote"></span></h2>
      <select id="scensel"></select>
      <div id="scenchart" style="height:560px"></div>
-     <div class="muted">Dot = median simulated CAGR; bar = 5th–95th percentile range across trials. Bootstrapped by reshuffling real historical months weighted by macro-quadrant probabilities — <b>assumes the future resembles reshuffled 1997–2026 history; a stated assumption, not a forecast.</b></div></div>
+     <div class="muted">Dot = median simulated CAGR; bar = 5th–95th percentile range across trials. Regime-persistent bootstrap: simulated regime spells last as long as history says they do (from the transition matrix), and months within a spell are contiguous blocks of real history. <i>current conditions</i> starts from today's actual quadrant; the weighted scenarios target long-run quadrant shares. <b>Assumes the future resembles re-sequenced 1997–2026 history; a stated assumption, not a forecast.</b></div></div>
  </section>
 
  <section class="tab" id="t-div">
@@ -434,16 +450,117 @@ function drawCorr(k){const c=DATA.corr[k];
     'Deflationary bust (recession/slowdown)':'#5b9dff'};
   const SORDER=Object.keys(SCOLOR);
 
-  // (1) current state — Tier-1 plain-language verdict
+  // (1) current state — Tier-1 plain-language verdict, now with the soft (probability) read
   const cur=MS.current;
+  const PROB2STATE={p_goldilocks:'Goldilocks (disinflationary growth)',
+    p_reflation:'Reflation (overheating)',
+    p_stagflation:'Stagflation (growth-inflation squeeze)',
+    p_deflationary_bust:'Deflationary bust (recession/slowdown)'};
+  const short=s=>s.split(' (')[0];
+  const probPills=cur.probs?Object.entries(cur.probs).sort((a,b)=>b[1]-a[1])
+    .map(([c,p])=>`<span class="pill" style="border-color:${SCOLOR[PROB2STATE[c]]}">${short(PROB2STATE[c])} ${(p*100).toFixed(0)}%</span>`).join(' '):'';
+  const persist=(cur.stay_prob!=null)
+    ?`<div class="muted" style="margin-top:6px">Persistence: historically this state continues month-over-month with ${(cur.stay_prob*100).toFixed(0)}% probability (expected duration ~${cur.expected_duration} months).</div>`:'';
   $('#statecur').innerHTML=
     `<div style="font-size:22px;font-weight:650;color:${SCOLOR[cur.state]||'#e6ebf5'}">${cur.state}</div>`
    +`<div class="muted" style="margin:4px 0 10px">as of ${cur.as_of} · in this state for ${cur.months_in_state} consecutive month(s)</div>`
-   +`<div class="metric">Growth <b>${cur.growth_dir}</b><div class="muted">industrial production ${cur.growth_value}% YoY</div></div>`
-   +`<div class="metric">Inflation <b>${cur.inflation_dir}</b><div class="muted">core PCE ${cur.inflation_value}% YoY</div></div>`
-   +`<div class="muted" style="margin-top:10px">Historical share of months: `
+   +(probPills?`<div style="margin:0 0 10px">Soft read (not a forced bucket): ${probPills}</div>`:'')
+   +`<div class="metric">Growth <b>${cur.growth_dir}</b><div class="muted">composite score ${cur.growth_score>0?'+':''}${cur.growth_score} · indpro ${cur.growth_value}% YoY</div></div>`
+   +`<div class="metric">Inflation <b>${cur.inflation_dir}</b><div class="muted">composite score ${cur.inflation_score>0?'+':''}${cur.inflation_score} · core PCE ${cur.inflation_value}% YoY</div></div>`
+   +persist
+   +`<div class="muted" style="margin-top:6px">Historical share of months: `
    +SORDER.filter(s=>MS.freq[s]!=null).map(s=>`<span class="pill" style="border-color:${SCOLOR[s]}">${s.split(' ')[0]} ${MS.freq[s]}%</span>`).join(' ')
    +`</div><div class="muted" style="margin-top:6px">Based on the latest complete macro print (data lags ~1 month). Descriptive trend read — not a forecast.</div>`;
+
+  // (1b) 4-quadrant position chart: current dot + trail + date picker + momentum arrow
+  const GS=MS.growth_score, IS=MS.inflation_score, QD=MS.dates, MM=MS.method;
+  let quadIdx=QD.length-1;
+  function quadHover(i){
+    const best=Object.entries(MS.probs).reduce((a,[c,v])=>v[i]>a[1]?[c,v[i]]:a,[null,-1]);
+    return `${QD[i]} — ${MS.states[i]}<br>growth ${GS[i]>0?'+':''}${GS[i]} · inflation ${IS[i]>0?'+':''}${IS[i]}`
+      +(best[0]?`<br>${(best[1]*100).toFixed(0)}% ${short(PROB2STATE[best[0]])}`:'');
+  }
+  function drawQuad(){
+    const i=quadIdx, trailN=+$('#quadTrail').value;
+    const i0=trailN>0?Math.max(0,i-trailN):0;
+    const R=Math.max(2.2,...GS.map(Math.abs),...IS.map(Math.abs))*1.08;
+    const rect=(x0,x1,y0,y1,c)=>({type:'rect',x0,x1,y0,y1,fillcolor:c,opacity:.09,line:{width:0},layer:'below'});
+    const shapes=[
+      rect(-R,0,0,R,SCOLOR[SORDER[0]]),  // Goldilocks: inflation down, growth up
+      rect(0,R,0,R,SCOLOR[SORDER[1]]),   // Reflation: both up
+      rect(0,R,-R,0,SCOLOR[SORDER[2]]),  // Stagflation: inflation up, growth down
+      rect(-R,0,-R,0,SCOLOR[SORDER[3]]), // Deflationary bust: both down
+      {type:'line',x0:0,x1:0,y0:-R,y1:R,line:{color:'#3a4663',width:1}},
+      {type:'line',x0:-R,x1:R,y0:0,y1:0,line:{color:'#3a4663',width:1}}];
+    const qlab=(x,y,s)=>({x,y,xref:'x',yref:'y',text:short(s),showarrow:false,
+      font:{size:12,color:SCOLOR[s]},opacity:.9});
+    const annotations=[qlab(-R*.55,R*.92,SORDER[0]),qlab(R*.55,R*.92,SORDER[1]),
+      qlab(R*.55,-R*.92,SORDER[2]),qlab(-R*.55,-R*.92,SORDER[3])];
+    const traces=[];
+    // trail: the actual path into the selected month (older = smaller/fainter)
+    const ti=[...Array(i-i0+1).keys()].map(k=>i0+k);
+    traces.push({x:ti.map(k=>IS[k]),y:ti.map(k=>GS[k]),mode:'lines+markers',
+      line:{color:'rgba(139,151,173,.45)',width:1.2},
+      marker:{size:ti.map(k=>3+5*(k-i0)/Math.max(1,i-i0)),
+        color:ti.map(k=>SCOLOR[MS.states[k]]),opacity:ti.map(k=>.25+.75*(k-i0)/Math.max(1,i-i0))},
+      hovertext:ti.map(quadHover),hoverinfo:'text',name:'trail',showlegend:false});
+    // forward actual path when a past month is selected (hollow markers)
+    if(i<QD.length-1){
+      const fi=[...Array(Math.min(12,QD.length-1-i)).keys()].map(k=>i+1+k);
+      traces.push({x:fi.map(k=>IS[k]),y:fi.map(k=>GS[k]),mode:'lines+markers',
+        line:{color:'rgba(230,235,245,.5)',width:1,dash:'dot'},
+        marker:{size:6,symbol:'circle-open',color:fi.map(k=>SCOLOR[MS.states[k]])},
+        hovertext:fi.map(k=>'actual path afterwards<br>'+quadHover(k)),hoverinfo:'text',
+        name:'what happened next',showlegend:false});
+    }
+    // momentum arrow: average monthly change of each score over the last MM months, projected
+    const Mo=MM.forecast_momentum_months,H=MM.forecast_horizon_months;
+    if(i-Mo>=0){
+      const vg=(GS[i]-GS[i-Mo])/Mo, vi=(IS[i]-IS[i-Mo])/Mo;
+      const fx=IS[i]+vi*H, fy=GS[i]+vg*H;
+      annotations.push({x:fx,y:fy,ax:IS[i],ay:GS[i],axref:'x',ayref:'y',xref:'x',yref:'y',
+        showarrow:true,arrowhead:3,arrowwidth:2,arrowcolor:'#e6ebf5',opacity:.85,text:''});
+      traces.push({x:[fx],y:[fy],mode:'markers',marker:{size:1,color:'rgba(0,0,0,0)'},
+        hovertext:[`momentum read: where the last ${Mo}m trend carries the scores in ${H} months<br>(linear extrapolation — not a model forecast)`],
+        hoverinfo:'text',showlegend:false});
+    }
+    // the selected month itself, on top
+    traces.push({x:[IS[i]],y:[GS[i]],mode:'markers',
+      marker:{size:16,color:SCOLOR[MS.states[i]],line:{color:'#e6ebf5',width:2}},
+      hovertext:[quadHover(i)],hoverinfo:'text',name:QD[i],showlegend:false});
+    const best=Object.entries(MS.probs).reduce((a,[c,v])=>v[i]>a[1]?[c,v[i]]:a,[null,-1]);
+    $('#quadNote').textContent=`${QD[i]} — ${short(MS.states[i])} (${(best[1]*100).toFixed(0)}%)`
+      +(i<QD.length-1?' · showing actual forward path':'');
+    Plotly.react('quadplot',traces,{...P,margin:{l:60,r:20,t:10,b:50},shapes,annotations,
+      xaxis:{title:'Inflation trend → (composite score, σ units)',range:[-R,R],gridcolor:'#1c2436',zeroline:false},
+      yaxis:{title:'Growth trend →',range:[-R,R],gridcolor:'#1c2436',zeroline:false}},
+      {displayModeBar:false});
+  }
+  (function(){
+    const inp=$('#quadDate');
+    inp.min=QD[0].slice(0,7); inp.max=QD[QD.length-1].slice(0,7); inp.value=inp.max;
+    inp.onchange=()=>{ if(!inp.value) return;
+      let k=QD.length-1; while(k>0&&QD[k].slice(0,7)>inp.value)k--; quadIdx=k; drawQuad(); };
+    $('#quadTrail').onchange=drawQuad;
+    const comps=o=>Object.entries(o).map(([n,s])=>`${n} (${s>0?'+':'−'})`).join(', ');
+    $('#quadmethod').innerHTML=
+      `<b>Axes.</b> Each axis is a composite <i>trend</i> score, in standard-deviation units. Per component: `
+     +`${MM.smooth_months}-month smoothing → trend = smoothed value now minus ${MM.trend_lag_months} months ago `
+     +`(accelerating vs decelerating, not the level) → z-scored against that component's own full history → sign-adjusted `
+     +`→ composite = average of available components, re-standardized. 0 = exactly on the border between quadrants.<br>`
+     +`<b>Growth components:</b> ${comps(MM.growth_components)} — indpro_yoy required, others join when their history exists.<br>`
+     +`<b>Inflation components:</b> ${comps(MM.inflation_components)} — core_pce_yoy required.<br>`
+     +`<b>Soft probabilities.</b> p(growth accelerating) = Φ(growth score) (normal CDF: score 0 → 50/50, +1σ → 84%); same for inflation; `
+     +`quadrant probability = product of the two. The hard label (timeline, per-state performance, scenarios) is simply the most probable quadrant — the sign of the two scores.<br>`
+     +`<b>Momentum arrow.</b> Average monthly change of each score over the last ${MM.forecast_momentum_months} months, projected ${MM.forecast_horizon_months} months ahead. `
+     +`Pure linear extrapolation of recent momentum — deliberately not a fitted/predictive model (FRED terms of use; see info/CLAUDE.md).<br>`
+     +`<b>Lag.</b> Positions are as fresh as the released macro prints — industrial production and core PCE lag ~1–2 months.<br>`
+     +`<b>Known simplifications.</b> z-scoring uses each component's full-sample std (a mild look-ahead that only affects scale, never the trend's direction); `
+     +`the two axes are treated as independent when multiplying probabilities. Full method + transition matrix: outputs/analytics/macro_state/REPORT_macro_state.md.`;
+    drawQuad();
+  })();
+  function resetQuad(){const inp=$('#quadDate');inp.value=inp.max;quadIdx=QD.length-1;drawQuad();}
+  window.resetQuad=resetQuad;
 
   // (2) timeline — 1-row heatmap, one colored cell per month
   const sIdx=MS.states.map(s=>SORDER.indexOf(s));
