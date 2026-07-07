@@ -5,7 +5,9 @@ For the *product vision and roadmap*, see [vision.md](vision.md). For the *actio
 backlog*, see [TODO.md](TODO.md). For the *conceptual diversification thesis*, see
 [factor-diversification-thesis.md](factor-diversification-thesis.md). For the *Phase 3 portfolio
 optimizer design* (agreed, not yet built), see
-[portfolio_optimization.md](portfolio_optimization.md).
+[portfolio_optimization.md](portfolio_optimization.md). For the *literature canon* grounding the
+optimizer and the regime forecasting (with adopt/adapt verdicts), see
+[literature.md](literature.md).
 
 ---
 

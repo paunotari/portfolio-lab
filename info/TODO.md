@@ -199,38 +199,24 @@ trends, not just the quadrant summary. Walk-forward results (h=3, k=20, ~230 eva
   leans hard it is *under*confident (errs safe). Hard 3-month calls are right ~52–57% of the
   time vs 25% chance — probabilities honest, certainty impossible at this sample.
 
-## Literature / methodology grounding (research pass — do before the next big build)
+## Literature / methodology grounding
 
-Most of what this repo computes is deliberately trivial statistics. Two areas are NOT trivial and
-have a large production + academic literature we should read before extending them, so we're not
-reinventing (badly) what's already solved. Goal of this task: a short `info/literature.md` that,
-per method we use, names the standard reference, what production/papers do differently, and
-whether it's worth adopting under our KISS + FRED-ToS constraints. **Concrete search targets**
-(listed so next-time me is efficient):
+**DONE 2026-07 → [literature.md](literature.md).** Top-tier, production-proven canon only, each
+entry with an adopt/adapt/benchmark verdict under our KISS + FRED-ToS constraints:
 
-- [ ] **Regime detection & forecasting** (informs `analytics/macro_state.py`):
-  - Markov regime-switching: Hamilton (1989); regime-switching asset allocation (Ang & Bekaert;
-    Guidolin & Timmermann). How does a *fitted* Markov-switching model compare to our counted
-    transition matrix? (Note the FRED-ToS line — fitting ≈ Phase 4.)
-  - Growth/inflation "four-quadrant" frameworks *in production*: Bridgewater All Weather (Dalio's
-    economic-machine framing), and practitioner quadrant shops (Hedgeye, 42 Macro) — practitioner,
-    not peer-reviewed, but that's exactly the production setting the user asked about.
-  - Nowcasting: dynamic factor models / diffusion indexes (Stock & Watson); GDPNow &
-    Nowcasting (Giannone-Reichlin-Small) — the grown-up version of our composite z-score signal.
-  - Analog / k-NN forecasting in macro-finance; block bootstrap (Politis & Romano stationary
-    bootstrap) — the literature behind our analog panel + regime-persistent Monte Carlo.
-- [ ] **Portfolio construction** (informs [portfolio_optimization.md](portfolio_optimization.md) —
-      this is where "trivial math done naively" is a *known* failure mode, so it needs the reading
-      most):
-  - Markowitz (1952) mean-variance; **Michaud (1989) "error-maximization"** critique; resampled
-    efficiency.
-  - Covariance shrinkage (Ledoit & Wolf); Black-Litterman (1992) for blending views with a prior.
-  - Risk parity / All Weather; **Hierarchical Risk Parity (López de Prado, 2016)** — robust,
-    correlation-clustered, no matrix inversion; a strong KISS-compatible candidate.
-  - Robust / maximin optimization; regime-conditional allocation; CVaR optimization
-    (Rockafellar & Uryasev) if we want tail-risk as an objective.
-- ML verdict stays as recorded (Phase 4, non-FRED data) — this pass is about better *statistics*,
-  not adding ML.
+- [x] **Portfolio construction** — Markowitz → Michaud (error-maximization) → DeMiguel (1/N beats
+      14 models; needs ~3,000 months to win — we have 330, the decisive number) → Ledoit-Wolf
+      shrinkage (adopt) → Black-Litterman (adapt the prior+views pattern for regime tilts) → risk
+      parity / All Weather → **HRP (candidate default engine)** → CVaR (optional Tier-2 later).
+      Synthesis compressed into 8 build directives in literature.md §4 — these now govern
+      [portfolio_optimization.md](portfolio_optimization.md).
+- [x] **Regime detection & forecasting** — Hamilton (fitted MS models = Phase 4/non-FRED; our
+      counted matrix is the honest cousin), Ang-Bekaert (regime-aware allocation earns its keep;
+      value concentrates in avoiding the bad state → maximin), nowcasting/GDPNow (live data >
+      fancier model — matches our own backtest conclusion), Politis-Romano stationary bootstrap
+      (our scenario engine's method has a name and theory; cite when next touched).
+- [x] **Factor canon** (why the sleeves exist) — Fama-French, Jegadeesh-Titman, Value & Momentum
+      Everywhere, Quality Minus Junk; our per-regime factor attribution replicates their patterns.
 
 ## Data sources
 

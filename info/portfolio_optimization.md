@@ -135,14 +135,20 @@ An unconstrained optimizer on 28 years of history is a hindsight machine. Three 
   `analytics/scenario.py`.
 - ✅ Backend chosen — `scipy` (§2).
 
-## 7. Read the literature first — this is NOT pure math
+## 7. Literature grounding — read [literature.md](literature.md) §4 before building
 
-The *mechanics* here are trivial (SLSQP + weighted sums), but **naive mean-variance optimization
-on historical returns is a documented failure mode** — Michaud (1989) called it an
-"error-maximizer" because it overweights whatever assets had the luckiest past estimates. The
-§4 guardrails are first-principles reasoning, not the known, better solutions. Before building,
-do the "Portfolio construction" literature pass in [TODO.md](TODO.md) → `info/literature.md`:
-covariance shrinkage (Ledoit-Wolf), Black-Litterman, resampled efficiency, risk parity, and
-especially **Hierarchical Risk Parity (López de Prado)** — a robust, KISS-compatible alternative
-that may be a better default than raw MVO for our 21-asset, 330-month set. The estimation-error
-robustness is the whole game; the optimizer is the *last* place to trust naive history.
+The research pass is **done (2026-07)** — [literature.md](literature.md) has the canon with
+verdicts. Its §4 synthesis amends this design with 8 build directives; the ones that *change*
+what's written above:
+
+- **1/N is the mandatory, always-visible benchmark** (DeMiguel 2009: no optimizer consistently
+  beats equal weight out of sample; break-even ≈ 3,000 months for 25 assets — we have 330 × 21).
+- **Return must tilt, never dominate**: enter as constraint or confidence-weighted view
+  (Michaud's error-maximization), not a free maximand — constrains how the Return slider blends.
+- **Shrink the covariance (Ledoit-Wolf)** before any risk computation — closed-form, ~30 lines.
+- **Consider HRP or equal-risk-contribution as the default engine / the prior** — no matrix
+  inversion, no mean estimates, explainable cluster tree (López de Prado 2016; AFP 2012).
+- **Black-Litterman pattern for the regime tilt**: neutral prior (1/N or ERC) + user sliders +
+  per-quadrant views weighted by the Markov outlook's confidence.
+- **Validation protocol**: walk-forward out-of-sample vs 1/N and min-var — same honesty standard
+  as the quadrant forecasting backtests.
