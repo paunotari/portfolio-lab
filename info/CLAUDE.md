@@ -7,7 +7,9 @@ backlog*, see [TODO.md](TODO.md). For the *conceptual diversification thesis*, s
 optimizer design* (agreed, not yet built), see
 [portfolio_optimization.md](portfolio_optimization.md). For the *literature canon* grounding the
 optimizer and the regime forecasting (with adopt/adapt verdicts), see
-[literature.md](literature.md).
+[literature.md](literature.md) — index + verdicts — with implementation-grade deep dives
+(formulas, algorithms, pitfalls; codeable without fetching the papers) in
+[literature/](literature/).
 
 ---
 

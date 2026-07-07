@@ -11,6 +11,23 @@ optimization** and **regime forecasting** — have deep production literatures w
 version is a *known* failure mode. This is the map so the optimizer
 ([portfolio_optimization.md](portfolio_optimization.md)) is built on what works.
 
+**This file is the index + verdicts.** Each entry has an implementation-grade deep dive in
+[literature/](literature/) — the principles AND the mathematics (formulas, algorithms,
+pitfalls, unit tests), written to be codeable without fetching the paper:
+
+| Deep dive | Covers |
+|---|---|
+| [mean-variance-and-estimation-error.md](literature/mean-variance-and-estimation-error.md) | Markowitz math · Michaud error-maximization mechanics · Chopra-Ziemba 11× · DeMiguel evidence · resampled efficiency |
+| [ledoit-wolf-shrinkage.md](literature/ledoit-wolf-shrinkage.md) | both shrinkage estimators, closed-form, numpy-ready |
+| [black-litterman.md](literature/black-litterman.md) | full posterior math + our prior/regime-views adaptation |
+| [risk-parity-erc.md](literature/risk-parity-erc.md) | Euler risk contributions, ERC existence/computation, leverage-aversion caveat |
+| [hierarchical-risk-parity.md](literature/hierarchical-risk-parity.md) | exact 3-stage HRP algorithm, pitfalls, unit tests |
+| [cvar-optimization.md](literature/cvar-optimization.md) | Rockafellar-Uryasev LP formulation, when to un-park it |
+| [regime-switching.md](literature/regime-switching.md) | Hamilton filter math, Ang-Bekaert findings, maximin reformulation, ToS boundary |
+| [nowcasting-dfm.md](literature/nowcasting-dfm.md) | DFM/Kalman sketch, GDPNow/NY Fed production notes, upgrade path |
+| [stationary-bootstrap.md](literature/stationary-bootstrap.md) | Politis-Romano ↔ our scenario engine, exact correspondence |
+| [factor-canon.md](literature/factor-canon.md) | FF3/momentum/VME/QMJ math + per-quadrant predictions vs our measurements |
+
 ---
 
 ## 1. Portfolio construction — the estimation-error war
