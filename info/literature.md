@@ -11,9 +11,12 @@ optimization** and **regime forecasting** — have deep production literatures w
 version is a *known* failure mode. This is the map so the optimizer
 ([portfolio_optimization.md](portfolio_optimization.md)) is built on what works.
 
-**This file is the index + verdicts.** Each entry has an implementation-grade deep dive in
-[literature/](literature/) — the principles AND the mathematics (formulas, algorithms,
-pitfalls, unit tests), written to be codeable without fetching the paper:
+**This file is the index + verdicts.** For the whole literature as one plain-language story (no
+formulas — read this first for comprehensive understanding), see
+[literature/state-of-the-art-in-plain-words.md](literature/state-of-the-art-in-plain-words.md).
+Each entry below also has an implementation-grade deep dive in [literature/](literature/) — the
+principles AND the mathematics (formulas, algorithms, pitfalls, unit tests), written to be
+codeable without fetching the paper:
 
 | Deep dive | Covers |
 |---|---|
