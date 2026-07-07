@@ -5,43 +5,72 @@
 
 HTML = r"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MSCI Factor / Region Dashboard</title>
+<title>Portfolio Lab — factor &amp; macro-regime dashboard</title>
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0f1420;--panel:#171d2b;--ink:#e6ebf5;--mut:#8b97ad;--line:#26304a;
---acc:#5b9dff;--warn:#ff6b6b;--good:#39d98a}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);
-font:14px/1.5 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-header{padding:18px 24px;border-bottom:1px solid var(--line)}
-h1{margin:0;font-size:18px;font-weight:650;letter-spacing:.2px}
-.sub{color:var(--mut);font-size:12px;margin-top:3px}
-nav{display:flex;gap:4px;padding:10px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
-nav button{background:transparent;color:var(--mut);border:1px solid transparent;
-padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px}
-nav button:hover{color:var(--ink)}nav button.on{background:var(--panel);color:var(--ink);
-border-color:var(--line)}
-main{padding:20px 24px;max-width:1200px}
+/* Visual identity: "research note" light theme. Rule: chrome is monochrome — color only ever
+   means data (regimes, factors, good/bad). Signature: the regime ribbon under the nav. */
+:root{--bg:#FBFBFD;--panel:#FFFFFF;--ink:#1D1D1F;--mut:#6E6E73;--line:#E8E8ED;--edge:#D2D2D7;
+--acc:#3B6FD4;--warn:#C43D3D;--good:#1E8E5A;
+--mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+--sans:"Instrument Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+--serif:"Newsreader",Georgia,"Times New Roman",serif}
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 var(--sans);
+-webkit-font-smoothing:antialiased}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:16px;
+padding:22px 28px 14px;flex-wrap:wrap}
+h1{margin:0;font-family:var(--serif);font-style:italic;font-weight:500;font-size:23px;letter-spacing:.2px}
+.sub{color:var(--mut);font-size:11.5px;margin-top:4px;font-family:var(--mono)}
+#headchip{font-family:var(--mono);font-size:11.5px;color:var(--mut);display:flex;align-items:center;gap:8px}
+#headchip .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+nav{display:flex;gap:22px;padding:0 28px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+nav button{background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;
+padding:10px 0 12px;color:var(--mut);font:500 13px var(--sans);cursor:pointer;letter-spacing:.1px}
+nav button:hover{color:var(--ink)}
+nav button.on{color:var(--ink);border-bottom-color:var(--ink)}
+#ribbon{display:flex;height:3px}#ribbon div{flex:1}
+main{padding:24px 28px;max-width:1200px}
 .tab{display:none}.tab.on{display:block}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+padding:20px 22px;margin-bottom:16px;box-shadow:0 1px 2px rgba(29,29,31,.03);overflow-x:auto}
 .grid{display:grid;gap:16px}.g2{grid-template-columns:1fr 1fr}@media(max-width:900px){.g2{grid-template-columns:1fr}}
+h2{font-size:13.5px;font-weight:600;margin:0 0 10px;letter-spacing:.1px}
+h3{font-size:11px;color:var(--mut);margin:14px 0 6px;font-weight:600;text-transform:uppercase;letter-spacing:.6px}
 table{border-collapse:collapse;width:100%;font-size:13px}
-th,td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:right}
-th:first-child,td:first-child{text-align:left}th{color:var(--mut);cursor:pointer;user-select:none}
-tr:hover td{background:#1c2436}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--mut);cursor:pointer;user-select:none;font-weight:500;font-size:11px;
+text-transform:uppercase;letter-spacing:.5px}
+td:not(:first-child){font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums}
+tr:hover td{background:#F5F5F7}
 .warn{color:var(--warn);font-weight:600}.good{color:var(--good)}
-h2{font-size:15px;margin:0 0 10px}h3{font-size:13px;color:var(--mut);margin:14px 0 6px;font-weight:600}
-select,input{background:#0d1220;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
-.pill{display:inline-block;background:#0d1220;border:1px solid var(--line);border-radius:20px;
-padding:2px 10px;margin:2px;font-size:12px}
-.anno p{margin:4px 0}.anno b{color:var(--acc)}
+select,input{background:#fff;color:var(--ink);border:1px solid var(--edge);border-radius:8px;
+padding:6px 9px;font:12.5px var(--sans)}
+select:hover,input:hover{border-color:#B7B7BE}
+input[type=checkbox]{accent-color:var(--ink);width:auto;padding:0}
+.card button{background:#fff;border:1px solid var(--edge);border-radius:999px;padding:6px 14px;
+font:500 12.5px var(--sans);color:var(--ink);cursor:pointer}
+.card button:hover{border-color:var(--ink)}
+.pill{display:inline-block;background:#fff;border:1px solid var(--edge);border-radius:999px;
+padding:2px 10px;margin:2px;font-family:var(--mono);font-size:11px}
+.anno p{margin:4px 0}.anno b{color:var(--ink)}
 .wrow{display:grid;grid-template-columns:1fr 90px;gap:8px;align-items:center;margin:4px 0}
 .wrow label{font-size:12px;color:var(--mut)}
-.metric{display:inline-block;margin-right:18px}.metric b{font-size:16px}
+.metric{display:inline-block;margin-right:22px}
+.metric b{font-size:19px;font-family:var(--mono);font-weight:500}
 .muted{color:var(--mut);font-size:12px}
+details summary{cursor:pointer}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style></head><body>
-<header><h1>MSCI Factor / Region Dashboard</h1>
-<div class="sub" id="sub"></div></header>
+<header><div><h1>Portfolio Lab</h1>
+<div class="sub" id="sub"></div></div><div id="headchip"></div></header>
 <nav id="nav"></nav>
+<div id="ribbon" title="Macro-regime timeline, 1997 → today — one slice per month"></div>
 <main>
  <section class="tab" id="t-perf">
    <div class="card">
@@ -182,13 +211,30 @@ padding:2px 10px;margin:2px;font-size:12px}
 JS = r"""
 const $=s=>document.querySelector(s);
 const pct=x=>x==null?'—':(x*100).toFixed(1)+'%';
-const P={paper_bgcolor:'#171d2b',plot_bgcolor:'#171d2b',font:{color:'#e6ebf5',size:12},
-  margin:{l:60,r:20,t:20,b:60},legend:{font:{size:11}}};
-const FCOLOR={Reference:'#8b97ad',Momentum:'#5b9dff','Enhanced Value':'#f4a259',Quality:'#39d98a'};
+// identity rule: chrome is monochrome, color only means data (factor hues, regime hues, good/bad)
+const P={paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)',
+  font:{color:'#1D1D1F',size:12,family:'Instrument Sans, -apple-system, sans-serif'},
+  margin:{l:60,r:20,t:20,b:60},legend:{font:{size:11}},
+  hoverlabel:{bgcolor:'#FFFFFF',bordercolor:'#D2D2D7',font:{color:'#1D1D1F',family:'IBM Plex Mono, monospace',size:11}}};
+const FCOLOR={Reference:'#8E8E93',Momentum:'#3B6FD4','Enhanced Value':'#E08A00',Quality:'#2E9E68'};
+const SCOLOR={'Goldilocks (disinflationary growth)':'#2E9E68',
+  'Reflation (overheating)':'#E08A00',
+  'Stagflation (growth-inflation squeeze)':'#D64545',
+  'Deflationary bust (recession/slowdown)':'#3B6FD4'};
+const SORDER=Object.keys(SCOLOR);
 
 // header
 const allDates=DATA.levels.dates;
 $('#sub').textContent=`${allDates[0]} → ${allDates[allDates.length-1]} · ${DATA.indices.length} indices · 7 regions × 4 factor types · monthly net USD`;
+
+// header chip + regime ribbon: the product's thesis (regimes over time) as the identity mark
+if(DATA.macro_state){
+  const c=DATA.macro_state.current;
+  $('#headchip').innerHTML=`<span class="dot" style="background:${SCOLOR[c.state]}"></span>`
+    +`${c.state.split(' (')[0]} · as of ${c.as_of}`;
+  $('#ribbon').innerHTML=DATA.macro_state.states.map((s,i)=>
+    `<div style="background:${SCOLOR[s]}" title="${DATA.macro_state.dates[i]} — ${s}"></div>`).join('');
+}
 
 // nav/tabs
 const TABS=[['perf','Performance'],['fvr','Factor vs Reference'],['reg','Regimes'],
@@ -263,7 +309,7 @@ function rebasedTraces(fromD,toD){
     const base=baseIdx<0?null:raw[baseIdx];
     const y=raw.map(v=>(v==null||base==null)?null:(v/base*100));
     return {x:xs,y,name,mode:'lines',connectgaps:false,
-      line:{width:1.3,color:FCOLOR[fac]||'#5b9dff'},opacity:.85};
+      line:{width:1.3,color:FCOLOR[fac]||'#3B6FD4'},opacity:.85};
   });
 }
 
@@ -281,12 +327,12 @@ function refreshPerf(fromD,toD){
   const txt=ok.map(r=>`${r.series}<br>CAGR ${pct(r.CAGR)} · vol ${pct(r.ann_vol)}`
     +`<br>Sharpe ${r.sharpe_rf0==null?'—':r.sharpe_rf0.toFixed(2)} · maxDD ${pct(r.max_drawdown)}`);
   Plotly.react('scatter',[{x,y,text:txt,mode:'markers',type:'scatter',
-    marker:{size,color:col,line:{color:'#0f1420',width:1}},hoverinfo:'text'}],
-    {...P,xaxis:{title:'Annualized volatility %',gridcolor:'#26304a'},
-     yaxis:{title:'CAGR %',gridcolor:'#26304a'}},{displayModeBar:false});
+    marker:{size,color:col,line:{color:'#FFFFFF',width:1}},hoverinfo:'text'}],
+    {...P,xaxis:{title:'Annualized volatility %',gridcolor:'#ECECF1'},
+     yaxis:{title:'CAGR %',gridcolor:'#ECECF1'}},{displayModeBar:false});
 
   Plotly.react('cum',rebasedTraces(fromD,toD),{...P,margin:{l:55,r:10,t:10,b:40},
-    yaxis:{type:'log',gridcolor:'#26304a',title:'Growth of 100'},xaxis:{gridcolor:'#26304a'},
+    yaxis:{type:'log',gridcolor:'#ECECF1',title:'Growth of 100'},xaxis:{gridcolor:'#ECECF1'},
     legend:{orientation:'h',font:{size:9},y:-0.12}},{displayModeBar:false});
 
   perfTable(curSort,curAsc);
@@ -327,15 +373,15 @@ function perfTable(sortKey,asc){
   const tr=facs.map(f=>({name:f,type:'bar',marker:{color:FCOLOR[f]},
     x:regions,y:regions.map(rg=>{const m=DATA.fvr.find(r=>r.region===rg&&r.factor===f);
       return m?+(m.excess_CAGR*100).toFixed(2):null;})}));
-  Plotly.newPlot('fvrbar',tr,{...P,barmode:'group',yaxis:{title:'Excess CAGR (pp)',gridcolor:'#26304a'},
-    xaxis:{gridcolor:'#26304a'}},{displayModeBar:false});
+  Plotly.newPlot('fvrbar',tr,{...P,barmode:'group',yaxis:{title:'Excess CAGR (pp)',gridcolor:'#ECECF1'},
+    xaxis:{gridcolor:'#ECECF1'}},{displayModeBar:false});
   const tr2=facs.map(f=>({name:f,type:'bar',marker:{color:FCOLOR[f]},
     x:regions,y:regions.map(rg=>{const m=DATA.fvr.find(r=>r.region===rg&&r.factor===f);
       return m?+(m.monthly_hit_rate*100).toFixed(1):null;})}));
   Plotly.newPlot('fvrhit',tr2,{...P,barmode:'group',
-    yaxis:{title:'% months factor > reference',range:[45,62],gridcolor:'#26304a'},
-    xaxis:{gridcolor:'#26304a'},shapes:[{type:'line',x0:-.5,x1:regions.length-.5,y0:50,y1:50,
-      line:{color:'#8b97ad',dash:'dot',width:1}}]},{displayModeBar:false});
+    yaxis:{title:'% months factor > reference',range:[45,62],gridcolor:'#ECECF1'},
+    xaxis:{gridcolor:'#ECECF1'},shapes:[{type:'line',x0:-.5,x1:regions.length-.5,y0:50,y1:50,
+      line:{color:'#6E6E73',dash:'dot',width:1}}]},{displayModeBar:false});
 })();
 
 // ---------- Regimes ----------
@@ -350,7 +396,7 @@ function perfTable(sortKey,asc){
   const z=regs.map(id=>series.map(s=>{const m=DATA.regperf.find(r=>r.regime===id&&r.series===s);
     return m&&m.excess_vs_ref!=null?+(m.excess_vs_ref*100).toFixed(1):null;}));
   Plotly.newPlot('regheat',[{z,x:series,y:DATA.regime_meta.map(r=>r.name),type:'heatmap',
-    colorscale:[[0,'#ff6b6b'],[.5,'#171d2b'],[1,'#39d98a']],zmid:0,
+    colorscale:[[0,'#D64545'],[.5,'#FFFFFF'],[1,'#2E9E68']],zmid:0,
     colorbar:{title:'excess pp'}}],{...P,margin:{l:210,r:20,t:10,b:150},
     xaxis:{tickangle:-40,tickfont:{size:9}},yaxis:{tickfont:{size:10}}},{displayModeBar:false});
   drawRegime(regs[0]);
@@ -363,7 +409,7 @@ function drawRegime(id){
   Plotly.newPlot('regbar',[{type:'bar',orientation:'h',
     y:rows.map(r=>r.series),x:rows.map(r=>+(r.annualized*100).toFixed(1)),
     marker:{color:rows.map(r=>FCOLOR[r.factor])}}],
-    {...P,margin:{l:210,r:20,t:10,b:40},xaxis:{title:'Annualized return %',gridcolor:'#26304a'},
+    {...P,margin:{l:210,r:20,t:10,b:40},xaxis:{title:'Annualized return %',gridcolor:'#ECECF1'},
      yaxis:{autorange:'reversed',tickfont:{size:10}}},{displayModeBar:false});
 }
 
@@ -374,13 +420,13 @@ function drawRegime(id){
   opts.forEach(([v,l])=>{if(DATA.corr[v]){const o=document.createElement('option');o.value=v;o.textContent=l;sel.appendChild(o);}});
   sel.onchange=()=>drawCorr(sel.value);drawCorr('full');
   Plotly.newPlot('rollchart',[{x:DATA.rolling.dates,y:DATA.rolling.vals,mode:'lines',
-    line:{color:'#5b9dff',width:1.6},fill:'tozeroy',fillcolor:'rgba(91,157,255,.12)'}],
-    {...P,margin:{l:50,r:10,t:10,b:40},yaxis:{title:'avg pairwise corr',range:[0.6,1],gridcolor:'#26304a'},
-     xaxis:{gridcolor:'#26304a'}},{displayModeBar:false});
+    line:{color:'#3B6FD4',width:1.6},fill:'tozeroy',fillcolor:'rgba(59,111,212,.10)'}],
+    {...P,margin:{l:50,r:10,t:10,b:40},yaxis:{title:'avg pairwise corr',range:[0.6,1],gridcolor:'#ECECF1'},
+     xaxis:{gridcolor:'#ECECF1'}},{displayModeBar:false});
 })();
 function drawCorr(k){const c=DATA.corr[k];
   Plotly.newPlot('corrheat',[{z:c.z,x:c.labels,y:c.labels,type:'heatmap',
-    colorscale:[[0,'#0f1420'],[.5,'#2a4a7a'],[1,'#ff6b6b']],zmin:0,zmax:1,
+    colorscale:[[0,'#FFFFFF'],[.5,'#9DBBEA'],[1,'#D64545']],zmin:0,zmax:1,
     colorbar:{title:'ρ'}}],{...P,margin:{l:190,r:20,t:10,b:170},
     xaxis:{tickangle:-45,tickfont:{size:9}},yaxis:{tickfont:{size:9},autorange:'reversed'}},
     {displayModeBar:false});}
@@ -392,10 +438,10 @@ function drawCorr(k){const c=DATA.corr[k];
   const meta={}; DATA.macro_meta.forEach(m=>meta[m.name]=m);
   // regime shading shapes + labels (reused by the series chart)
   const bands=DATA.regime_meta.map((r,i)=>({type:'rect',xref:'x',yref:'paper',
-    x0:r.start,x1:r.end,y0:0,y1:1,fillcolor:i%2?'rgba(91,157,255,.07)':'rgba(244,162,89,.07)',
+    x0:r.start,x1:r.end,y0:0,y1:1,fillcolor:i%2?'rgba(59,111,212,.06)':'rgba(224,138,0,.06)',
     line:{width:0},layer:'below'}));
   const bandLabels=DATA.regime_meta.map(r=>({x:r.start,y:1,xref:'x',yref:'paper',
-    text:r.name.split(' ')[0],showarrow:false,font:{size:8,color:'#8b97ad'},
+    text:r.name.split(' ')[0],showarrow:false,font:{size:8,color:'#6E6E73'},
     xanchor:'left',yanchor:'bottom',hovertext:r.name}));
 
   // (a) indicator time series with regime bands
@@ -408,10 +454,10 @@ function drawCorr(k){const c=DATA.corr[k];
     $('#macronote').textContent=`${m.units||''} · ${m.transform==='yoy'?'12-month % change of the underlying index':'level as published'} · history ${m.start||'?'} → ${m.end||'?'} (FRED: ${m.id||''})`;
     // default to the analysis window (regime bands readable); drag/zoom out for full history
     Plotly.newPlot('macrochart',[{x:DATA.macro.dates,y:DATA.macro.series[name],mode:'lines',
-      line:{color:'#5b9dff',width:1.4},connectgaps:false}],
+      line:{color:'#3B6FD4',width:1.4},connectgaps:false}],
       {...P,margin:{l:55,r:10,t:18,b:40},
-       xaxis:{gridcolor:'#26304a',range:['1997-01-01',DATA.macro.dates[DATA.macro.dates.length-1]]},
-       yaxis:{gridcolor:'#26304a'},shapes:bands,annotations:bandLabels},{displayModeBar:false});
+       xaxis:{gridcolor:'#ECECF1',range:['1997-01-01',DATA.macro.dates[DATA.macro.dates.length-1]]},
+       yaxis:{gridcolor:'#ECECF1'},shapes:bands,annotations:bandLabels},{displayModeBar:false});
   }
   drawMacroSeries(Object.keys(DATA.macro.series)[0]);
 
@@ -421,7 +467,7 @@ function drawCorr(k){const c=DATA.corr[k];
   function drawMacroHeat(basis){
     const c=DATA.macro_corr[basis];
     Plotly.newPlot('macroheat',[{z:c.z,x:c.indicators,y:c.series,type:'heatmap',
-      colorscale:[[0,'#ff6b6b'],[.5,'#171d2b'],[1,'#39d98a']],zmid:0,zmin:-1,zmax:1,
+      colorscale:[[0,'#D64545'],[.5,'#FFFFFF'],[1,'#2E9E68']],zmid:0,zmin:-1,zmax:1,
       colorbar:{title:'corr'},hoverongaps:false}],
       {...P,margin:{l:210,r:20,t:10,b:120},xaxis:{tickangle:-40,tickfont:{size:9}},
        yaxis:{tickfont:{size:9},autorange:'reversed'}},{displayModeBar:false});
@@ -439,9 +485,9 @@ function drawCorr(k){const c=DATA.corr[k];
       .sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
     Plotly.newPlot('macrodrv',[{type:'bar',orientation:'h',
       y:pairs.map(p=>p[0]),x:pairs.map(p=>p[1]),
-      marker:{color:pairs.map(p=>p[1]>=0?'#39d98a':'#ff6b6b')}}],
+      marker:{color:pairs.map(p=>p[1]>=0?'#2E9E68':'#D64545')}}],
       {...P,margin:{l:170,r:20,t:6,b:40},
-       xaxis:{title:`corr (${basis} basis)`,range:[-1,1],gridcolor:'#26304a'},
+       xaxis:{title:`corr (${basis} basis)`,range:[-1,1],gridcolor:'#ECECF1'},
        yaxis:{autorange:'reversed',tickfont:{size:10}}},{displayModeBar:false});
   }
   dsel.onchange=drawDrivers;
@@ -453,12 +499,7 @@ function drawCorr(k){const c=DATA.corr[k];
 (function(){
   if(!DATA.macro_state){ $('#t-state').innerHTML='<div class="card"><h2>Macro State</h2>'
     +'<div class="muted">No macro-state data baked — run the pipeline with the macro steps (macro_state, scenario).</div></div>'; return; }
-  const MS=DATA.macro_state;
-  const SCOLOR={'Goldilocks (disinflationary growth)':'#39d98a',
-    'Reflation (overheating)':'#f4a259',
-    'Stagflation (growth-inflation squeeze)':'#ff6b6b',
-    'Deflationary bust (recession/slowdown)':'#5b9dff'};
-  const SORDER=Object.keys(SCOLOR);
+  const MS=DATA.macro_state;   // SCOLOR/SORDER are global (header ribbon uses them too)
 
   // (1) current state — Tier-1 plain-language verdict, now with the soft (probability) read
   const cur=MS.current;
@@ -486,7 +527,7 @@ function drawCorr(k){const c=DATA.corr[k];
   const persist=(cur.stay_prob!=null)
     ?`<div class="muted" style="margin-top:6px">Persistence: historically this state continues month-over-month with ${(cur.stay_prob*100).toFixed(0)}% probability (expected duration ~${cur.expected_duration} months).</div>`:'';
   $('#statecur').innerHTML=
-    `<div style="font-size:22px;font-weight:650;color:${SCOLOR[cur.state]||'#e6ebf5'}">${cur.state}</div>`
+    `<div style="font-size:22px;font-weight:650;color:${SCOLOR[cur.state]||'#1D1D1F'}">${cur.state}</div>`
    +`<div class="muted" style="margin:4px 0 10px">as of ${cur.as_of} · in this state for ${cur.months_in_state} consecutive month(s)</div>`
    +(probPills?`<div style="margin:0 0 10px">Soft read (not a forced bucket): ${probPills}</div>`:'')
    +outlookLine
@@ -550,14 +591,14 @@ function drawCorr(k){const c=DATA.corr[k];
     const i=quadIdx, trailN=+$('#quadTrail').value;
     const i0=trailN>0?Math.max(0,i-trailN):0;
     const R=Math.max(2.2,...GS.map(Math.abs),...IS.map(Math.abs))*1.08;
-    const rect=(x0,x1,y0,y1,c)=>({type:'rect',x0,x1,y0,y1,fillcolor:c,opacity:.09,line:{width:0},layer:'below'});
+    const rect=(x0,x1,y0,y1,c)=>({type:'rect',x0,x1,y0,y1,fillcolor:c,opacity:.06,line:{width:0},layer:'below'});
     const shapes=[
       rect(-R,0,0,R,SCOLOR[SORDER[0]]),  // Goldilocks: inflation down, growth up
       rect(0,R,0,R,SCOLOR[SORDER[1]]),   // Reflation: both up
       rect(0,R,-R,0,SCOLOR[SORDER[2]]),  // Stagflation: inflation up, growth down
       rect(-R,0,-R,0,SCOLOR[SORDER[3]]), // Deflationary bust: both down
-      {type:'line',x0:0,x1:0,y0:-R,y1:R,line:{color:'#3a4663',width:1}},
-      {type:'line',x0:-R,x1:R,y0:0,y1:0,line:{color:'#3a4663',width:1}}];
+      {type:'line',x0:0,x1:0,y0:-R,y1:R,line:{color:'#D2D2D7',width:1}},
+      {type:'line',x0:-R,x1:R,y0:0,y1:0,line:{color:'#D2D2D7',width:1}}];
     const qlab=(x,y,s)=>({x,y,xref:'x',yref:'y',text:short(s),showarrow:false,
       font:{size:12,color:SCOLOR[s]},opacity:.9});
     const annotations=[qlab(-R*.55,R*.92,SORDER[0]),qlab(R*.55,R*.92,SORDER[1]),
@@ -575,8 +616,8 @@ function drawCorr(k){const c=DATA.corr[k];
         x0:IS[i]+pctile(di,pl),x1:IS[i]+pctile(di,ph),
         y0:GS[i]+pctile(dg,pl),y1:GS[i]+pctile(dg,ph),
         fillcolor:fill,line:{color:line,width:1,dash:'dot'}});
-      box(10,90,'rgba(230,235,245,.04)','rgba(230,235,245,.30)');
-      box(25,75,'rgba(230,235,245,.07)','rgba(230,235,245,.45)');
+      box(10,90,'rgba(29,29,31,.04)','rgba(29,29,31,.30)');
+      box(25,75,'rgba(29,29,31,.07)','rgba(29,29,31,.45)');
       const dx=di.map(v=>IS[i]+v), dy=dg.map(v=>GS[i]+v);
       traces.push({x:dx,y:dy,mode:'markers',
         marker:{size:4,opacity:.35,color:dx.map((x,k)=>SCOLOR[SORDER[(dy[k]>0)?(x<0?0:1):(x<0?3:2)]])},
@@ -586,7 +627,7 @@ function drawCorr(k){const c=DATA.corr[k];
     // trail: the actual path into the selected month (older = smaller/fainter)
     const ti=[...Array(i-i0+1).keys()].map(k=>i0+k);
     traces.push({x:ti.map(k=>IS[k]),y:ti.map(k=>GS[k]),mode:'lines+markers',
-      line:{color:'rgba(139,151,173,.45)',width:1.2},
+      line:{color:'rgba(110,110,115,.45)',width:1.2},
       marker:{size:ti.map(k=>3+5*(k-i0)/Math.max(1,i-i0)),
         color:ti.map(k=>SCOLOR[MS.states[k]]),opacity:ti.map(k=>.25+.75*(k-i0)/Math.max(1,i-i0))},
       hovertext:ti.map(quadHover),hoverinfo:'text',name:'trail',showlegend:false});
@@ -594,7 +635,7 @@ function drawCorr(k){const c=DATA.corr[k];
     if(i<QD.length-1){
       const fi=[...Array(Math.min(12,QD.length-1-i)).keys()].map(k=>i+1+k);
       traces.push({x:fi.map(k=>IS[k]),y:fi.map(k=>GS[k]),mode:'lines+markers',
-        line:{color:'rgba(230,235,245,.5)',width:1,dash:'dot'},
+        line:{color:'rgba(29,29,31,.5)',width:1,dash:'dot'},
         marker:{size:6,symbol:'circle-open',color:fi.map(k=>SCOLOR[MS.states[k]])},
         hovertext:fi.map(k=>'actual path afterwards<br>'+quadHover(k)),hoverinfo:'text',
         name:'what happened next',showlegend:false});
@@ -605,7 +646,7 @@ function drawCorr(k){const c=DATA.corr[k];
       const vg=(GS[i]-GS[i-Mo])/Mo, vi=(IS[i]-IS[i-Mo])/Mo;
       const fx=IS[i]+vi*H, fy=GS[i]+vg*H;
       annotations.push({x:fx,y:fy,ax:IS[i],ay:GS[i],axref:'x',ayref:'y',xref:'x',yref:'y',
-        showarrow:true,arrowhead:3,arrowwidth:2,arrowcolor:'#e6ebf5',opacity:.85,text:''});
+        showarrow:true,arrowhead:3,arrowwidth:2,arrowcolor:'#1D1D1F',opacity:.8,text:''});
       traces.push({x:[fx],y:[fy],mode:'markers',marker:{size:1,color:'rgba(0,0,0,0)'},
         hovertext:[`momentum read: where the last ${Mo}m trend carries the scores in ${H} months<br>(linear extrapolation — not a model forecast)`],
         hoverinfo:'text',showlegend:false});
@@ -617,14 +658,14 @@ function drawCorr(k){const c=DATA.corr[k];
         for(let k=0;k<=OH;k++){px.push(IS[u+k]);py.push(GS[u+k]);
           ht.push(`analog ${QD[u]} +${k}m — ${short(MS.states[u+k])}`);}
         traces.push({x:px,y:py,mode:'lines+markers',
-          line:{color:'rgba(199,146,255,.55)',width:1,dash:'dash'},
-          marker:{size:px.map((_,k)=>k===OH?7:4),color:'rgba(199,146,255,.7)'},
+          line:{color:'rgba(109,70,214,.5)',width:1,dash:'dash'},
+          marker:{size:px.map((_,k)=>k===OH?7:4),color:'rgba(109,70,214,.65)'},
           hovertext:ht,hoverinfo:'text',showlegend:false});
       });
     }
     // the selected month itself, on top
     traces.push({x:[IS[i]],y:[GS[i]],mode:'markers',
-      marker:{size:16,color:SCOLOR[MS.states[i]],line:{color:'#e6ebf5',width:2}},
+      marker:{size:16,color:SCOLOR[MS.states[i]],line:{color:'#FFFFFF',width:2}},
       hovertext:[quadHover(i)],hoverinfo:'text',name:QD[i],showlegend:false});
     const best=Object.entries(MS.probs).reduce((a,[c,v])=>v[i]>a[1]?[c,v[i]]:a,[null,-1]);
     $('#quadNote').textContent=`${QD[i]} — ${short(MS.states[i])} (${(best[1]*100).toFixed(0)}%)`
@@ -633,8 +674,8 @@ function drawCorr(k){const c=DATA.corr[k];
     $('#quadOutlook').innerHTML=ol?`<span class="muted">${OH}-month Markov outlook from ${QD[i]}:</span> ${statePills(ol)}`:'';
     renderAnalogs(i);
     Plotly.react('quadplot',traces,{...P,margin:{l:60,r:20,t:10,b:50},shapes,annotations,
-      xaxis:{title:'Inflation trend → (composite score, σ units)',range:[-R,R],gridcolor:'#1c2436',zeroline:false},
-      yaxis:{title:'Growth trend →',range:[-R,R],gridcolor:'#1c2436',zeroline:false}},
+      xaxis:{title:'Inflation trend → (composite score, σ units)',range:[-R,R],gridcolor:'#EFEFF4',zeroline:false},
+      yaxis:{title:'Growth trend →',range:[-R,R],gridcolor:'#EFEFF4',zeroline:false}},
       {displayModeBar:false});
   }
   (function(){
@@ -678,7 +719,7 @@ function drawCorr(k){const c=DATA.corr[k];
     zmin:-0.5,zmax:3.5,showscale:false,
     colorscale:SORDER.flatMap((s,i)=>[[i/4,SCOLOR[s]],[(i+1)/4,SCOLOR[s]]]),
     hovertext:[MS.states.map((s,i)=>`${MS.dates[i]} — ${s}`)],hoverinfo:'text'}],
-    {...P,margin:{l:10,r:10,t:6,b:40},xaxis:{gridcolor:'#26304a'},
+    {...P,margin:{l:10,r:10,t:6,b:40},xaxis:{gridcolor:'#ECECF1'},
      yaxis:{showticklabels:false}},{displayModeBar:false});
 
   // (3) per-state index performance
@@ -692,7 +733,7 @@ function drawCorr(k){const c=DATA.corr[k];
       y:rows.map(r=>r.series),x:rows.map(r=>+(r.annualized_return*100).toFixed(1)),
       marker:{color:rows.map(r=>FCOLOR[r.factor])},
       text:rows.map(r=>`${r.n_months} months`),hovertemplate:'%{y}: %{x}% (%{text})<extra></extra>'}],
-      {...P,margin:{l:210,r:20,t:6,b:40},xaxis:{title:'Annualized return % in this state',gridcolor:'#26304a'},
+      {...P,margin:{l:210,r:20,t:6,b:40},xaxis:{title:'Annualized return % in this state',gridcolor:'#ECECF1'},
        yaxis:{autorange:'reversed',tickfont:{size:10}}},{displayModeBar:false});
   }
   ssel.onchange=drawStatePerf; drawStatePerf();
@@ -708,8 +749,8 @@ function drawCorr(k){const c=DATA.corr[k];
       return m?`hit rate ${(m.hit_rate*100).toFixed(0)}%`:'';}),
     hovertemplate:'%{x} · '+f+': %{y}pp/mo (%{text})<extra></extra>'})),
     {...P,barmode:'group',margin:{l:55,r:20,t:6,b:60},
-     yaxis:{title:'Avg monthly excess vs reference (pp)',gridcolor:'#26304a'},
-     xaxis:{gridcolor:'#26304a'}},{displayModeBar:false});
+     yaxis:{title:'Avg monthly excess vs reference (pp)',gridcolor:'#ECECF1'},
+     xaxis:{gridcolor:'#ECECF1'}},{displayModeBar:false});
 
   // (5) scenario simulation — median dot + p5..p95 range per series
   if(!DATA.scenario){ $('#scensel').style.display='none';
@@ -727,12 +768,12 @@ function drawCorr(k){const c=DATA.corr[k];
       error_x:{type:'data',symmetric:false,
         array:rows.map(r=>+((r.cagr_p95-r.cagr_p50)*100).toFixed(1)),
         arrayminus:rows.map(r=>+((r.cagr_p50-r.cagr_p5)*100).toFixed(1)),
-        color:'#8b97ad',thickness:1.2,width:3},
-      marker:{size:9,color:rows.map(r=>FCOLOR[r.factor]),line:{color:'#0f1420',width:1}},
+        color:'#6E6E73',thickness:1.2,width:3},
+      marker:{size:9,color:rows.map(r=>FCOLOR[r.factor]),line:{color:'#FFFFFF',width:1}},
       text:rows.map(r=>`P(loss over ${SC.years}y) ${(r.prob_cumulative_loss*100).toFixed(1)}% · median maxDD ${(r.maxdd_p50*100).toFixed(0)}%`),
       hovertemplate:'%{y}: median %{x}%/y<br>%{text}<extra></extra>'}],
       {...P,margin:{l:210,r:20,t:6,b:40},
-       xaxis:{title:'Simulated CAGR %/yr (dot = median, bar = 5th–95th pct)',gridcolor:'#26304a',zeroline:true,zerolinecolor:'#3a4663'},
+       xaxis:{title:'Simulated CAGR %/yr (dot = median, bar = 5th–95th pct)',gridcolor:'#ECECF1',zeroline:true,zerolinecolor:'#D2D2D7'},
        yaxis:{autorange:'reversed',tickfont:{size:10}}},{displayModeBar:false});
   }
   $('#scensel').onchange=drawScenario; drawScenario();
@@ -786,8 +827,8 @@ function sortObj(o){return Object.entries(o).sort((a,b)=>b[1]-a[1]);}
 function barh(el,entries,thr,color){
   const over=entries.filter(([k,v])=>v>thr).map(e=>e[0]);
   Plotly.newPlot(el,[{type:'bar',orientation:'h',y:entries.map(e=>e[0]),x:entries.map(e=>+e[1].toFixed(2)),
-    marker:{color:entries.map(e=>e[1]>thr?'#ff6b6b':color)}}],
-    {...P,margin:{l:170,r:20,t:6,b:30},xaxis:{title:'%',gridcolor:'#26304a'},
+    marker:{color:entries.map(e=>e[1]>thr?'#D64545':color)}}],
+    {...P,margin:{l:170,r:20,t:6,b:30},xaxis:{title:'%',gridcolor:'#ECECF1'},
      yaxis:{autorange:'reversed',tickfont:{size:10}}},{displayModeBar:false});
   return over;}
 function recompute(){
@@ -814,9 +855,9 @@ function recompute(){
   }
 
   const se=sortObj(sec),ce=sortObj(ctry),ke=sortObj(stk).slice(0,22);
-  const so=barh('divsector',se,T.sector,'#5b9dff');
-  const co=barh('divcountry',ce,T.country,'#f4a259');
-  const ko=barh('divstock',ke,T.stock,'#39d98a');
+  const so=barh('divsector',se,T.sector,'#3B6FD4');
+  const co=barh('divcountry',ce,T.country,'#E08A00');
+  const ko=barh('divstock',ke,T.stock,'#2E9E68');
   const hs=hhi(sec),hc=hhi(ctry),hk=hhi(stk);
   const flag=arr=>arr.length?`<span class="warn">${arr.join(', ')}</span>`:'<span class="good">none</span>';
   $('#divsummary').innerHTML=
