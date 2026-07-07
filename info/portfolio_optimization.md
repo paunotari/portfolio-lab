@@ -134,3 +134,15 @@ An unconstrained optimizer on 28 years of history is a hindsight machine. Three 
 - ✅ Regime-conditional data for regime-aware optimization — `analytics/macro_state.py`,
   `analytics/scenario.py`.
 - ✅ Backend chosen — `scipy` (§2).
+
+## 7. Read the literature first — this is NOT pure math
+
+The *mechanics* here are trivial (SLSQP + weighted sums), but **naive mean-variance optimization
+on historical returns is a documented failure mode** — Michaud (1989) called it an
+"error-maximizer" because it overweights whatever assets had the luckiest past estimates. The
+§4 guardrails are first-principles reasoning, not the known, better solutions. Before building,
+do the "Portfolio construction" literature pass in [TODO.md](TODO.md) → `info/literature.md`:
+covariance shrinkage (Ledoit-Wolf), Black-Litterman, resampled efficiency, risk parity, and
+especially **Hierarchical Risk Parity (López de Prado)** — a robust, KISS-compatible alternative
+that may be a better default than raw MVO for our 21-asset, 330-month set. The estimation-error
+robustness is the whole game; the optimizer is the *last* place to trust naive history.
