@@ -13,7 +13,7 @@ version is a *known* failure mode. This is the map so the optimizer
 
 **This file is the index + verdicts.** For the whole literature as one plain-language story (no
 formulas — read this first for comprehensive understanding), see
-[literature/state-of-the-art-in-plain-words.md](literature/state-of-the-art-in-plain-words.md).
+[literature/STATE-OF-THE-ART-IN-PLAIN-WORDS.md](literature/STATE-OF-THE-ART-IN-PLAIN-WORDS.md).
 Each entry below also has an implementation-grade deep dive in [literature/](literature/) — the
 principles AND the mathematics (formulas, algorithms, pitfalls, unit tests), written to be
 codeable without fetching the paper:
