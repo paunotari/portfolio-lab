@@ -237,12 +237,46 @@ entry with an adopt/adapt/benchmark verdict under our KISS + FRED-ToS constraint
 
 ## Data sources
 
+### Data upgrades for the optimizer — prioritized (2026-07)
+
+Decided after the optimizer build, from the "would more/other data help?" analysis. The ranking
+logic: expected returns improve only with CALENDAR SPAN, covariance with observation count
+(Merton 1980) — and shrinkage already patched the covariance (δ* ≈ 0.14 says the monthly sample
+matrix was decent). So frequency is the least valuable axis; breadth and span are the levers.
+Matches the round-2 backtest conclusion: at ~350 months, more data — not more conditioning — is
+what moves the needle.
+
+- [ ] **P1 — Asset classes beyond equities (bonds, commodities/gold, TIPS-like), 3–4 series.**
+      The single highest-value extension: all 21 current sleeves are equities, so every
+      quadrant profile is correlated and the maximin mode can only reshuffle equity tilts. True
+      All-Weather robustness needs assets that structurally win in different quadrants (bonds
+      in Deflationary bust, commodities in Stagflation) — the unlevered-equity limitation is
+      flagged in [literature/risk-parity-erc.md](literature/risk-parity-erc.md). Plugs in via
+      the `source=api` registry branch below. Adaptations needed: look-through diversification
+      tables (or exempt non-equity sleeves from that objective) and the regime-view builder's
+      factor-vs-Reference assumption (`portfolio/views.py`).
+- [ ] **P2 — Longer PROXY history for the regime layer** (e.g. Fama-French factor returns from
+      1926, MSCI World from 1970) — not as investable sleeves, but to condition per-quadrant
+      factor behavior on far more Stagflation/bust months (our thinnest, most decision-relevant
+      samples; the actual 1970s are barely in the 1997+ window). Regime-conditioning is also the
+      honest answer to the stationarity objection: stability is only assumed *within* regimes.
+- [ ] **P3 — Live data feed** (see "Live data" below) — the nowcasting lesson: fresher data
+      beats a fancier model; our ~1–2 month macro print lag bounds the regime call more than
+      method choice does.
+- [ ] **P4 (likely never) — Higher-frequency (weekly/daily) returns.** Would only sharpen the
+      covariance (already shrunk), does nothing for means (span-pinned), biases cross-region
+      correlations via asynchronous closes, and the macro layer is inherently monthly (FRED
+      prints monthly — no weekly quadrants). Recorded so the question isn't re-litigated.
+
+### Infrastructure
+
 - [x] **Index registry** (`data/index_registry.csv`) — explicit manifest of tracked indexes;
       ingest is registry-driven so adding an MSCI index = add a row + drop the file(s), no code
       edit. See `info/CLAUDE.md` §5.
 - [ ] **API data source** — add a `source=api` branch in `ingest/returns.py` so indexes can be
       pulled from an API (e.g. a ticker feed) instead of local MSCI files, using the same registry
       contract. Keep the index set small/curated (KISS — the main indexes, not 200 niche ones).
+      Now also the door for the P1 asset-class extension above.
 - [ ] Optionally move the 2 hardcoded AC Asia ex Japan web-image weights out of
       `ingest/asia_images.py` into a small CSV, so *all* weight data is file-driven.
 
