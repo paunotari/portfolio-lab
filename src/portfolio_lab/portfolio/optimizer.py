@@ -507,8 +507,9 @@ def run():
             cones[name] = portfolio_cone(full_w, uni=uni)
 
     from portfolio_lab.portfolio.validation import walk_forward
-    wf_summary, wf_meta = walk_forward()
+    wf_summary, wf_meta, wf_monthly = walk_forward()
     wf_summary.to_csv(C.OPTIMIZER_WALKFORWARD, index=False)
+    wf_monthly.to_csv(C.OPTIMIZER_WALKFORWARD_RETURNS)   # cached for portfolio/visualize.py
 
     rows = [dict(portfolio=name, series=s, weight=w)
             for name, res in portfolios.items() for s, w in res["weights"].items()]

@@ -43,8 +43,10 @@ def _contestants(inp: dict, n_starts: int, seed: int) -> dict:
 
 
 def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
-                 seed: int = None) -> tuple[pd.DataFrame, dict]:
-    """Expanding-window backtest. Returns (summary DataFrame, meta dict)."""
+                 seed: int = None) -> tuple[pd.DataFrame, dict, pd.DataFrame]:
+    """Expanding-window backtest. Returns (summary DataFrame, meta dict, monthly OOS returns
+    DataFrame — one column per contestant, used by portfolio/visualize.py for the cumulative
+    comparison curves)."""
     warmup = warmup or C.OPTIMIZER_WF_WARMUP_MONTHS
     refit = refit or C.OPTIMIZER_WF_REFIT_MONTHS
     n_starts = n_starts or C.OPTIMIZER_WF_N_STARTS
@@ -70,9 +72,10 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
             prev_w[name] = w
 
     oos_index = rets.index[warmup:]
-    rows = []
+    rows, monthly = [], {}
     for name, chunks in oos_returns.items():
         r = pd.Series(np.concatenate(chunks), index=oos_index[:sum(map(len, chunks))])
+        monthly[name] = r
         level = pd.concat([pd.Series([100.0], index=[oos_index[0] - pd.offsets.MonthEnd(1)]),
                            100.0 * (1 + r).cumprod()])
         p = _perf_stats(level)
@@ -83,17 +86,18 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
     meta = dict(warmup_months=warmup, refit_months=refit, n_refits=len(refit_dates),
                 oos_start=str(oos_index[0].date()), oos_end=str(oos_index[-1].date()),
                 oos_months=len(oos_index))
-    return summary, meta
+    return summary, meta, pd.DataFrame(monthly)
 
 
 def run():
     C.ensure_dirs()
-    summary, meta = walk_forward()
+    summary, meta, monthly = walk_forward()
     summary.to_csv(C.OPTIMIZER_WALKFORWARD, index=False)
+    monthly.to_csv(C.OPTIMIZER_WALKFORWARD_RETURNS)
     print(f"[validation] walk-forward: {meta['n_refits']} refits, OOS "
           f"{meta['oos_start']} -> {meta['oos_end']} ({meta['oos_months']} months)")
     print(summary.to_string(index=False))
-    return summary, meta
+    return summary, meta, monthly
 
 
 if __name__ == "__main__":

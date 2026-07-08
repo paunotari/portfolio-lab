@@ -115,6 +115,7 @@ under your priorities — not a forecast."**
 | Π, BL posterior, regime views | `portfolio/views.py` |
 | objectives, normalization, SLSQP, maximin, scorecard, report, CLI | `portfolio/optimizer.py` |
 | walk-forward OOS backtest | `portfolio/validation.py` |
+| comparison charts (7 captioned Plotly figures) | `portfolio/visualize.py` → `optimizer_viz.html` |
 | portfolio-level scenario cone | `analytics/scenario.py::portfolio_cone` |
 | config constants (`OPTIMIZER_*`) | `config.py` |
 | outputs | `outputs/analytics/optimizer/` (`REPORT_optimizer.md`, `optimizer_portfolios.csv`, `optimizer_walkforward.csv`) |
@@ -123,6 +124,7 @@ under your priorities — not a forecast."**
 python -m portfolio_lab.portfolio.optimizer --return 5 --risk 5 --div 5   # one-off run
 python -m portfolio_lab.portfolio.optimizer --maximin                     # robust mode
 python -m portfolio_lab.portfolio.validation                             # walk-forward only
+python -m portfolio_lab.portfolio.visualize                              # comparison charts (HTML)
 ```
 
 ## Follow-ups (tracked in TODO.md)
