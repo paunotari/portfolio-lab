@@ -36,14 +36,13 @@ _(both done — see Portfolio optimization below for what builds on them next)_
 
 ## Portfolio optimization (vision.md Phase 3)
 
-> **Design is written up separately in [portfolio_optimization.md](portfolio_optimization.md)**
-> (2026-07): three Tier-1 preferences + one optional hard target, normalized-score blend solved
-> with multi-start SLSQP (`scipy` chosen — resolves the backend open question below), regime
-> targeting incl. a maximin "robust across all quadrants" mode, scenario engine as validator,
-> guardrails against hindsight-fitting, and a 3a/3b/3c build order. **To implement next.** The two
-> checklist items below are what that doc plans to deliver.
+> **The unified method (v2) is documented in [portfolio_optimization.md](portfolio_optimization.md)**
+> and **BUILT 2026-07** — 3a engine + 3b regime/maximin + walk-forward validation
+> (`portfolio/shrinkage.py`, `anchors.py`, `views.py`, `optimizer.py`, `validation.py`, pipeline
+> stage 10, `tests/test_optimizer.py`). The two original checklist items below are done; the
+> remaining Phase-3 work is 3c and the smaller follow-ups listed after them.
 
-- [ ] **Design the multi-objective portfolio optimizer.** Goal: given the return/risk/exposure
+- [x] **Design the multi-objective portfolio optimizer.** Goal: given the return/risk/exposure
       data already computed, find weights that best satisfy user-specified objectives, not just
       a single fixed formula. Needs to support, at minimum:
   - Single-objective modes, e.g. "maximize historical return" (degenerates to 100% in the best
@@ -65,12 +64,30 @@ _(both done — see Portfolio optimization below for what builds on them next)_
     SLSQP). cvxpy can't express max-drawdown / per-regime objectives; Riskfolio-Lib is too heavy
     and opaque for the house style. Rationale in
     [portfolio_optimization.md](portfolio_optimization.md) §2.
-- [ ] **Regime-targeted allocation** (the signature feature). Let the user express a desired
-      performance profile *per macro regime/quadrant* rather than only an average — e.g. split
-      evenly (25/25/25/25 across inflationary/deflationary/growth/stagnation), weight by each
-      regime's historical frequency, or set custom per-regime targets ("do well in X, accept
-      less in Y") — then optimize the allocation to match. Builds directly on the multi-objective
-      optimizer above plus the 4-quadrant classification below.
+- [x] **Regime-targeted allocation** (the signature feature) — DONE 2026-07. Regime row
+      (per-quadrant importances, each quadrant scored on its own attainable range; presets
+      historical-frequency / even 25×4 / Markov-outlook-weighted) + the **maximin mode**
+      (`--maximin`: max the worst quadrant's return, epigraph reformulation) in
+      `portfolio/optimizer.py`; regime views also tilt μ_BL via the BL layer, confidence-weighted
+      by the Markov outlook. Validated by `analytics/scenario.py::portfolio_cone` + walk-forward.
+
+### Phase-3 follow-ups (post engine build, 2026-07)
+
+- [ ] **3c — dashboard "Optimizer" tab**: three sliders + Tier-2 panel (regime row, risk-metric
+      toggle, caps, hard target) running live in the browser; JS mirror of the objective + a
+      simple multi-start/projected-gradient solver (serverless, same dual-implementation pattern
+      and caveat #12 sync warning as `computeSeriesStats`); frontier strip showing the chosen
+      portfolio vs neighbors; Tier-1 output = recommended allocation + the "why" (scorecard, RC,
+      benchmarks) per the layering item above.
+- [ ] CVaR-95 as third Tier-2 risk metric — un-parking route in
+      [literature/cvar-optimization.md](literature/cvar-optimization.md): feed the
+      Rockafellar-Uryasev LP with scenario-engine months instead of raw history.
+- [ ] Per-sleeve/per-region **risk budgeting** ("EM gets 10% of my risk, not 10% of my money") —
+      same convex program as ERC with target contributions b_i.
+- [ ] Revisit **ERC vs HRP as the default anchor** when more walk-forward evidence accumulates
+      (first table 2026-07: min-var best OOS Sharpe 1.06, HRP 0.88, ERC 0.86, 1/N 0.84, maximin
+      0.73, balanced sliders 0.70 — the balanced blend did NOT beat 1/N, exactly the DeMiguel
+      expectation; min-var's win also matches the literature's "most-constrained models do best").
 
 ## Macro & regime analysis (vision.md Phase 2 remainder)
 

@@ -116,11 +116,31 @@ SCENARIO_YEARS = 10
 SCENARIO_TRIALS = 2000
 SCENARIO_SEED = 42
 
+# portfolio optimizer (portfolio/optimizer.py) settings + output file handles.
+# Defaults follow the unified method (info/portfolio_optimization.md): the 40% sleeve cap and
+# min-sleeves guardrails are implicit shrinkage (Jagannathan-Ma 2003), not just prudence.
+# min_sleeves is enforced through the cap: a cap of c forces at least ceil(1/c) sleeves, so
+# forcing >= m sleeves means capping just under 1/(m-1). The 40% default already forces >= 3.
+OPTIMIZER_DIR = ANALYTICS_DIR / "optimizer"
+OPTIMIZER_REPORT = OPTIMIZER_DIR / "REPORT_optimizer.md"
+OPTIMIZER_PORTFOLIOS = OPTIMIZER_DIR / "optimizer_portfolios.csv"
+OPTIMIZER_WALKFORWARD = OPTIMIZER_DIR / "optimizer_walkforward.csv"
+OPTIMIZER_MAX_SLEEVE_PCT = 40.0     # default per-sleeve cap (Tier-2 overridable)
+OPTIMIZER_MIN_SLEEVES = 3           # implied by the 40% cap; kept explicit for overrides
+OPTIMIZER_N_STARTS = 50             # multi-start SLSQP random starts (+ anchor + equal-weight)
+OPTIMIZER_SEED = 7
+# walk-forward validation (portfolio/validation.py): expanding window, annual refits, fewer
+# starts per refit (each refit re-solves the whole normalization; 8 starts keeps it honest+fast)
+OPTIMIZER_WF_WARMUP_MONTHS = 120
+OPTIMIZER_WF_REFIT_MONTHS = 12
+OPTIMIZER_WF_N_STARTS = 8
+
 
 def ensure_dirs() -> None:
     """Create all writable output directories if missing (idempotent)."""
     for d in (PROCESSED_DIR, ANALYTICS_DIR, CORR_REGIME_DIR, DIVERSIFICATION_DIR,
-              MACRO_ANALYTICS_DIR, MACRO_CORR_BY_REGIME_DIR, MACRO_STATE_DIR, SCENARIO_DIR):
+              MACRO_ANALYTICS_DIR, MACRO_CORR_BY_REGIME_DIR, MACRO_STATE_DIR, SCENARIO_DIR,
+              OPTIMIZER_DIR):
         d.mkdir(parents=True, exist_ok=True)
 
 

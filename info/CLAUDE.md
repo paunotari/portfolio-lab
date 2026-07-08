@@ -4,7 +4,8 @@ Orientation doc for Claude (or any agent / the author) picking up this repo. Rea
 For the *product vision and roadmap*, see [vision.md](vision.md). For the *actionable task
 backlog*, see [TODO.md](TODO.md). For the *conceptual diversification thesis*, see
 [factor-diversification-thesis.md](factor-diversification-thesis.md). For the *Phase 3 portfolio
-optimizer design* (agreed, not yet built), see
+optimizer* (the unified method, v2 — engine + regime/maximin + walk-forward BUILT 2026-07;
+dashboard tab 3c pending), see
 [portfolio_optimization.md](portfolio_optimization.md). For the *literature canon* grounding the
 optimizer and the regime forecasting (with adopt/adapt verdicts), see
 [literature.md](literature.md) — index + verdicts — with implementation-grade deep dives
@@ -50,7 +51,8 @@ hard-coded Asia figures in `ingest/asia_images.py`).
 ```bash
 pip install -r requirements.txt
 python scripts/run_pipeline.py          # raw -> processed -> analytics -> dashboard
-python tests/test_pipeline.py           # or: python -m pytest tests/ -q
+python tests/test_pipeline.py           # data-integrity checks
+python tests/test_optimizer.py          # optimizer-stack unit tests (or: python -m pytest tests/ -q)
 open outputs/dashboard.html             # double-click; Plotly loads from CDN
 ```
 Individual stages (from repo root, src is auto-added to path by scripts/tests):
@@ -60,6 +62,8 @@ python -m portfolio_lab.ingest.macro          # FRED fetch (uses FRED_API_KEY fr
 python -m portfolio_lab.analytics.engine
 python -m portfolio_lab.analytics.macro_link  # index<->macro correlations (needs macro_monthly.csv)
 python -m portfolio_lab.portfolio.diversification
+python -m portfolio_lab.portfolio.optimizer --return 5 --risk 5 --div 5   # or --maximin
+python -m portfolio_lab.portfolio.validation  # walk-forward OOS backtest only
 python -m portfolio_lab.dashboard.build
 ```
 > To run a bare `python -m portfolio_lab.*` you must have `src/` on `PYTHONPATH`
@@ -78,8 +82,13 @@ python -m portfolio_lab.dashboard.build
 | `analytics/engine.py` | Performance summary (CAGR/vol/Sharpe/maxDD, one number per series over the common window — no more "cw_"/"full_" split), factor-vs-reference, per-regime performance, correlation matrices (full + per regime), 36m rolling correlation, and `REPORT.md`. |
 | `analytics/macro_link.py` | **Index↔macro correlation engine.** For each of the 21 return series × 16 indicators: contemporaneous + lagged (0/1/3/6/12m, macro leads) correlations on **two bases** — `chg` (Δ month-over-month, the sound basis) and `level` (regime context only) — plus univariate OLS betas. 36-month min-overlap guard flags short pairs as insufficient. Also computes **per-(named)-regime** correlation matrices (chg basis, lag 0; lower 6-month overlap floor since regimes run as short as ~15 months — `regime_correlations()`). Outputs to `outputs/analytics/macro/` (long CSV, two wide 21×16 matrices, betas, `correlation_by_regime/*.csv`, `REPORT_macro.md`). |
 | `analytics/macro_state.py` | **4-quadrant macro-state classifier (v2, composite)** — systematic, month-by-month (growth trend × inflation trend → Goldilocks/Reflation/Deflationary-bust/Stagflation). Growth and inflation are each a **composite of several indicators' z-scored, sign-adjusted trends** (`config.MACRO_STATE_GROWTH_COMPONENTS` / `_INFLATION_COMPONENTS`; primaries `indpro_yoy` / `core_pce_yoy` required, short-history components join when available). Produces **continuous scores + soft quadrant probabilities** (Φ of the scores, product across the two axes) alongside the hard label (= most probable quadrant = sign of the scores), plus an **empirical monthly Markov transition matrix** (`transition_matrix()`, persistence + expected durations) and a **short-horizon probabilistic outlook** (`quadrant_outlook()`: soft vector × P^3 — the best-calibrated method in the 2026-07 walk-forward backtest recorded in TODO.md). `classify_states()`/`transition_matrix()` are reused by `analytics/scenario.py`. Also computes per-state performance for all 21 series, **factor-level attribution**, and an NBER-recession overlap sanity check in the report. Outputs to `outputs/analytics/macro_state/` (`macro_state_monthly.csv`, `macro_state_transitions.csv`, `macro_state_performance.csv`, `macro_state_factor_attribution.csv`, `REPORT_macro_state.md`). See caveats §7 (#14 NaN pitfall, #17 v2 simplifications). |
-| `analytics/scenario.py` | **Regime-persistent bootstrap scenario simulation (v2)**. Monte Carlo in **regime spells**, not i.i.d. months: spell durations are geometric from the transition matrix's continuation probabilities (realistic regime persistence), and months within a spell are **contiguous blocks** of real history (partial within-regime serial correlation), always whole cross-sections (preserving cross-series correlation). Three built-in scenarios: `current_conditions` (**starts from today's actual quadrant**, spells then follow historical transition probabilities — `simulate_from_current()`), `historical_frequency`, `even_25_25_25_25` (weights mode: long-run month shares converge to the target weights via q ∝ w·(1−p_stay); `simulate_scenario(weights, ...)` keeps the custom-weights API for the future optimizer). Outputs simulated CAGR/maxDD percentiles + probability of cumulative loss per series, to `outputs/analytics/scenario/` (`scenario_summary.csv`, `REPORT_scenario.md`). Explicitly non-ML (resampling + empirical transition counts) — see caveat §11. |
+| `analytics/scenario.py` | **Regime-persistent bootstrap scenario simulation (v2)**. Monte Carlo in **regime spells**, not i.i.d. months: spell durations are geometric from the transition matrix's continuation probabilities (realistic regime persistence), and months within a spell are **contiguous blocks** of real history (partial within-regime serial correlation), always whole cross-sections (preserving cross-series correlation). Three built-in scenarios: `current_conditions` (**starts from today's actual quadrant**, spells then follow historical transition probabilities — `simulate_from_current()`), `historical_frequency`, `even_25_25_25_25` (weights mode: long-run month shares converge to the target weights via q ∝ w·(1−p_stay); `simulate_scenario(weights, ...)` keeps the custom-weights API). **`portfolio_cone(weights_by_series)`** runs a weighted blend through the `current_conditions` simulation and returns the portfolio-level CAGR cone + P(loss) — the optimizer's validator. Outputs simulated CAGR/maxDD percentiles + probability of cumulative loss per series, to `outputs/analytics/scenario/` (`scenario_summary.csv`, `REPORT_scenario.md`). Explicitly non-ML (resampling + empirical transition counts) — see caveat §11; the method is a state-conditioned **stationary bootstrap (Politis-Romano 1994)**, cited in the docstring. |
 | `portfolio/diversification.py` | `analyze_portfolio({index: weight})` → look-through sector/country/stock exposure, HHI, threshold flags, **plus blended portfolio performance** (`portfolio_performance()`: constant-mix CAGR/vol/Sharpe/maxDD over the sleeves' overlapping history, via `analytics.engine._perf_stats`). **Weights must sum to 100%** (`config.PORTFOLIO_WEIGHT_TOLERANCE_PCT`) — raises `ValueError` rather than silently rescaling (e.g. a 340%-summing input is rejected, not renormalized). Reusable API + CLI. |
+| `portfolio/shrinkage.py` | **Ledoit-Wolf covariance shrinkage** — constant-correlation target (default, "Honey, I Shrunk…") + scaled-identity variant (sklearn-equivalent test oracle). Closed-form, returns `(Sigma, delta*)`; δ* is reported in optimizer output as an input-quality number. |
+| `portfolio/anchors.py` | **μ-free structural engines**: `equal_weight` (1/N), `erc_weights` (equal risk contribution, Spinu convex form — the optimizer's neutral anchor), `hrp_weights` (López de Prado's 3-stage HRP), `min_var_weights`, `risk_contributions` (Euler RC vector, reused in reporting). All long-only, sum to 1, consume the shrunk Σ. |
+| `portfolio/views.py` | **Black-Litterman layer — the only place expected returns are produced.** `implied_returns` (Π = δΣw₀, δ calibrated to the anchor's own history), `posterior` (master formula; τ=1/T, He-Litterman Ω, confidence capped at 0.95), `regime_views` (relative factor-vs-Reference views with Q outlook-weighted and confidence = the Markov outlook's probability mass). No views ⇒ μ_BL = Π ⇒ optimizer returns the anchor (unit-tested). |
+| `portfolio/optimizer.py` | **The multi-objective optimizer (unified method — see [portfolio_optimization.md](portfolio_optimization.md)).** Objectives: return (w·μ_BL only), risk (shrunk-Σ vol \| empirical blended maxDD), diversification (geometric mean of look-through effective bets, exact quadratic forms), regime row (per-quadrant scores), maximin mode (epigraph). Utopia/nadir 0–100 normalization → scorecard; multi-start SLSQP; caps as implicit shrinkage (40%/sleeve default; ≥m sleeves = cap just under 1/(m−1)); hard targets as constraints with explicit "NOT ACHIEVABLE" reporting; corner-solution warnings. `run()` = pipeline stage 10: benchmark table (1/N/ERC/HRP/min-var always), flagship portfolios (balanced 5/5/5 + maximin), scenario cones, walk-forward table → `outputs/analytics/optimizer/` (`REPORT_optimizer.md`, `optimizer_portfolios.csv`). Degrades gracefully without macro. CLI for custom runs. |
+| `portfolio/validation.py` | **Walk-forward OOS backtest** (literature directive 7): expanding window (120m warmup, annual refits, `OPTIMIZER_WF_*` config), everything re-estimated on train only; contestants 1/N, min-var, ERC, HRP, balanced sliders, maximin; OOS CAGR/vol/Sharpe/maxDD + per-refit turnover → `optimizer_walkforward.csv` + report section. First result (2026-07): min-var best OOS Sharpe; balanced blend did NOT beat 1/N — stated in the report, per the honesty principle. |
 | `dashboard/build.py` | Bakes all data as JSON into `outputs/dashboard.html`. Macro, macro-state and scenario data are each optional — their tabs degrade gracefully when the files are absent (e.g. after `--no-macro`). |
 | `dashboard/template.py` | The static HTML shell + browser JS (`__DATA__`/`__JS__` placeholders). Edit here for UI. **Visual identity (v1, 2026-07): light "research note" theme** — paper `#FBFBFD`/ink `#1D1D1F`, governing rule *chrome is monochrome, color only means data* (regime + factor hues are the only saturated pixels); type trio Newsreader italic (wordmark only) / Instrument Sans (UI) / IBM Plex Mono (all numbers, dates, pills — Google Fonts CDN, falls back to system offline); signature element = the 3px **regime ribbon** under the nav (the full monthly quadrant timeline as real-data brand mark) + current-regime chip in the header. `SCOLOR`/`FCOLOR`/`P` at the top of the JS are the palette single-source — keep new charts on them. **7 tabs**: **Performance** (single CAGR/vol/Sharpe/maxDD driven by a live date-range picker, defaulting to the common window; the cumulative-growth chart **rebases every series to 100 at the start of whatever range is selected** — `rebasedTraces()` — so the comparison is fair regardless of each index's own inception date; recomputed client-side in JS from the baked level series, so the formula must stay in sync with `analytics/engine.py`'s `_perf_stats`), Factor vs Reference, Regimes, Correlations, Macro (regime-shaded indicator chart, index↔macro heatmap with level/Δ toggle, per-series top-drivers bar), **Macro State** (Tier-1 current-quadrant verdict card with the soft probability read, persistence AND the 3-month Markov outlook pills; the **4-quadrant position chart** — current dot on continuous composite scores so it can straddle borders, trail of past months, month picker showing the actual forward path from any past date, direction-only momentum arrow, **empirical 3-month cone** (percentile boxes + re-anchored historical outcome dots conditioned on the current state), per-selected-month Markov outlook line, and a collapsible full-methodology block, all computed client-side from the baked scores/probs/transitions/`method` params; a Tier-2 **"Similar past months" analog panel** — k-nearest past months by scores+velocities with their 3-month outcomes and an optional top-5 path overlay on the chart; colored 4-quadrant month-by-month timeline; per-state index performance bars with state selector; factor-edge-by-state grouped bars; and the Monte Carlo scenario chart — median dot + p5–p95 range per series with a scenario selector incl. `current_conditions`), Diversification (live what-if — sleeve weights must sum to 100%, shown as a red/green total pill; blended portfolio CAGR/vol/Sharpe/maxDD computed live via the shared `computeSeriesStats()` helper, same one the Performance tab uses). |
 
@@ -97,6 +106,7 @@ levels_wide.csv + macro_monthly.csv ─analytics.macro_link──► outputs/ana
 macro_monthly.csv ─analytics.macro_state──► outputs/analytics/macro_state/*  (+ REPORT_macro_state.md)
 macro_state's classify_states() + levels_wide.csv ─analytics.scenario──► outputs/analytics/scenario/*
 weights CSVs ─portfolio.diversification──► outputs/diversification/*
+levels_wide.csv + weights CSVs + macro_state outputs ─portfolio.optimizer (+validation, scenario.portfolio_cone)──► outputs/analytics/optimizer/*
 all of the above ─dashboard.build──► outputs/dashboard.html
 ```
 
@@ -122,7 +132,7 @@ explicit, not implied by which folders happen to exist. Columns:
 `weights_file` to hold a ticker or endpoint) and implement one new branch in `ingest/returns.py`
 keyed on `source`. The registry contract stays the same — see TODO.md.
 Macro ingest needs network; skip it (and macro_link/macro_state/scenario, which all depend on
-macro data) offline with `python scripts/run_pipeline.py --no-macro`. Pipeline is 10 steps; see
+macro data) offline with `python scripts/run_pipeline.py --no-macro`. Pipeline is 11 steps; see
 `scripts/run_pipeline.py`.
 
 ## 6. Data model / conventions
@@ -220,6 +230,16 @@ macro data) offline with `python scripts/run_pipeline.py --no-macro`. Pipeline i
     Changing any classifier constant reshuffles the
     hard labels and therefore per-state performance, attribution AND scenario outputs — they
     all share `classify_states()`.
+18. **The optimizer never sees raw historical mean returns.** The only expected-return vector any
+    objective consumes is the Black-Litterman posterior μ_BL (`portfolio/views.py`) — anchored on
+    ERC-implied returns and tilted only by confidence-weighted regime views. Per-quadrant means
+    μ̂_q do enter the regime/maximin objectives directly (that's the signature feature, licensed
+    by Ang-Bekaert), guarded by the caps + corner warnings + scenario/walk-forward validation.
+    If you add a new objective, keep this line: raw full-sample μ̂ is forbidden by the evidence
+    (info/literature.md §4, directive 2). Also note: the walk-forward in
+    `portfolio/validation.py` re-estimates everything on the training window, but the
+    macro-state labels retain the classifier's mild full-sample z-normalization (caveat #17) —
+    stated in the report.
 
 ## 8. Extending it (conventions to keep)
 

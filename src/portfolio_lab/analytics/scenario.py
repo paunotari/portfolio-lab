@@ -35,6 +35,14 @@ This remains "what would a similar macro mix have historically produced," not a 
 WILL happen -- it assumes the future resembles a re-sequenced version of 1997-2026 history, a
 real, stated assumption, not a hidden one.
 
+LINEAGE: this is a state-conditioned STATIONARY BOOTSTRAP (Politis & Romano, JASA 1994) -- their
+random geometric block lengths are our geometric spell durations (continuation probability = the
+transition matrix diagonal), their uniform block starts are our within-state block sampling, with
+the regime path conditioning layered on top. The method has a name and asymptotic theory; see
+info/literature/stationary-bootstrap.md for the exact correspondence. Our expected block length
+is economically pinned by measured regime persistence (~4-6 months), rather than statistically
+tuned (Politis-White 2004 is the alternative, and roughly agrees in order of magnitude).
+
 Built-in scenarios:
   current_conditions    markov mode from today's actual quadrant (headline)
   historical_frequency  weights mode, each quadrant weighted by its 1997-2026 share of months
@@ -116,14 +124,14 @@ def _state_sequence(rng, n_periods, states_avail, stay, first_probs, spell_probs
     return seq
 
 
-def _run_trials(uni, states_avail, stay, first_probs, years, n_trials, seed,
-                spell_probs=None, next_probs=None) -> pd.DataFrame:
-    """Common core: simulate paths, compound them, summarize CAGR/maxDD percentiles per series."""
+def _simulate_month_returns(uni, states_avail, stay, first_probs, years, n_trials, seed,
+                            spell_probs=None, next_probs=None) -> np.ndarray:
+    """(n_trials, n_periods, n_series) simulated monthly returns — the raw material both the
+    per-series summary and the portfolio-level cone are computed from."""
     rng = np.random.default_rng(C.SCENARIO_SEED if seed is None else seed)
-    years = years or C.SCENARIO_YEARS
+    n_periods = (years or C.SCENARIO_YEARS) * 12
     n_trials = n_trials or C.SCENARIO_TRIALS
-    n_periods = years * 12
-    rets, series = uni["rets"], uni["series"]
+    rets = uni["rets"]
 
     month_returns = np.empty((n_trials, n_periods, rets.shape[1]))
     for trial in range(n_trials):
@@ -139,6 +147,16 @@ def _run_trials(uni, states_avail, stay, first_probs, years, n_trials, seed,
             hist_idx[t:end] = _block_fill(rng, pos, end - t)
             t = end
         month_returns[trial] = rets[hist_idx]
+    return month_returns
+
+
+def _run_trials(uni, states_avail, stay, first_probs, years, n_trials, seed,
+                spell_probs=None, next_probs=None) -> pd.DataFrame:
+    """Common core: simulate paths, compound them, summarize CAGR/maxDD percentiles per series."""
+    years = years or C.SCENARIO_YEARS
+    series = uni["series"]
+    month_returns = _simulate_month_returns(uni, states_avail, stay, first_probs, years,
+                                            n_trials, seed, spell_probs, next_probs)
 
     growth = 1.0 + month_returns
     cum = np.cumprod(growth, axis=1)                        # (trials, periods, series)
@@ -196,6 +214,53 @@ def simulate_from_current(uni: dict = None, years: int = None, n_trials: int = N
     first[states_avail.index(uni["current_state"])] = 1.0
     return _run_trials(uni, states_avail, stay, first_probs=first, years=years,
                        n_trials=n_trials, seed=seed, next_probs=np.array(next_probs))
+
+
+def portfolio_cone(weights: dict, uni: dict = None, years: int = None,
+                   n_trials: int = None, seed: int = None) -> dict:
+    """Portfolio-level current_conditions cone: run a WEIGHTED BLEND of series through the same
+    markov-mode simulation and summarize its simulated CAGR / max-drawdown percentiles and
+    probability of cumulative loss. This is the optimizer's validator (scenario engine as judge,
+    not objective — info/portfolio_optimization.md): the recommendation's forward cone under the
+    stated "future = re-sequenced history" assumption.
+
+    `weights`: {series column name: weight fraction}, summing to 1 over uni['series'] members.
+    """
+    uni = uni or build_universe()
+    w = np.zeros(len(uni["series"]))
+    for name, val in weights.items():
+        if name not in uni["series"]:
+            raise ValueError(f"unknown series {name!r}")
+        w[uni["series"].index(name)] = val
+    if abs(w.sum() - 1.0) > C.PORTFOLIO_WEIGHT_TOLERANCE_PCT / 100.0:
+        raise ValueError(f"portfolio weights must sum to 100% (got {w.sum():.1%})")
+
+    states_avail = [s for s in STATE_ORDER if s in uni["state_pos"]]
+    stay = np.array([uni["trans"].loc[s, s] for s in states_avail])
+    next_probs = []
+    for s in states_avail:
+        row = uni["trans"].loc[s, states_avail].values.astype(float).copy()
+        row[states_avail.index(s)] = 0.0
+        next_probs.append(row / row.sum() if row.sum() > 0 else
+                          np.ones(len(states_avail)) / len(states_avail))
+    first = np.zeros(len(states_avail))
+    first[states_avail.index(uni["current_state"])] = 1.0
+
+    years = years or C.SCENARIO_YEARS
+    month_returns = _simulate_month_returns(uni, states_avail, stay, first, years,
+                                            n_trials, seed, next_probs=np.array(next_probs))
+    blended = month_returns @ w                              # (trials, periods)
+    cum = np.cumprod(1.0 + blended, axis=1)
+    terminal = cum[:, -1]
+    cagr = terminal ** (1.0 / years) - 1.0
+    max_dd = (cum / np.maximum.accumulate(cum, axis=1) - 1.0).min(axis=1)
+    return dict(scenario="current_conditions", years=years,
+                cagr_p5=float(np.percentile(cagr, 5)), cagr_p25=float(np.percentile(cagr, 25)),
+                cagr_p50=float(np.percentile(cagr, 50)), cagr_p75=float(np.percentile(cagr, 75)),
+                cagr_p95=float(np.percentile(cagr, 95)),
+                maxdd_p5=float(np.percentile(max_dd, 5)), maxdd_p50=float(np.percentile(max_dd, 50)),
+                maxdd_p95=float(np.percentile(max_dd, 95)),
+                prob_cumulative_loss=float((terminal < 1.0).mean()))
 
 
 def run(years: int = None, n_trials: int = None):

@@ -203,6 +203,33 @@ def test_scenario_summary_valid():
         assert n == 21, f"scenario {name}: expected 21 series, got {n}"
 
 
+def test_optimizer_portfolios_valid():
+    # structural validity of the optimizer stage's outputs (skipped if not generated);
+    # unit tests of the optimizer internals live in tests/test_optimizer.py
+    if not C.OPTIMIZER_PORTFOLIOS.exists():
+        return
+    totals = defaultdict(float)
+    for r in _rows(C.OPTIMIZER_PORTFOLIOS):
+        w = float(r["weight"])
+        assert 0.0 <= w <= 1.0, f"{r['portfolio']}/{r['series']}: weight {w} out of bounds"
+        totals[r["portfolio"]] += w
+    assert totals, "optimizer_portfolios.csv is empty"
+    for name, tot in totals.items():
+        # displayed weights drop sub-0.1% dust, so allow a little under 100%
+        assert 0.97 <= tot <= 1.0001, f"{name}: weights sum to {tot:.4f}"
+
+
+def test_optimizer_walkforward_valid():
+    if not C.OPTIMIZER_WALKFORWARD.exists():
+        return
+    rows = _rows(C.OPTIMIZER_WALKFORWARD)
+    names = {r["portfolio"] for r in rows}
+    assert "1/N" in names, "walk-forward must always include the 1/N benchmark (DeMiguel)"
+    for r in rows:
+        assert float(r["oos_ann_vol"]) > 0, f"{r['portfolio']}: nonpositive OOS vol"
+        assert -1.0 <= float(r["oos_max_drawdown"]) <= 0.0, f"{r['portfolio']}: bad maxDD"
+
+
 if __name__ == "__main__":
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     passed = 0

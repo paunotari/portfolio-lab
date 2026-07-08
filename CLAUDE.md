@@ -20,8 +20,9 @@ For what the code does and how it's structured, read **[info/CLAUDE.md](info/CLA
      readable) in the same turn you finish the work.
 
 3. **Commit and push automatically once a change is implemented and verified working** — i.e.
-   after the relevant tests pass (`python tests/test_pipeline.py`) and, if applicable, the
-   pipeline runs clean (`python scripts/run_pipeline.py`). Do not ask for permission to commit/push
+   after the relevant tests pass (`python tests/test_pipeline.py` and
+   `python tests/test_optimizer.py`) and, if applicable, the pipeline runs clean
+   (`python scripts/run_pipeline.py`). Do not ask for permission to commit/push
    for routine work in this repo — that confirmation is pre-authorized here. Write a descriptive
    commit message (what changed and why, not just "update"). Push to `main` (this repo's
    established workflow — solo owner, no branch/PR process yet).
@@ -31,6 +32,7 @@ For what the code does and how it's structured, read **[info/CLAUDE.md](info/CLA
 
 ## Quick reference
 ```bash
-python scripts/run_pipeline.py      # rebuild processed data, analytics, dashboard
+python scripts/run_pipeline.py      # rebuild processed data, analytics, optimizer, dashboard
 python tests/test_pipeline.py       # data-integrity checks — must pass before committing
+python tests/test_optimizer.py      # optimizer-stack unit tests — must pass before committing
 ```
