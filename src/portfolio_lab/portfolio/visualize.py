@@ -127,12 +127,21 @@ def build_data() -> dict:
             cones.append(dict(name=name, **{k: v for k, v in portfolio_cone(full_w, uni=uni).items()
                                             if k not in ("scenario", "years")}))
 
+    # roster holdings: the actual sleeves+weights each strategy lands on (grounds the formulas)
+    wvecs = dict(inp["anchors"])                            # 1/N, ERC (anchor), HRP, Min-variance
+    wvecs.update({name: res["w"] for name, res in portfolios.items()})
+    roster_weights = {}
+    for name, w in wvecs.items():
+        pairs = sorted([[series[i].replace(" | ", " · "), round(float(w[i]), 4)]
+                        for i in range(len(series)) if w[i] > 0.001], key=lambda kv: -kv[1])
+        roster_weights[name] = dict(holdings=pairs, n_total=len(pairs))
+
     outlook = ({_short(k): round(float(v), 3) for k, v in inp["outlook"].items()}
                if inp["outlook"] else None)
     return dict(window=f"{rets.index[0].date()} → {rets.index[-1].date()}", T=inp["T"],
                 n=len(series), delta_star=round(inp["delta_star"], 3), outlook=outlook,
                 wf=wf, sleeves=sleeve_pts, portfolios=port_pts, quad=quad, bl=bl, wrc=wrc,
-                cones=cones)
+                cones=cones, roster_weights=roster_weights)
 
 
 TEMPLATE = """<!DOCTYPE html>
@@ -175,6 +184,17 @@ TEMPLATE = """<!DOCTYPE html>
     vertical-align:middle}
   .roster .p{font-size:12.5px}
   .mut{color:var(--mut)}
+  .holds{margin:8px 0 2px}
+  .holds .htitle{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);
+    margin-bottom:5px}
+  .hbar{display:grid;grid-template-columns:180px 1fr 44px;align-items:center;gap:8px;margin:3px 0;
+    font-size:12px}
+  .hlab{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+  .htrk{background:#F0F0F3;border-radius:3px;height:9px;overflow:hidden}
+  .hfill{display:block;height:9px;border-radius:3px}
+  .hpct{font-family:"IBM Plex Mono",monospace;text-align:right;color:var(--ink)}
+  .hmore{font-size:11.5px;color:var(--mut);margin-top:4px}
+  @media(max-width:620px){.hbar{grid-template-columns:130px 1fr 40px}}
   details.more .key{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
 </style></head><body>
 <h1>Portfolio optimizer — comparisons &amp; evidence</h1>
@@ -189,35 +209,41 @@ established methods from the portfolio-construction literature; two (marked ★)
 top of that literature. The deepest thing separating them is <b>how much each one bets on
 predicted returns</b> — the input the research says is the least trustworthy of all.</p>
 <div class="roster">
-<div class="rp"><span class="dot" style="background:#8E8E93"></span><b>1/N — equal weight</b><br>
+<div class="rp" data-port="1/N"><span class="dot" style="background:#8E8E93"></span><b>1/N — equal weight</b><br>
 Split the money equally across all sleeves and ignore every input. Not really a "method" — it's
 the humble baseline the whole field measures against. <code>w_i = 1/N</code><br>
-<span class="p mut">DeMiguel, Garlappi &amp; Uppal (2009), <a href="https://academic.oup.com/rfs/article-abstract/22/5/1915/1592901"><i>RFS</i></a> — raced 14 sophisticated models against it; none beat it reliably.</span></div>
-<div class="rp"><span class="dot" style="background:#2E9E68"></span><b>Min-variance</b><br>
+<span class="p mut">DeMiguel, Garlappi &amp; Uppal (2009), <a href="https://academic.oup.com/rfs/article-abstract/22/5/1915/1592901"><i>RFS</i></a> — raced 14 sophisticated models against it; none beat it reliably.</span>
+<div class="holds"></div></div>
+<div class="rp" data-port="Min-variance"><span class="dot" style="background:#2E9E68"></span><b>Min-variance</b><br>
 Pick the weights that make total portfolio volatility as small as mathematically possible — and
 ignore expected returns entirely. Naturally lands in the calmest, most mutually-hedging assets.
 <code>min_w  wᵀΣw   s.t. Σw = 1, w ≥ 0</code><br>
-<span class="p mut">Markowitz (1952), <i>JF</i> — the original efficient-frontier idea; Nobel Prize 1990.</span></div>
-<div class="rp"><span class="dot" style="background:#3B6FD4"></span><b>ERC — Equal Risk Contribution (our neutral anchor)</b><br>
+<span class="p mut">Markowitz (1952), <i>JF</i> — the original efficient-frontier idea; Nobel Prize 1990.</span>
+<div class="holds"></div></div>
+<div class="rp" data-port="ERC (anchor)"><span class="dot" style="background:#3B6FD4"></span><b>ERC — Equal Risk Contribution (our neutral anchor)</b><br>
 Give every sleeve an equal share of the <i>risk</i>, not of the money (60/40 in dollars is ~90/10
 in risk — equities dominate). No return forecasts needed; its volatility provably sits between
 min-variance and 1/N. <code>RC_i = w_i·(Σw)_i / σ_p   equal for all i</code><br>
-<span class="p mut">Maillard, Roncalli &amp; Teïletche (2010), <i>JPM</i>; the philosophy behind Bridgewater's All Weather (1996).</span></div>
-<div class="rp"><span class="dot" style="background:#7A5FD0"></span><b>HRP — Hierarchical Risk Parity</b><br>
+<span class="p mut">Maillard, Roncalli &amp; Teïletche (2010), <i>JPM</i>; the philosophy behind Bridgewater's All Weather (1996).</span>
+<div class="holds"></div></div>
+<div class="rp" data-port="HRP"><span class="dot" style="background:#7A5FD0"></span><b>HRP — Hierarchical Risk Parity</b><br>
 Cluster the assets into a correlation "family tree," then split capital down the branches — never
 inverting the covariance matrix, so one bad estimate can't blow up the whole allocation.
 <code>distance d_ij = √((1 − ρ_ij)/2)</code><br>
-<span class="p mut">López de Prado (2016), <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2708678"><i>JPM</i></a> — beats min-variance out-of-sample in the paper's own tests.</span></div>
-<div class="rp"><span class="dot" style="background:#E08A00"></span><b>★ Balanced sliders — our unified method</b><br>
+<span class="p mut">López de Prado (2016), <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2708678"><i>JPM</i></a> — beats min-variance out-of-sample in the paper's own tests.</span>
+<div class="holds"></div></div>
+<div class="rp" data-port="Balanced sliders (5/5/5)"><span class="dot" style="background:#E08A00"></span><b>★ Balanced sliders — our unified method</b><br>
 Start from the ERC anchor, tilt it <i>gently</i> with confidence-weighted Black-Litterman views,
 then blend your three preferences (return / risk / diversification), each scored 0–100 on its own
 attainable range. Bets on returns only in proportion to stated confidence — never freely.<br>
-<span class="p mut">Black &amp; Litterman (1992, Goldman Sachs) over the shrinkage+anchor stack — full math in the per-chart blocks below.</span></div>
-<div class="rp"><span class="dot" style="background:#C94F4F"></span><b>★ Maximin — our robust mode</b><br>
+<span class="p mut">Black &amp; Litterman (1992, Goldman Sachs) over the shrinkage+anchor stack — full math in the per-chart blocks below.</span>
+<div class="holds"></div></div>
+<div class="rp" data-port="Maximin (worst quadrant)"><span class="dot" style="background:#C94F4F"></span><b>★ Maximin — our robust mode</b><br>
 Don't chase the best case — make the <i>worst</i> macro quadrant as good as possible, so no
 regime can sink you. Accepts higher volatility as the price of that safety.
 <code>max_w  min_q  wᵀμ̂_q</code> (solved as a linear program)<br>
-<span class="p mut">Ang &amp; Bekaert (2002/2004) — regime value comes from surviving the bad state; = All Weather's whole philosophy.</span></div>
+<span class="p mut">Ang &amp; Bekaert (2002/2004) — regime value comes from surviving the bad state; = All Weather's whole philosophy.</span>
+<div class="holds"></div></div>
 </div>
 <p class="key"><b>The pattern to watch across the charts:</b> the four methods that bet <i>least</i>
 on predicted returns (1/N, min-variance, ERC, HRP) are exactly the ones that win out of sample —
@@ -412,6 +438,25 @@ const L=o=>Object.assign({paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0
 const CFG={displayModeBar:false,responsive:true};
 document.getElementById('win').textContent=DATA.window+'  ('+DATA.T+'m × '+DATA.n+' series)';
 document.getElementById('dstar').textContent=DATA.delta_star;
+
+// roster holdings — the actual sleeves+weights each strategy lands on
+document.querySelectorAll('.roster .rp[data-port]').forEach(rp=>{
+ const rw=DATA.roster_weights[rp.dataset.port], el=rp.querySelector('.holds');
+ if(!rw||!el||!rw.holdings.length) return;
+ const col=pc(rp.dataset.port), h=rw.holdings, mx=h[0][1];
+ const equal=h.length===rw.n_total && (h[0][1]-h[h.length-1][1] < 0.001);
+ let html='<div class="htitle">Holdings — what it actually buys</div>';
+ if(equal){el.innerHTML=html+'<div class="hmore">All '+rw.n_total+
+   ' sleeves held equally at '+(h[0][1]*100).toFixed(1)+'% each.</div>';return;}
+ h.slice(0,8).forEach(([s,w])=>{html+='<div class="hbar"><span class="hlab" title="'+s+'">'+s+
+   '</span><span class="htrk"><span class="hfill" style="width:'+(w/mx*100).toFixed(0)+
+   '%;background:'+col+'"></span></span><span class="hpct">'+(w*100).toFixed(1)+'%</span></div>';});
+ const rest=rw.n_total-Math.min(8,h.length);
+ if(rest>0){const rw2=h.slice(8).reduce((a,b)=>a+b[1],0);
+   html+='<div class="hmore">+ '+rest+' more sleeve'+(rest>1?'s':'')+
+   ' ('+(rw2*100).toFixed(0)+'% combined, each &lt; '+(h[8][1]*100).toFixed(1)+'%)</div>';}
+ el.innerHTML=html;
+});
 
 // 1 race
 Plotly.newPlot('race',Object.keys(DATA.wf.growth).map(n=>({x:DATA.wf.dates,y:DATA.wf.growth[n],
