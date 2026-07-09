@@ -64,6 +64,8 @@ def build_data() -> dict:
         prefs={"return": 5, "risk": 5, "diversification": 5}, inputs=inp)}
     if have_macro:
         portfolios["Maximin (worst quadrant)"] = opt.optimize(maximin=True, inputs=inp)
+        portfolios[f"Maximin (geo ≤{C.OPTIMIZER_GEO_CAP_PCT:.0f}%)"] = opt.optimize(
+            maximin=True, geo_cap=C.OPTIMIZER_GEO_CAP_PCT / 100.0, inputs=inp)
 
     # 1-2. walk-forward race + summary
     wf_summary, wf_monthly = _walkforward_data()
@@ -131,10 +133,12 @@ def build_data() -> dict:
     wvecs = dict(inp["anchors"])                            # 1/N, ERC (anchor), HRP, Min-variance
     wvecs.update({name: res["w"] for name, res in portfolios.items()})
     roster_weights = {}
+    Z, zones = inp["geo_Z"], inp["geo_zones"]
     for name, w in wvecs.items():
         pairs = sorted([[series[i].replace(" | ", " · "), round(float(w[i]), 4)]
                         for i in range(len(series)) if w[i] > 0.001], key=lambda kv: -kv[1])
-        roster_weights[name] = dict(holdings=pairs, n_total=len(pairs))
+        geo = {z: round(float(w @ Z[:, j]), 3) for j, z in enumerate(zones)}
+        roster_weights[name] = dict(holdings=pairs, n_total=len(pairs), geo=geo)
 
     outlook = ({_short(k): round(float(v), 3) for k, v in inp["outlook"].items()}
                if inp["outlook"] else None)
@@ -243,6 +247,15 @@ Don't chase the best case — make the <i>worst</i> macro quadrant as good as po
 regime can sink you. Accepts higher volatility as the price of that safety.
 <code>max_w  min_q  wᵀμ̂_q</code> (solved as a linear program)<br>
 <span class="p mut">Ang &amp; Bekaert (2002/2004) — regime value comes from surviving the bad state; = All Weather's whole philosophy.</span>
+<div class="holds"></div></div>
+<div class="rp" data-port="Maximin (geo ≤40%)"><span class="dot" style="background:#1F8A99"></span><b>★ Maximin, geo-capped — robust <i>and</i> spread across the world</b><br>
+Same worst-quadrant objective, plus a hard cap on the <b>look-through</b> exposure to each
+geographic zone (North America / Europe / Asia-Pacific / Rest, from the factsheet country
+weights — so an "EM" sleeve counts as the Asia it really holds). Within each zone the optimizer
+still picks the best sleeves; the cap only forbids piling everything into one region — insurance
+for the scenario where a different part of the world leads the next decade.
+<code>max_w min_q wᵀμ̂_q   s.t.  wᵀZ_zone ≤ 40% ∀zone</code><br>
+<span class="p mut">Constraints as implicit shrinkage: Jagannathan &amp; Ma (2003), <i>JF</i> — capping is itself a robustness device, not just a preference.</span>
 <div class="holds"></div></div>
 </div>
 <p class="key"><b>The pattern to watch across the charts:</b> the four methods that bet <i>least</i>
@@ -430,7 +443,7 @@ const DATA = __DATA__;
 const INK='#1D1D1F', MUT='#6E6E73', LINE='#E3E3E8';
 const PCOLOR={'1/N':'#8E8E93','ERC (anchor)':'#3B6FD4','HRP':'#7A5FD0','Min-variance':'#2E9E68',
   'Balanced sliders (5/5/5)':'#E08A00','Maximin (worst quadrant)':'#C94F4F'};
-const pc=n=>PCOLOR[n]||'#E08A00';
+const pc=n=>PCOLOR[n]||(n.startsWith('Maximin (geo')?'#1F8A99':'#E08A00');
 const L=o=>Object.assign({paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)',
   font:{family:'Instrument Sans, sans-serif',color:INK,size:12.5},
   margin:{l:60,r:20,t:10,b:45},xaxis:{gridcolor:LINE,zerolinecolor:LINE},
@@ -447,7 +460,7 @@ document.querySelectorAll('.roster .rp[data-port]').forEach(rp=>{
  const equal=h.length===rw.n_total && (h[0][1]-h[h.length-1][1] < 0.001);
  let html='<div class="htitle">Holdings — what it actually buys</div>';
  if(equal){el.innerHTML=html+'<div class="hmore">All '+rw.n_total+
-   ' sleeves held equally at '+(h[0][1]*100).toFixed(1)+'% each.</div>';return;}
+   ' sleeves held equally at '+(h[0][1]*100).toFixed(1)+'% each.</div>'+geoLine(rw);return;}
  h.slice(0,8).forEach(([s,w])=>{html+='<div class="hbar"><span class="hlab" title="'+s+'">'+s+
    '</span><span class="htrk"><span class="hfill" style="width:'+(w/mx*100).toFixed(0)+
    '%;background:'+col+'"></span></span><span class="hpct">'+(w*100).toFixed(1)+'%</span></div>';});
@@ -455,8 +468,12 @@ document.querySelectorAll('.roster .rp[data-port]').forEach(rp=>{
  if(rest>0){const rw2=h.slice(8).reduce((a,b)=>a+b[1],0);
    html+='<div class="hmore">+ '+rest+' more sleeve'+(rest>1?'s':'')+
    ' ('+(rw2*100).toFixed(0)+'% combined, each &lt; '+(h[8][1]*100).toFixed(1)+'%)</div>';}
+ html+=geoLine(rw);
  el.innerHTML=html;
 });
+function geoLine(rw){ if(!rw.geo) return '';
+ return '<div class="hmore">Look-through geography: '+Object.entries(rw.geo)
+   .filter(([,v])=>v>=0.005).map(([z,v])=>z+' '+(v*100).toFixed(0)+'%').join(' · ')+'</div>';}
 
 // 1 race
 Plotly.newPlot('race',Object.keys(DATA.wf.growth).map(n=>({x:DATA.wf.dates,y:DATA.wf.growth[n],

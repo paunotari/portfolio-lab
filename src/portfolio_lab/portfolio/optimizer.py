@@ -104,6 +104,27 @@ def _div_matrices(series: list[str]) -> dict[str, np.ndarray]:
     return mats
 
 
+def _geo_matrix(series: list[str]) -> tuple[np.ndarray, list[str]]:
+    """(Z, zone_names): Z[i, z] = sleeve i's LOOK-THROUGH exposure fraction to geographic zone z
+    (config.OPTIMIZER_GEO_ZONES; unmapped countries -> 'Rest of world'). Zone exposure of a
+    portfolio is the linear form w'Z — cheap as an optimizer constraint. Look-through matters:
+    an 'EM' sleeve is mostly Asia and gets constrained as such, which a label-based cap
+    would miss."""
+    _, ctry_by, _, usa_idx, series_key = _load_tables()
+    col_to_index = {v: k for k, v in series_key.items()}
+    country_zone = {c: z for z, cs in C.OPTIMIZER_GEO_ZONES.items() for c in cs}
+    zones = list(C.OPTIMIZER_GEO_ZONES) + ["Rest of world"]
+    Z = np.zeros((len(series), len(zones)))
+    for i, col in enumerate(series):
+        idx_name = col_to_index.get(col)
+        w = dict(ctry_by.get(idx_name, {})) or ({"United States": 100.0}
+                                                if idx_name in usa_idx else {})
+        for c, pct in w.items():
+            zone = country_zone.get(C.COUNTRY_FIX.get(c, c), "Rest of world")
+            Z[i, zones.index(zone)] += pct / 100.0
+    return Z, zones
+
+
 def _load_states(index: pd.DatetimeIndex = None) -> pd.DataFrame | None:
     """Monthly macro-state labels + soft probabilities, or None when macro outputs are absent."""
     if not C.MACRO_STATE_MONTHLY.exists():
@@ -154,10 +175,11 @@ def build_inputs(rets: pd.DataFrame = None) -> dict:
         mu_bl = bl.posterior(pi, sigma, T, P, Q, conf)
         mu_q = (perf_long.pivot(index="state", columns="series", values="mean_monthly_return")
                 .reindex(columns=series))
+    Z, zones = _geo_matrix(series)
     return dict(rets=rets, series=series, T=T, sigma=sigma, delta_star=delta_star,
                 anchors=anchor_set, w_anchor=w_erc, pi=pi, delta_ra=delta_ra, mu_bl=mu_bl,
                 mu_q=mu_q, outlook=outlook, view_descs=view_descs,
-                div_mats=_div_matrices(series))
+                div_mats=_div_matrices(series), geo_Z=Z, geo_zones=zones)
 
 
 # --------------------------------------------------------------------------- blended-path stats
@@ -287,8 +309,8 @@ def _score(value: float, rng_pair: tuple) -> float:
 
 def optimize(prefs: dict = None, regime_weights: dict = None, maximin: bool = False,
              risk_metric: str = "vol", cap: float = None, min_sleeves: int = None,
-             target: tuple = None, inputs: dict = None, n_starts: int = None,
-             seed: int = None) -> dict:
+             target: tuple = None, geo_cap: float = None, inputs: dict = None,
+             n_starts: int = None, seed: int = None) -> dict:
     """One optimization run.
 
     prefs           {"return": 0-10, "risk": 0-10, "diversification": 0-10, "regime": 0-10} —
@@ -301,6 +323,10 @@ def optimize(prefs: dict = None, regime_weights: dict = None, maximin: bool = Fa
     min_sleeves     enforced through the cap: effective cap = min(cap, 1/min_sleeves).
     target          optional hard target: ("cagr", 0.12) = blended historical CAGR >= 12%/yr,
                     or ("maxdd", 0.30) = blended historical max drawdown no deeper than -30%.
+    geo_cap         optional cap (fraction) on the LOOK-THROUGH exposure to each geographic
+                    zone (config.OPTIMIZER_GEO_ZONES). Forces geographic spread while the
+                    objective still picks the best sleeves *within* each zone — diversification
+                    by constraint, never "investing somewhere just because".
     """
     inp = inputs or build_inputs()
     n, series, R = len(inp["series"]), inp["series"], inp["rets"].values
@@ -314,6 +340,13 @@ def optimize(prefs: dict = None, regime_weights: dict = None, maximin: bool = Fa
     warnings = []
 
     cons = [{"type": "eq", "fun": lambda w: w.sum() - 1.0}]
+    if geo_cap is not None:
+        Z, zones = inp["geo_Z"], inp["geo_zones"]
+        # feasibility: total exposure ~1 must fit under the caps (sum of caps >= 1)
+        if geo_cap * len(zones) < 1.0 - 1e-9:
+            raise ValueError(f"geo_cap {geo_cap:.0%} x {len(zones)} zones cannot hold 100%")
+        for z in range(len(zones)):
+            cons.append({"type": "ineq", "fun": (lambda w, z=z: geo_cap - float(w @ Z[:, z]))})
     if target is not None:
         kind, x = target
         if kind == "cagr":
@@ -456,8 +489,9 @@ def _package(inp, w, mode, risk_metric, diag, warnings) -> dict:
     per_quadrant = (None if inp["mu_q"] is None else
                     {st: float(w @ inp["mu_q"].loc[st].values) for st in inp["mu_q"].index})
     weights = {series[i]: float(w[i]) for i in range(len(series)) if w[i] >= DISPLAY_MIN_W}
+    geo_exposure = {z: float(w @ inp["geo_Z"][:, j]) for j, z in enumerate(inp["geo_zones"])}
     return dict(
-        mode=mode, weights=weights, w=w, performance=perf,
+        mode=mode, weights=weights, w=w, performance=perf, geo_exposure=geo_exposure,
         objective_values={"return_monthly_mu_bl": fns["return"](w),
                           "risk": fns["risk"](w),
                           "effective_bets": fns["diversification"](w),
@@ -496,6 +530,8 @@ def run():
         prefs={"return": 5, "risk": 5, "diversification": 5}, inputs=inp)}
     if inp["mu_q"] is not None and len(inp["mu_q"]) >= 2:
         portfolios["Maximin (robust across quadrants)"] = optimize(maximin=True, inputs=inp)
+        portfolios[f"Maximin (geo ≤{C.OPTIMIZER_GEO_CAP_PCT:.0f}%)"] = optimize(
+            maximin=True, geo_cap=C.OPTIMIZER_GEO_CAP_PCT / 100.0, inputs=inp)
 
     cones = {}
     if C.MACRO_STATE_MONTHLY.exists():
@@ -566,7 +602,9 @@ def _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta):
                   " · ".join(f"{k} **{v:.0f}**" for k, v in sc.items())]
         by_dim = res["objective_values"]["effective_bets_by_dim"]
         L += ["Effective look-through bets: " +
-              ", ".join(f"{d} {v:.1f}" for d, v in by_dim.items()), ""]
+              ", ".join(f"{d} {v:.1f}" for d, v in by_dim.items())]
+        L += ["Look-through geographic exposure: " +
+              " · ".join(f"{z} {v:.0%}" for z, v in res["geo_exposure"].items()), ""]
         L += ["| weight | sleeve | risk contribution (share) |", "|---|---|---|"]
         total_rc = sum(res["risk_contributions"].values()) or 1.0
         for s, w in sorted(res["weights"].items(), key=lambda kv: -kv[1]):
@@ -620,6 +658,8 @@ def _render(res: dict) -> str:
     for s, v in sorted(res["weights"].items(), key=lambda kv: -kv[1]):
         lines.append(f"  {v:6.1%}  {s}   (risk contribution "
                      f"{res['risk_contributions'].get(s, 0.0):.4f})")
+    lines.append("\nlook-through geographic exposure: " +
+                 "  ".join(f"{z} {v:.0%}" for z, v in res["geo_exposure"].items()))
     if res["per_quadrant_monthly"]:
         lines.append("\nper-quadrant mean monthly return:")
         for st, v in res["per_quadrant_monthly"].items():
@@ -637,6 +677,8 @@ def main():
     ap.add_argument("--maximin", action="store_true", help="robust-across-quadrants mode")
     ap.add_argument("--risk-metric", choices=["vol", "maxdd"], default="vol")
     ap.add_argument("--cap", type=float, default=None, help="per-sleeve cap, e.g. 0.4")
+    ap.add_argument("--geo-cap", type=float, default=None,
+                    help="cap on look-through exposure per geographic zone, e.g. 0.4")
     ap.add_argument("--target-cagr", type=float, default=None, help="hard target, e.g. 0.12")
     ap.add_argument("--target-maxdd", type=float, default=None, help="hard cap, e.g. 0.30")
     args = ap.parse_args()
@@ -644,7 +686,7 @@ def main():
               ("maxdd", args.target_maxdd) if args.target_maxdd is not None else None)
     res = optimize(prefs={"return": args.ret, "risk": args.risk, "diversification": args.div},
                    maximin=args.maximin, risk_metric=args.risk_metric, cap=args.cap,
-                   target=target)
+                   target=target, geo_cap=args.geo_cap)
     print(_render(res))
     print("\nLabel: historically optimal under your priorities — not a forecast.")
 

@@ -81,6 +81,15 @@ nonlinear by multi-start SLSQP) — so "Return 5 / Risk 5" is genuinely balanced
   (mathematically forces ≥ 3 sleeves; forcing ≥ m means capping just under 1/(m−1)), both
   Tier-2 overridable. Hard targets enter as SLSQP constraints; infeasible targets are *reported*
   ("NOT ACHIEVABLE"), never silently relaxed.
+- **Geographic look-through caps** (`geo_cap`, added 2026-07): optional cap on each zone's
+  **look-through** exposure (`config.OPTIMIZER_GEO_ZONES`: North America / Europe /
+  Asia-Pacific / Rest, from the factsheet country weights — an "EM" sleeve counts as the Asia
+  it actually holds). Linear constraints (w·Z ≤ cap), so the objective still picks the best
+  sleeves *within* each zone. Motivation: unconstrained maximin concentrated 83% look-through
+  Asia; geo ≤40% spreads it NA 40 / Asia 40 / Europe 12 — insurance against a decade led by a
+  different region. Empirical bonus: the geo-capped maximin *beat* the unconstrained one out of
+  sample (Sharpe 0.84 vs 0.73) — Jagannathan-Ma's "constraints are implicit shrinkage",
+  measured live. Ships as a third flagship in the report and a walk-forward contestant.
 - **Degenerate honesty:** all sliders zero ⇒ the ERC anchor, by construction. Return slider
   alone ⇒ tilts to the best μ_BL sleeves but stays capped, with the corner warning below.
 

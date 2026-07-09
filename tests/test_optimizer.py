@@ -216,6 +216,28 @@ def test_maximin_beats_blend_on_worst_quadrant():
         "maximin must not have a worse worst-quadrant than the blend"
 
 
+def test_geo_cap_respected_and_costs_objective():
+    if not (C.LEVELS_WIDE.exists() and C.MACRO_STATE_MONTHLY.exists()):
+        return
+    O, inp = _inputs()
+    if inp["mu_q"] is None:
+        return
+    cap = C.OPTIMIZER_GEO_CAP_PCT / 100.0
+    res_u = O.optimize(maximin=True, inputs=inp, n_starts=8)
+    res_g = O.optimize(maximin=True, geo_cap=cap, inputs=inp, n_starts=8)
+    for zone, v in res_g["geo_exposure"].items():
+        assert v <= cap + 1e-4, f"geo cap violated: {zone} = {v:.1%}"
+    worst = lambda r: min(r["per_quadrant_monthly"].values())
+    assert worst(res_g) <= worst(res_u) + 1e-9, \
+        "a constrained maximin cannot beat the unconstrained one in-sample"
+    # infeasible cap (sum of caps < 100%) must raise, not silently relax
+    try:
+        O.optimize(maximin=True, geo_cap=0.20, inputs=inp, n_starts=4)
+        assert False, "infeasible geo_cap must raise"
+    except ValueError:
+        pass
+
+
 def test_scenario_portfolio_cone_matches_per_series_when_one_hot():
     if not (C.LEVELS_WIDE.exists() and C.MACRO_STATE_MONTHLY.exists()):
         return

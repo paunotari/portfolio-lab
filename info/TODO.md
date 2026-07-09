@@ -73,6 +73,13 @@ _(both done — see Portfolio optimization below for what builds on them next)_
 
 ### Phase-3 follow-ups (post engine build, 2026-07)
 
+- [x] **Geographic look-through caps** (user request 2026-07: unconstrained maximin was 83%
+      look-through Asia) — `optimize(geo_cap=...)` + `config.OPTIMIZER_GEO_ZONES`, linear
+      constraints on w·Z so the objective still picks the best sleeves within each zone.
+      Geo-capped maximin ships as third flagship + walk-forward contestant; it beat the
+      unconstrained maximin OOS (Sharpe 0.84 vs 0.73 — constraints as implicit shrinkage,
+      confirmed live).
+
 - [ ] **3c — dashboard "Optimizer" tab**: three sliders + Tier-2 panel (regime row, risk-metric
       toggle, caps, hard target) running live in the browser; JS mirror of the objective + a
       simple multi-start/projected-gradient solver (serverless, same dual-implementation pattern

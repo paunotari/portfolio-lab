@@ -137,6 +137,22 @@ OPTIMIZER_WF_WARMUP_MONTHS = 120
 OPTIMIZER_WF_REFIT_MONTHS = 12
 OPTIMIZER_WF_N_STARTS = 8
 
+# geographic look-through caps (optimizer `geo_cap`): zones are defined on the LOOK-THROUGH
+# country exposures (factsheet country_weights), not on the sleeve's region label — an "EM"
+# sleeve is mostly Asia in look-through terms and is constrained as such. Countries not listed
+# below (incl. the factsheets' own "Other" residual bucket) fall into "Rest of world".
+# The cap is a linear constraint (zone exposure = w'Z, Z from the weights tables), so within
+# each zone the optimizer still picks by its objective — the cap forces geographic spread, it
+# never forces "investing somewhere just because".
+OPTIMIZER_GEO_ZONES = {
+    "North America": ["United States", "Canada"],
+    "Europe": ["France", "Germany", "Italy", "Netherlands", "Spain", "Switzerland",
+               "United Kingdom"],
+    "Asia-Pacific": ["China", "Hong Kong", "India", "Japan", "Korea", "Singapore", "Taiwan",
+                     "Thailand"],
+}
+OPTIMIZER_GEO_CAP_PCT = 40.0        # default zone cap for the geo-capped flagship portfolio
+
 
 def ensure_dirs() -> None:
     """Create all writable output directories if missing (idempotent)."""
