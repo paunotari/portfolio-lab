@@ -73,6 +73,16 @@ _(both done — see Portfolio optimization below for what builds on them next)_
 
 ### Phase-3 follow-ups (post engine build, 2026-07)
 
+- [x] **Rule-based contestants + transaction costs in the walk-forward** (2026-07) —
+      `portfolio/rules.py` (`momentum_weights` = Jegadeesh-Titman 12-1; `vol_managed` = unlevered
+      Moreira-Muir vol targeting) tested through the same walk-forward, now **net of
+      `OPTIMIZER_TC_BPS` (10 bps)** one-way turnover cost (`oos_sharpe_gross` reports pre-cost).
+      **Verdict: nothing beat min-variance.** Momentum 12-1 (top 6) net Sharpe 0.77 < 1/N 0.84;
+      vol-targeting cut min-var's drawdown (−29%→−22%) but not its Sharpe (1.06→0.99); costs
+      barely bit at annual refits (gross≈net). A clean, reported negative result — the method
+      working. Follow-ups worth a look someday: momentum at a faster refit (its signal decays
+      faster than yearly); min-variance as the BL anchor (it keeps winning — see below).
+
 - [x] **Geographic look-through caps** (user request 2026-07: unconstrained maximin was 83%
       look-through Asia) — `optimize(geo_cap=...)` + `config.OPTIMIZER_GEO_ZONES`, linear
       constraints on w·Z so the objective still picks the best sleeves within each zone.

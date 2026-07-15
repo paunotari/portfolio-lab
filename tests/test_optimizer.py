@@ -251,6 +251,50 @@ def test_scenario_portfolio_cone_matches_per_series_when_one_hot():
         assert abs(cone[k] - row[k]) < 1e-12, f"one-hot cone diverges from per-series on {k}"
 
 
+def test_momentum_weights_top_k_equal_and_valid():
+    import pandas as pd
+    from portfolio_lab.portfolio import rules
+    # 4 sleeves with clearly ordered trend; top-2 by 12-1 momentum must be the two risers
+    idx = pd.date_range("2000-01-31", periods=20, freq="ME")
+    df = pd.DataFrame({
+        "A": 0.03, "B": 0.02, "C": -0.01, "D": -0.02}, index=idx)
+    w = rules.momentum_weights(df, k=2, lookback=12, skip=1)
+    assert abs(w.sum() - 1.0) < 1e-12 and np.all(w >= 0), "momentum weights must be a valid simplex"
+    assert (w > 0).sum() == 2, "must hold exactly top-2"
+    assert w[0] > 0 and w[1] > 0 and w[2] == 0 and w[3] == 0, "must pick the two best performers"
+
+
+def test_vol_managed_is_causal_and_derisks():
+    import pandas as pd
+    from portfolio_lab.portfolio import rules
+    rng = np.random.default_rng(0)
+    # calm then turbulent: leverage should fall in the turbulent stretch, never exceed max_lev
+    calm = rng.normal(0.005, 0.01, 60)
+    wild = rng.normal(0.0, 0.08, 60)
+    r = pd.Series(np.concatenate([calm, wild]), index=pd.date_range("2000-01-31", periods=120, freq="ME"))
+    managed, extra = rules.vol_managed(r, target_ann=0.10, window=12, max_lev=1.0)
+    lev = managed / r.replace(0, np.nan)
+    assert lev.dropna().max() <= 1.0 + 1e-9, "unlevered overlay must never exceed leverage 1"
+    # average leverage in the turbulent half must be below the calm half (it de-risks)
+    assert lev.iloc[-40:].mean() < lev.iloc[15:55].mean(), "must cut exposure when vol runs hot"
+    assert (extra >= 0).all(), "turnover is non-negative"
+
+
+def test_walkforward_reports_gross_and_net_and_rules():
+    if not (C.LEVELS_WIDE.exists() and C.MACRO_STATE_MONTHLY.exists()):
+        return
+    from portfolio_lab.portfolio.validation import walk_forward
+    summary, meta, monthly = walk_forward(n_starts=4)
+    names = set(summary.portfolio)
+    assert any(n.startswith("Momentum") for n in names), "momentum contestant missing"
+    assert any("vol-target" in n for n in names), "vol-target contestant missing"
+    assert "oos_sharpe_gross" in summary.columns and meta["tc_bps"] > 0
+    # costs can only lower (or equal) the net Sharpe vs gross
+    for _, row in summary.iterrows():
+        assert row.oos_sharpe_rf0 <= row.oos_sharpe_gross + 1e-9, \
+            f"{row.portfolio}: net Sharpe above gross — costs applied with wrong sign"
+
+
 if __name__ == "__main__":
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     passed = 0

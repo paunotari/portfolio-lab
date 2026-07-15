@@ -629,14 +629,19 @@ def _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta):
           f"{wf_meta['refit_months']}m; OOS {wf_meta['oos_start']} → {wf_meta['oos_end']} "
           f"({wf_meta['oos_months']} months, {wf_meta['n_refits']} refits). Everything is "
           "re-estimated on the training window only (the macro-state labels keep the "
-          "classifier's mild full-sample z-normalization — CLAUDE.md caveat #17). No "
-          "transaction costs; turnover shown instead.", ""]
+          "classifier's mild full-sample z-normalization — CLAUDE.md caveat #17). Returns are "
+          f"**net of {wf_meta.get('tc_bps', 0):.0f} bps** transaction cost on one-way turnover "
+          "(`oos_sharpe_gross` is before costs); rule-based contestants (momentum, "
+          "vol-target — `portfolio/rules.py`) are tested alongside the portfolios.", ""]
     L += _md_table(wf_summary, {"oos_CAGR": "{:.2%}", "oos_ann_vol": "{:.2%}",
                                 "oos_sharpe_rf0": "{:.2f}", "oos_max_drawdown": "{:.1%}",
+                                "oos_sharpe_gross": "{:.2f}",
                                 "mean_turnover_per_refit": "{:.1%}"})
     best = wf_summary.iloc[0].portfolio
-    L += ["", f"Out of sample, **{best}** had the best risk-adjusted result. If a clever "
-          "portfolio can't clearly beat the dumb benchmarks here, the dumb one wins — and "
+    L += ["", f"Out of sample and net of costs, **{best}** had the best risk-adjusted result. "
+          "As of the 2026-07 rule test, no momentum or volatility-targeting overlay beat it — "
+          "vol-targeting cut drawdowns but not the Sharpe, and momentum did not clear 1/N. If a "
+          "clever portfolio can't clearly beat the dumb benchmarks here, the dumb one wins — and "
           "saying so is a feature. With 330 months of data this is expected "
           "(DeMiguel 2009: break-even ≈ 3,000 months), which is exactly why preferences tilt "
           "a structural anchor instead of trusting estimated returns.", ""]

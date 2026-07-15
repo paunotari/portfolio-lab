@@ -288,26 +288,31 @@ most constrained ones — constraints act as implicit shrinkage.
 <div id="race" class="chart" style="height:440px"></div>
 
 <h2>2 · Out-of-sample scoreboard</h2>
-<p class="cap">Same race as numbers. Sharpe is return per unit of risk — the fair lens.
-<b>Min-variance winning is itself a literature result</b> (the most-constrained models do best
-out of sample); the balanced slider blend not beating 1/N is the expected humility, printed
-rather than hidden.</p>
+<p class="cap">Same race as numbers, ranked by Sharpe (return per unit of risk), <b>net of
+transaction costs</b>. <b>Min-variance winning is itself a literature result</b> (the
+low-volatility anomaly + immunity to return-estimation error). This board now also judges
+rule-based challengers — cross-sectional <b>momentum 12-1</b> and <b>volatility targeting</b>
+overlays: as of the 2026-07 test <b>none beat min-variance</b>, and vol-targeting cut drawdowns
+without lifting the Sharpe. Reporting a rule that <i>didn't</i> work is the method working.</p>
 <details class="more"><summary>Method, math &amp; sources</summary><div class="body">
 All statistics are computed on the stitched out-of-sample monthly returns only:
 <span class="frm">Sharpe (rf=0) = 12·mean(r) / (σ(r)·√12)      CAGR = (level_end/level_start)^(12/n) − 1
 maxDD = min_t ( level_t / max_{s≤t} level_s − 1 )      turnover/refit = Σ|w_new − w_old| / 2</span>
-Hover any bar for its CAGR, max drawdown and turnover. No transaction costs are modeled — the
-turnover number is shown so you can apply your own cost assumption (at ~0.3–9% one-way per year
-on index sleeves, rankings are unlikely to flip). Michaud's warning explains the pattern: an
-optimizer given estimated means "goes long the luckiest estimation errors," so the methods that
-use <i>less</i> estimated information (min-var uses only covariance; 1/N uses nothing) tend to
-survive out of sample best at small T.
+Hover any bar for its CAGR, max drawdown and turnover. Returns are net of a per-rebalance cost
+(one-way turnover × the configured bps), so high-turnover rules can't look good for free — at
+annual refits even momentum's cost barely moves it, which the gross-vs-net columns confirm.
+Michaud's warning explains the base pattern: an optimizer given estimated means "goes long the
+luckiest estimation errors," so the methods that use <i>less</i> estimated information (min-var
+uses only covariance; 1/N uses nothing) survive best at small T. The two rule challengers test
+that from the other side — <b>momentum 12-1</b> is the one legitimate use of past returns (right
+horizon, re-tested as a rule); <b>volatility targeting</b> scales exposure down when trailing vol
+runs hot. Both were beaten by min-variance here.
 <ul class="src">
-<li>Michaud (1989), "The Markowitz Optimization Enigma: Is 'Optimized' Optimal?" — <i>FAJ</i> 45(1)</li>
-<li>Chopra &amp; Ziemba (1993), <i>JPM</i> — errors in means ≈ 11× more costly than errors in variances</li>
-<li>Repo deep dive: <span class="num">info/literature/mean-variance-and-estimation-error.md</span></li>
+<li>Michaud (1989), "The Markowitz Optimization Enigma" — <i>FAJ</i> 45(1); Chopra &amp; Ziemba (1993), <i>JPM</i> — means ≈ 11× costlier than variances</li>
+<li>Jegadeesh &amp; Titman (1993), <i>JF</i> — momentum; Moreira &amp; Muir (2017), "Volatility-Managed Portfolios" — <i>JF</i></li>
+<li>Repo: <span class="num">mean-variance-and-estimation-error.md</span> · code: <span class="num">portfolio/rules.py</span>, <span class="num">validation.py</span></li>
 </ul></div></details>
-<div id="board" class="chart" style="height:380px"></div>
+<div id="board" class="chart" style="height:460px"></div>
 
 <h2>3 · The risk/return map</h2>
 <p class="cap">Grey dots are the 21 individual sleeves over the full window; colored markers are
@@ -443,7 +448,11 @@ const DATA = __DATA__;
 const INK='#1D1D1F', MUT='#6E6E73', LINE='#E3E3E8';
 const PCOLOR={'1/N':'#8E8E93','ERC (anchor)':'#3B6FD4','HRP':'#7A5FD0','Min-variance':'#2E9E68',
   'Balanced sliders (5/5/5)':'#E08A00','Maximin (worst quadrant)':'#C94F4F'};
-const pc=n=>PCOLOR[n]||(n.startsWith('Maximin (geo')?'#1F8A99':'#E08A00');
+function pc(n){ if(PCOLOR[n]) return PCOLOR[n];
+  if(n.startsWith('Maximin (geo')) return '#1F8A99';
+  if(n.startsWith('Momentum')) return '#B5892E';
+  if(n.indexOf('vol-target')>=0) return '#5AA6B5';
+  return '#E08A00'; }
 const L=o=>Object.assign({paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)',
   font:{family:'Instrument Sans, sans-serif',color:INK,size:12.5},
   margin:{l:60,r:20,t:10,b:45},xaxis:{gridcolor:LINE,zerolinecolor:LINE},

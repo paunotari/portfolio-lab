@@ -28,6 +28,10 @@ import pandas as pd
 from portfolio_lab import config as C
 from portfolio_lab.analytics.engine import _perf_stats
 from portfolio_lab.portfolio import optimizer as opt
+from portfolio_lab.portfolio import rules
+
+# base portfolios the volatility-targeting overlay is tested on (one naive, one that already wins)
+VOLTARGET_BASES = ["1/N", "Min-variance"]
 
 
 def _contestants(inp: dict, n_starts: int, seed: int) -> dict:
@@ -36,6 +40,8 @@ def _contestants(inp: dict, n_starts: int, seed: int) -> dict:
     out["Balanced sliders (5/5/5)"] = opt.optimize(
         prefs={"return": 5, "risk": 5, "diversification": 5},
         inputs=inp, n_starts=n_starts, seed=seed)["w"]
+    out[f"Momentum {C.OPTIMIZER_MOMENTUM_LOOKBACK}-{C.OPTIMIZER_MOMENTUM_SKIP} "
+        f"(top {C.OPTIMIZER_MOMENTUM_K})"] = rules.momentum_weights(inp["rets"])
     if inp["mu_q"] is not None and len(inp["mu_q"]) >= 2:
         out["Maximin (worst quadrant)"] = opt.optimize(
             maximin=True, inputs=inp, n_starts=n_starts, seed=seed)["w"]
@@ -60,35 +66,58 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
     if T <= warmup + refit:
         raise ValueError(f"not enough history for walk-forward (T={T}, warmup={warmup})")
 
-    oos_returns: dict[str, list] = {}
+    # per contestant: gross monthly return + monthly one-way turnover (only rebalance months > 0)
+    gross_chunks: dict[str, list] = {}
+    turn_chunks: dict[str, list] = {}
     prev_w: dict[str, np.ndarray] = {}
-    turnover: dict[str, list] = {}
     refit_dates = []
     for t in range(warmup, T, refit):
         inp = opt.build_inputs(rets.iloc[:t])
         refit_dates.append(str(rets.index[t - 1].date()))
         oos = rets.iloc[t:t + refit].values
         for name, w in _contestants(inp, n_starts, seed).items():
-            oos_returns.setdefault(name, []).append(oos @ w)
-            if name in prev_w:
-                turnover.setdefault(name, []).append(float(np.abs(w - prev_w[name]).sum() / 2))
+            chunk = oos @ w
+            tmonth = np.zeros(len(chunk))
+            if name in prev_w:                              # trading happens on the first month
+                tmonth[0] = float(np.abs(w - prev_w[name]).sum() / 2)
             prev_w[name] = w
+            gross_chunks.setdefault(name, []).append(chunk)
+            turn_chunks.setdefault(name, []).append(tmonth)
 
     oos_index = rets.index[warmup:]
+    gross = {n: pd.Series(np.concatenate(c), index=oos_index[:sum(map(len, c))])
+             for n, c in gross_chunks.items()}
+    turn = {n: pd.Series(np.concatenate(c), index=oos_index[:sum(map(len, c))])
+            for n, c in turn_chunks.items()}
+
+    # volatility-targeting overlays on selected bases (their own leverage-change turnover is
+    # charged on top of the base's rebalancing turnover)
+    for base in VOLTARGET_BASES:
+        if base not in gross:
+            continue
+        managed, extra_turn = rules.vol_managed(gross[base])
+        vt = f"{base} + vol-target"
+        gross[vt] = managed
+        turn[vt] = turn[base] + extra_turn
+
+    cost = C.OPTIMIZER_TC_BPS / 10_000.0
     rows, monthly = [], {}
-    for name, chunks in oos_returns.items():
-        r = pd.Series(np.concatenate(chunks), index=oos_index[:sum(map(len, chunks))])
-        monthly[name] = r
-        level = pd.concat([pd.Series([100.0], index=[oos_index[0] - pd.offsets.MonthEnd(1)]),
-                           100.0 * (1 + r).cumprod()])
-        p = _perf_stats(level)
+    for name in gross:
+        net = gross[name] - cost * turn[name]              # charge transaction costs
+        monthly[name] = net
+        lvl = pd.concat([pd.Series([100.0], index=[oos_index[0] - pd.offsets.MonthEnd(1)]),
+                         100.0 * (1 + net).cumprod()])
+        p = _perf_stats(lvl)
+        gp = _perf_stats(pd.concat([pd.Series([100.0], index=[lvl.index[0]]),
+                                    100.0 * (1 + gross[name]).cumprod()]))
         rows.append(dict(portfolio=name, oos_CAGR=p["CAGR"], oos_ann_vol=p["ann_vol"],
                          oos_sharpe_rf0=p["sharpe_rf0"], oos_max_drawdown=p["max_drawdown"],
-                         mean_turnover_per_refit=float(np.mean(turnover.get(name, [0.0])))))
+                         oos_sharpe_gross=gp["sharpe_rf0"],
+                         mean_turnover_per_refit=float(turn[name].sum() / max(1, len(refit_dates)))))
     summary = pd.DataFrame(rows).sort_values("oos_sharpe_rf0", ascending=False)
     meta = dict(warmup_months=warmup, refit_months=refit, n_refits=len(refit_dates),
                 oos_start=str(oos_index[0].date()), oos_end=str(oos_index[-1].date()),
-                oos_months=len(oos_index))
+                oos_months=len(oos_index), tc_bps=C.OPTIMIZER_TC_BPS)
     return summary, meta, pd.DataFrame(monthly)
 
 

@@ -136,6 +136,21 @@ OPTIMIZER_SEED = 7
 OPTIMIZER_WF_WARMUP_MONTHS = 120
 OPTIMIZER_WF_REFIT_MONTHS = 12
 OPTIMIZER_WF_N_STARTS = 8
+# transaction cost charged in the walk-forward: one-way turnover x this rate, applied on the
+# month a rebalance happens. 10 bps is a realistic round-trip-ish cost for liquid index funds;
+# it exists so high-turnover rules (momentum, vol-target) can't look good for free.
+OPTIMIZER_TC_BPS = 10.0
+# rule-based contestants (portfolio/rules.py), tested through the same walk-forward as the
+# optimizer portfolios -- rules are validated over many decision dates, never on a return snapshot.
+OPTIMIZER_MOMENTUM_K = 6            # cross-sectional momentum: hold the top-K sleeves, equal weight
+OPTIMIZER_MOMENTUM_LOOKBACK = 12    # formation window (months)
+OPTIMIZER_MOMENTUM_SKIP = 1         # skip the most recent month (avoids short-term reversal) -> "12-1"
+# volatility targeting (Moreira-Muir 2017), UNLEVERED version for a long-only investor: scale a
+# base portfolio's exposure DOWN toward the target when its trailing vol runs hot, hold cash for
+# the rest; never lever up (max leverage 1.0). A defensive overlay, tested as its own contestant.
+OPTIMIZER_VOLTARGET_ANN = 0.12      # annual volatility target
+OPTIMIZER_VOLTARGET_WINDOW = 12     # trailing months used to estimate current vol
+OPTIMIZER_VOLTARGET_MAXLEV = 1.0    # 1.0 = unlevered (can only de-risk into cash)
 
 # geographic look-through caps (optimizer `geo_cap`): zones are defined on the LOOK-THROUGH
 # country exposures (factsheet country_weights), not on the sleeve's region label — an "EM"

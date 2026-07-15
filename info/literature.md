@@ -122,6 +122,22 @@ explainable ("your money splits where correlations split"), no optimizer patholo
 cluster tree is itself a Tier-2 visualization (it should rediscover our region/factor structure —
 a great sanity check). Benchmark HRP vs 1/N vs the slider blend, walk-forward.
 
+### Moreira & Muir (2017), "Volatility-Managed Portfolios" — *Journal of Finance* ([pdf](https://onlinelibrary.wiley.com/doi/10.1111/jofi.12513))
+Scale exposure by the **inverse of recent volatility** — lean in when markets are calm, cut risk
+when they turn turbulent. Counterintuitive (you reduce risk right after a spike, when expected
+returns look highest) yet raised Sharpe and alpha across the market, value, momentum and
+profitability factors in their sample. One of the most cited recent results — and one of the most
+*contested*: follow-ups (Cederburg et al. 2020; Barroso-Detzel) find the out-of-sample, net-of-cost
+benefit is fragile and uneven across factors. A textbook case for our honest walk-forward to
+adjudicate rather than assume.
+**⇒ for us: tested, and it did NOT win (2026-07).** Added as a walk-forward contestant in the
+UNLEVERED form a long-only investor can actually run (`portfolio/rules.py::vol_managed`: cut
+exposure toward a vol target, hold cash, never lever up). Result: it **cut drawdowns materially**
+(min-variance's maxDD −29% → −22%, vol 14% → 12%) but **did not lift the Sharpe** (1.06 → 0.99) —
+the de-risking gives up as much recovery as it saves. Kept as a defensive option to expose in
+Tier-2 (maxDD-focused users), not as a performance claim. The contested literature was right to
+be cautious; our data agrees.
+
 ### Rockafellar & Uryasev (2000), "Optimization of Conditional Value-at-Risk" — *Journal of Risk* ([pdf](https://uryasev.ams.stonybrook.edu/wp-content/uploads/2011/11/kro_CVaR.pdf))
 Made **tail risk optimizable**: CVaR (expected loss beyond the α-quantile) is coherent, and
 minimizing it reduces to a *linear program*. Regulatory endorsement: Basel's FRTB (2016) moved

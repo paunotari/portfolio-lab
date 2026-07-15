@@ -107,11 +107,16 @@ under your priorities — not a forecast."**
   slow and overfit noise; validating through it is honest and cheap.
 - **Walk-forward out-of-sample backtest** (`validation.py`): expanding window, 120m warmup,
   annual refits, everything re-estimated on the training window only; contestants 1/N /
-  min-var / ERC / HRP / balanced sliders / maximin, with turnover reported. **First result
-  (2026-07, OOS 2009–2026): min-variance had the best OOS Sharpe (1.06); the balanced-slider
-  blend (0.70) did NOT beat 1/N (0.84).** Exactly the DeMiguel humility the method predicts,
-  printed in the report — the honest framing is that the optimizer's value is *expressing
-  preferences and regime robustness transparently*, not beating equal weight.
+  min-var / ERC / HRP / balanced sliders / maximin (±geo-cap) **plus rule-based challengers**
+  (momentum 12-1, volatility-targeting overlays — `portfolio/rules.py`), all judged **net of
+  transaction cost** (`OPTIMIZER_TC_BPS`, 10 bps one-way; `oos_sharpe_gross` reports pre-cost).
+  **Standing result (2026-07, OOS 2009–2026): min-variance has the best net OOS Sharpe (1.06);
+  nothing beats it** — the balanced blend (0.70) and momentum (0.77) don't clear 1/N (0.84), and
+  vol-targeting cut min-var's drawdown (−29%→−22%) but not its Sharpe (→0.99). Exactly the
+  DeMiguel humility the method predicts, printed in the report — the optimizer's value is
+  *expressing preferences and regime robustness transparently*, not beating equal weight. The
+  low-vol anomaly ([low-volatility-anomaly.md](literature/low-volatility-anomaly.md)) explains
+  the winner; min-var-as-default-anchor is the open decision this evidence keeps reinforcing.
 
 ---
 
