@@ -280,10 +280,16 @@ what moves the needle.
       Momentum's quadrant pattern are structural; the one flip is the MARKET factor in
       Stagflation (+0.5% long vs −5.4% modern) — the modern "equities always lose in
       stagflation" reading is era-specific. Report: `outputs/analytics/long_history/`.
-  - [ ] Follow-up: feed the regime views' Q (and/or the maximin μ̂_q priors) with long-history
-        differentials **for the cells where both eras agree** — shrink toward the long sample,
-        never replace the modern one blindly. Also possible: MSCI World from 1970 as a second
-        proxy for region-level (not just factor-level) behavior.
+  - [x] Follow-up DONE 2026-07: the regime views' Q now blends toward the long history where
+        eras agree (`long_history.msci_factor_prior` + `views.regime_views(long_prior=)`):
+        β translates the FF factor into MSCI-excess space (Mom β=0.28, HML β=0.19), blend
+        weighted by months of evidence, clipped to the training window in the walk-forward.
+        Effect: EV view tempered +0.44%→+0.15%/mo (the century says the modern value premium
+        read was window-inflated); Momentum anchored 3/4 quadrants; Quality untouched (no FF
+        counterpart). OOS Sharpe of the blend unchanged (0.70) — the tilt is small by design;
+        the gain is input robustness, stated in the report per view.
+  - [ ] Possible later: MSCI World from 1970 as a second proxy for region-level (not just
+        factor-level) behavior; QMJ (AQR) as a Quality counterpart if a clean source exists.
 - [ ] **P3 — Live data feed** (see "Live data" below) — the nowcasting lesson: fresher data
       beats a fancier model; our ~1–2 month macro print lag bounds the regime call more than
       method choice does.

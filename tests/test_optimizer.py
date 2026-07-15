@@ -136,6 +136,32 @@ def test_posterior_monotone_in_confidence():
     assert all(a > b for a, b in zip(gaps, gaps[1:])), "higher confidence must pull mu_BL to Q"
 
 
+def test_regime_views_long_prior_blend():
+    """Where eras agree the Q blends toward beta*f_long by month weights; where they disagree
+    (or no prior) the modern value stands."""
+    import pandas as pd
+    series = ["USA | Reference", "USA | Momentum"]
+    perf = pd.DataFrame([
+        dict(state="S1", series="USA | Reference", mean_monthly_return=0.004, n_months=100),
+        dict(state="S1", series="USA | Momentum", mean_monthly_return=0.006, n_months=100),
+    ])
+    outlook = {"S1": 1.0}
+    # modern diff = 0.002; long prior: agree, long_diff = 0.005, n_long = 300
+    prior = {"Momentum": dict(beta=0.5, states={"S1": dict(agree=True, long_diff=0.005,
+                                                           n_long=300)})}
+    _, Q, _, descs = bl.regime_views(series, perf, outlook, long_prior=prior)
+    expected = (100 * 0.002 + 300 * 0.005) / 400
+    assert abs(Q[0] - expected) < 1e-12, f"blend wrong: {Q[0]} != {expected}"
+    assert descs[0]["long_anchored_states"] == 1
+    # eras disagree -> modern value untouched
+    prior["Momentum"]["states"]["S1"]["agree"] = False
+    _, Q2, _, d2 = bl.regime_views(series, perf, outlook, long_prior=prior)
+    assert abs(Q2[0] - 0.002) < 1e-12 and d2[0]["long_anchored_states"] == 0
+    # no prior -> identical to modern-only
+    _, Q3, _, _ = bl.regime_views(series, perf, outlook)
+    assert abs(Q3[0] - 0.002) < 1e-12
+
+
 def test_zero_risk_view_rejected():
     sigma, _ = shrink_constant_correlation(_toy_returns())
     pi, _ = bl.implied_returns(sigma, anchors.equal_weight(len(sigma)), 0.006)

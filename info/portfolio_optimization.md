@@ -55,6 +55,14 @@ regime rather than chasing the best, and keep the equal-weight benchmark on scre
   excess weighted by the 3-month Markov outlook, and confidence = the outlook's own probability
   mass. A 34%-confidence stagflation call tilts 34%-hard, not 100%-hard. Relative views only —
   absolute "asset X returns Y%" claims would smuggle raw means back in.
+- **Q is anchored on 66 years of history where the eras agree** (added 2026-07, from the
+  long-history study): `long_history.msci_factor_prior` maps the Fama-French factors into
+  MSCI-excess space via an OLS β (Mom 0.28, HML 0.19) and shrinks each quadrant's modern excess
+  toward β·f_long, weighted by months of evidence — but *only* in cells where the 1960+ and
+  modern samples agree on direction (15/16 do). Disagreeing cells and Quality (no FF
+  counterpart) stay modern-only; the walk-forward clips the long history to the training
+  window. Measured effect: the Enhanced-Value view tempered from +0.44% to +0.15%/month — a
+  century of data says the modern value-premium reading was window-inflated.
 - Fixed conventions, never user-exposed: τ = 1/T, He-Litterman diagonal Ω scaled by per-view
   confidence, confidence capped at 0.95 (a 100%-confidence view degenerates BL into constrained
   MVO on itself).

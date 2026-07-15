@@ -73,7 +73,8 @@ def posterior(pi: np.ndarray, sigma: np.ndarray, T: int,
     return np.linalg.solve(A, b)
 
 
-def regime_views(series: list[str], perf: pd.DataFrame, outlook: dict) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[dict]]:
+def regime_views(series: list[str], perf: pd.DataFrame, outlook: dict,
+                 long_prior: dict = None) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[dict]]:
     """Build the regime views from per-quadrant performance + the Markov outlook.
 
     One RELATIVE view per factor type ("<factor> sleeves minus their own regions' Reference"):
@@ -82,6 +83,13 @@ def regime_views(series: list[str], perf: pd.DataFrame, outlook: dict) -> tuple[
       c_F:   the outlook's max quadrant probability (how sure the macro module is about the mix),
              clipped to [C_MIN, C_MAX] — the "tilt proportional to confidence" property.
 
+    `long_prior` (analytics/long_history.py::msci_factor_prior, optional): where the long
+    (1960+) and modern samples AGREE on a factor's per-quadrant direction, the modern excess is
+    shrunk toward the long-history-implied value, weighted by months of evidence:
+        d = (n_mod . d_mod + n_long . beta . f_long) / (n_mod + n_long)
+    Cells where the eras disagree — the ones a 28-year window would overfit — keep the modern
+    value untouched, and factors without an FF counterpart (Quality) are never adjusted.
+
     Relative views only — no absolute "asset X will return Y%" claims, which would smuggle raw
     historical means back in. Returns (P, Q, conf, view_descriptions).
     """
@@ -89,6 +97,7 @@ def regime_views(series: list[str], perf: pd.DataFrame, outlook: dict) -> tuple[
     ref_cols = {r: f"{r} | Reference" for r in regions if f"{r} | Reference" in series}
     conf_val = float(np.clip(max(outlook.values()), C_MIN, C_MAX))
     mean_by = perf.set_index(["state", "series"]).mean_monthly_return
+    n_by_state = perf.groupby("state").n_months.first().to_dict()
 
     P_rows, Q_vals, confs, descs = [], [], [], []
     for factor in ("Momentum", "Enhanced Value", "Quality"):
@@ -100,21 +109,32 @@ def regime_views(series: list[str], perf: pd.DataFrame, outlook: dict) -> tuple[
         for s in f_cols:
             row[series.index(s)] += 1.0 / len(f_cols)
             row[series.index(ref_cols[s.split(" | ")[0]])] -= 1.0 / len(f_cols)
-        q_val, wsum = 0.0, 0.0
+        lp = (long_prior or {}).get(factor)
+        q_val, wsum, n_anchored = 0.0, 0.0, 0
         for state, p_state in outlook.items():
             diffs = [mean_by.get((state, s), np.nan) - mean_by.get((state, ref_cols[s.split(" | ")[0]]), np.nan)
                      for s in f_cols]
             diffs = [d for d in diffs if not np.isnan(d)]
-            if diffs:
-                q_val += p_state * float(np.mean(diffs))
-                wsum += p_state
+            if not diffs:
+                continue
+            d_use = float(np.mean(diffs))
+            lp_state = lp["states"].get(state) if lp else None
+            if lp_state and lp_state["agree"]:
+                n_mod = int(n_by_state.get(state, 0))
+                d_use = ((n_mod * d_use + lp_state["n_long"] * lp_state["long_diff"])
+                         / (n_mod + lp_state["n_long"]))
+                n_anchored += 1
+            q_val += p_state * d_use
+            wsum += p_state
         if wsum == 0:
             continue
         P_rows.append(row)
         Q_vals.append(float(q_val / wsum))
         confs.append(conf_val)
         descs.append(dict(view=f"{factor} vs Reference (outlook-weighted)",
-                          q_monthly=float(q_val / wsum), confidence=conf_val))
+                          q_monthly=float(q_val / wsum), confidence=conf_val,
+                          long_anchored_states=n_anchored,
+                          long_beta=(round(lp["beta"], 3) if lp else None)))
     if not P_rows:
         return np.empty((0, len(series))), np.empty(0), np.empty(0), []
     return np.array(P_rows), np.array(Q_vals), np.array(confs), descs

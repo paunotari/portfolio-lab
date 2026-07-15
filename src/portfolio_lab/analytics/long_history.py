@@ -97,6 +97,60 @@ def run():
     return stats, freq, meta
 
 
+FF_BY_FACTOR_TYPE = {"Momentum": "mom", "Enhanced Value": "hml"}   # Quality: no FF counterpart
+
+
+def msci_factor_prior(rets: pd.DataFrame) -> dict | None:
+    """Long-history prior for the optimizer's regime views (the recorded TODO follow-up).
+
+    For each MSCI factor type with an FF counterpart, per quadrant:
+      - beta: OLS slope of the modern MSCI factor-vs-Reference excess (region-mean) on the FF
+        factor — translates the academic long-short factor into 'long-only sleeve excess' space
+        (expect ~0.2-0.5). Same univariate-OLS precedent as analytics/macro_link.py.
+      - long_diff = beta * mean FF factor return in that quadrant over the LONG sample
+      - agree: do the long and modern samples agree on the factor's SIGN in that quadrant?
+        (views.py blends toward long_diff only where they do — never replaces blindly)
+
+    Walk-forward honesty: everything is clipped to `rets.index.max()`, so a training window
+    ending in 2015 uses 1960-2015 long history, not the future. Returns None when the FF file
+    is absent (the views then run modern-only, as before).
+    """
+    if not C.FF_FACTORS_MONTHLY.exists():
+        return None
+    end = rets.index.max()
+    ff = pd.read_csv(C.FF_FACTORS_MONTHLY, index_col=0, parse_dates=True).sort_index().loc[:end]
+    states_long = classify_states(start="1926-01-01")
+    ff = ff.join(states_long[["state"]], how="inner").dropna(subset=["state"])
+    modern_start = rets.index.min()
+
+    out = {}
+    for ftype, fcol in FF_BY_FACTOR_TYPE.items():
+        cols = [c for c in rets.columns if c.split(" | ")[1] == ftype]
+        pairs = [(c, f"{c.split(' | ')[0]} | Reference") for c in cols]
+        pairs = [(c, r) for c, r in pairs if r in rets.columns]
+        if not pairs:
+            continue
+        exc = pd.concat([rets[c] - rets[r] for c, r in pairs], axis=1).mean(axis=1)
+        both = pd.concat([exc, ff[fcol]], axis=1, join="inner").dropna()
+        if len(both) < C.MACRO_MIN_OVERLAP_MONTHS:
+            continue
+        x, y = both.iloc[:, 1], both.iloc[:, 0]
+        beta = float(((x - x.mean()) * (y - y.mean())).sum() / ((x - x.mean()) ** 2).sum())
+
+        per_state = {}
+        for state, g in ff.groupby("state"):
+            f_long = g[fcol].dropna()
+            f_mod = g.loc[modern_start:, fcol].dropna()
+            if len(f_long) < 24 or len(f_mod) < 6:
+                continue
+            per_state[state] = dict(
+                agree=bool(np.sign(f_long.mean()) == np.sign(f_mod.mean())),
+                long_diff=float(beta * f_long.mean()), n_long=int(len(f_long)))
+        if per_state:
+            out[ftype] = dict(beta=beta, states=per_state)
+    return out or None
+
+
 def _short(state: str) -> str:
     return state.split(" (")[0]
 

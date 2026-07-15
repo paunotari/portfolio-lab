@@ -171,7 +171,14 @@ def build_inputs(rets: pd.DataFrame = None) -> dict:
         perf_long = _state_mean_returns(rets, states)
         trans = transition_matrix(states)
         outlook = quadrant_outlook(states, trans)
-        P, Q, conf, view_descs = bl.regime_views(series, perf_long, outlook)
+        try:                                    # 66y FF prior for the views (optional, clipped
+            from portfolio_lab.analytics.long_history import msci_factor_prior   # to rets end)
+            long_prior = msci_factor_prior(rets)
+        except Exception as e:
+            print(f"[optimizer] WARN long-history prior unavailable ({e}) — modern-only views")
+            long_prior = None
+        P, Q, conf, view_descs = bl.regime_views(series, perf_long, outlook,
+                                                 long_prior=long_prior)
         mu_bl = bl.posterior(pi, sigma, T, P, Q, conf)
         mu_q = (perf_long.pivot(index="state", columns="series", values="mean_monthly_return")
                 .reindex(columns=series))
@@ -584,8 +591,11 @@ def _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta):
         L += [f"3-month Markov outlook: " + ", ".join(
               f"{k.split(' (')[0]} {v:.0%}" for k, v in inp["outlook"].items()), ""]
         for v in inp["view_descs"]:
+            anchored = v.get("long_anchored_states", 0)
+            note = (f"; Q anchored on 66y Fama-French history in {anchored}/4 quadrants "
+                    f"(β={v['long_beta']})" if anchored else "; modern sample only")
             L += [f"- {v['view']}: expected monthly excess {v['q_monthly']:+.3%} at "
-                  f"confidence {v['confidence']:.0%} — tilts exactly that hard, no harder"]
+                  f"confidence {v['confidence']:.0%} — tilts exactly that hard, no harder{note}"]
         L += [""]
     else:
         L += ["_No macro-state outputs found — μ_BL = Π (pure anchor-implied returns), regime "
