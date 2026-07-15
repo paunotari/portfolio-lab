@@ -70,6 +70,28 @@ Test on data the method never saw (walk-forward), compare against equal weight, 
 pain as "the average of the worst months" (CVaR — [cvar-optimization.md](cvar-optimization.md)),
 not just volatility. The same honesty protocol our quadrant forecasting already follows.
 
+### 7. The plot twist: the boring portfolio keeps winning (the low-volatility anomaly)
+
+Finance's founding promise — more risk, more reward — turns out to be empirically backwards
+*within* stock markets: boring, low-risk stocks have earned about as much as exciting, risky
+ones, which makes their risk-adjusted returns far better. Why doesn't everyone pile in and fix
+it? Because most investors can't or won't borrow to amplify boring returns, so they overpay for
+exciting stocks instead — leaving the calm ones structurally cheap (Frazzini & Pedersen's
+"Betting Against Beta"). This is why plain minimum-variance — the strategy that never even looks
+at returns — won both halves of our own out-of-sample test. It's not smarter; it's harvesting
+this premium while having no return forecast to be wrong about.
+→ [low-volatility-anomaly.md](low-volatility-anomaly.md)
+
+### 8. Has anyone put it all together?
+
+Every big shop built its franchise on one piece: Goldman on Black-Litterman, Bridgewater on All
+Weather (our maximin, industrialized), AQR on factors + risk parity. In books, three
+single-volume syntheses stand out: Ilmanen's *Expected Returns* (what each asset should earn and
+why), Ang's *Asset Management* (everything reorganized as factors), López de Prado's *Advances
+in Financial Machine Learning* (how not to fool yourself). There is no single canonical
+combination — ours is [portfolio_optimization.md](../portfolio_optimization.md), and its
+deliberate edge is the one thing commercial syntheses won't sell: measured honesty.
+
 ---
 
 ## The global picture — what to keep in mind when building a portfolio

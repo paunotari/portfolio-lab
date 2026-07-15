@@ -29,6 +29,7 @@ codeable without fetching the paper:
 | [regime-switching.md](literature/regime-switching.md) | Hamilton filter math, Ang-Bekaert findings, maximin reformulation, ToS boundary |
 | [nowcasting-dfm.md](literature/nowcasting-dfm.md) | DFM/Kalman sketch, GDPNow/NY Fed production notes, upgrade path |
 | [stationary-bootstrap.md](literature/stationary-bootstrap.md) | Politis-Romano ↔ our scenario engine, exact correspondence |
+| [low-volatility-anomaly.md](literature/low-volatility-anomaly.md) | Haugen-Baker → Clarke-de Silva-Thorley → Blitz-van Vliet · BAB mechanism · why min-var wins our walk-forward |
 | [factor-canon.md](literature/factor-canon.md) | FF3/momentum/VME/QMJ math + per-quadrant predictions vs our measurements |
 
 ---
@@ -63,6 +64,24 @@ Raw MVO on our data *cannot* be expected to beat 1/N. Consequences: (a) **1/N is
 benchmark** displayed next to every optimizer output; (b) expected *returns* are the least
 estimable input — prefer risk/structure objectives and treat return as a constraint or view, not
 a free maximand.
+
+### The low-volatility anomaly — Haugen & Baker (1991); Clarke, de Silva & Thorley (2006); Blitz & van Vliet (2007); explained by Frazzini & Pedersen (2014), "Betting Against Beta" — *JFE* ([pdf](https://pages.stern.nyu.edu/~lpederse/papers/BettingAgainstBeta.pdf))
+The empirical scandal CAPM never recovered from: **low-risk stocks earn as much as — often more
+than — high-risk stocks**, the exact opposite of "more risk, more reward." Haugen & Baker first
+documented it (low-vol Wilshire-5000 portfolios matched the market with far less risk); Clarke,
+de Silva & Thorley showed **minimum-variance portfolios** of large US stocks deliver market-like
+returns at ~25–30% less volatility; Blitz & van Vliet confirmed it globally. Frazzini & Pedersen
+supplied the mechanism: most investors can't or won't use leverage, so they overpay for exciting
+high-beta assets to reach return targets, leaving boring low-beta assets structurally cheap —
+their BAB factor harvests exactly that premium (same leverage-aversion logic as risk parity,
+[risk-parity-erc.md](literature/risk-parity-erc.md) §4).
+**⇒ for us: the explanation of our own walk-forward result.** Min-variance won BOTH halves of
+our out-of-sample test (Sharpe 1.21 in 2009–2017, 0.96 in 2018–2026 — measured 2026-07) without
+estimating a single expected return. That's not "better optimization": it's (a) immunity to
+mean-estimation error and (b) harvesting this structural premium — on our menu, via the Quality
+sleeves it concentrates in. License to consider min-var as the default anchor (open TODO
+decision), with the caveat said out loud: a min-var portfolio is a *factor bet on defensive
+equity*, not a neutral allocation. → [low-volatility-anomaly.md](literature/low-volatility-anomaly.md)
 
 ### Ledoit & Wolf (2004), "Honey, I Shrunk the Sample Covariance Matrix" — *JPM* ([pdf](http://www.ledoit.net/honey.pdf))
 Opening line of the abstract, literally: *"nobody should be using the sample covariance matrix
@@ -204,3 +223,38 @@ The literature, compressed into build directives for
    same honesty protocol that already governs the quadrant forecasting.
 8. **CVaR later, ML never (here)**: CVaR as an optional Tier-2 tail metric (Rockafellar-Uryasev);
    fitted regime/return models stay Phase 4 with non-FRED data.
+
+---
+
+## 5. The syntheses — who has already combined these practices
+
+There is **no single canonical synthesis** of the canon above — every serious shop and author
+picks their own trade-offs. The map of who combined what:
+
+**In production (each firm's synthesis is its franchise):**
+- **Goldman Sachs** — built around **Black-Litterman** (1990–): equilibrium prior + client views,
+  the standard strategic-asset-allocation anchor at sovereign funds and endowments.
+- **Bridgewater** — built around **All Weather / risk parity** (1996–): balance risk across the
+  growth×inflation quadrants so no regime sinks the portfolio (≈ our maximin, industrialized).
+- **AQR** — built around **factor investing + risk parity**: harvest documented premia (value,
+  momentum, quality, low-beta/BAB) systematically; supplied much of the academic canon itself
+  (Asness, Frazzini, Pedersen, Moskowitz).
+
+**In books (the three best single-volume syntheses):**
+- **Ilmanen, *Expected Returns* (2011)** — what every asset class and factor is expected to
+  return and *why* (risk premia, behavioral, frictions); the best "what to expect" reference.
+- **Ang, *Asset Management: A Systematic Approach to Factor Investing* (2014)** — the whole
+  field reorganized around factors ("assets are bundles of factors"); the academic synthesis.
+- **López de Prado, *Advances in Financial Machine Learning* (2018)** — the modern
+  robust-methods toolbox (HRP, purged cross-validation, backtest-overfitting diagnostics);
+  the "how not to fool yourself" reference.
+
+**In software:** PyPortfolioOpt and Riskfolio-Lib implement the individual pieces (shrinkage,
+BL, HRP, CVaR, risk parity) but deliberately without an opinion on how to combine them.
+
+**⇒ for us:** our synthesis is [portfolio_optimization.md](portfolio_optimization.md) — the
+five-stage unified method. Its deliberate differentiator, which none of the commercial
+syntheses has an incentive to offer, is **measured honesty**: 1/N always on screen, a
+walk-forward that admits when the clever portfolio loses, and every tilt auditable. The
+scoreboard where our blend loses to equal weight isn't a failure of the synthesis — it *is*
+the synthesis.
