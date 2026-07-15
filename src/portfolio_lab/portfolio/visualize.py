@@ -319,6 +319,11 @@ runs hot. Both were beaten by min-variance here.
 whole portfolios. <b>Diversified blends sit further left (less risk) than almost any single
 sleeve at similar return</b> — that is the whole free lunch, and the different engines are just
 different choices of where to sit on the cloud's edge.</p>
+<p class="cap mut">From here on the charts show the <b>static portfolios</b> — allocations you
+hold and can decompose (weights, risk, per-quadrant, scenarios). The two dynamic rule strategies
+from the scoreboard (momentum, vol-target) have <i>no fixed weights</i> — they change holdings or
+exposure every period — so they only have meaning in the walk-forward above and aren't plotted
+here. Forcing a single point for them would mix time windows and mislead.</p>
 <details class="more"><summary>Method, math &amp; sources</summary><div class="body">
 This is Markowitz's 1952 frame: a portfolio's return is the weighted average of its parts, but
 its risk is <i>not</i> — imperfect correlations cancel some of it:
@@ -330,6 +335,18 @@ constant-correlation target in proportion to its estimated noise:
 The engines differ only in where they sit: min-variance solves <code>min wᵀΣw</code>; ERC
 equalizes risk contributions; HRP splits capital down a correlation-distance cluster tree
 (<code>d_ij = √((1−ρ_ij)/2)</code>, never inverting Σ); 1/N ignores the data entirely.
+<p style="margin-top:10px"><b>Why this chart's CAGR differs from the scoreboard's (chart 2).</b>
+Same portfolio, two different measurements. Here every point is measured over the <b>full common
+window (1999–2026)</b> with each portfolio's final weights held fixed — so it includes the
+dot-com crash and 2008, when min-variance made just +0.2%/yr and drew down −41%. The scoreboard
+instead measures only the <b>out-of-sample window (2009–2026)</b>, which skipped those bear
+markets (they're the walk-forward's 10-year training warmup) and happened to be a strong bull
+run. Concretely for min-variance: the exact same weights earn <b>9.2%/yr over 1999–2026</b> but
+<b>14.7%/yr over just 2009–2026</b> — the ~6-point gap is almost entirely the window, not the
+method (re-estimating yearly adds only ~0.4pt, to the 15.1% on the scoreboard). Neither number
+lies: this map describes behaviour across all the history we have; the scoreboard tests only
+unseen months — and honestly flags that those unseen months were an unusually kind era with no
+prolonged bear market to survive out of sample.</p>
 <ul class="src">
 <li>Markowitz (1952), "Portfolio Selection" — <i>JF</i>; Nobel Prize 1990</li>
 <li>Ledoit &amp; Wolf (2004), "Honey, I Shrunk the Sample Covariance Matrix" — <a href="http://www.ledoit.net/honey.pdf">JPM 30(4)</a></li>
