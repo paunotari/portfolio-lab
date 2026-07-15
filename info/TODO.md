@@ -272,11 +272,18 @@ what moves the needle.
       the `source=api` registry branch below. Adaptations needed: look-through diversification
       tables (or exempt non-equity sleeves from that objective) and the regime-view builder's
       factor-vs-Reference assumption (`portfolio/views.py`).
-- [ ] **P2 — Longer PROXY history for the regime layer** (e.g. Fama-French factor returns from
-      1926, MSCI World from 1970) — not as investable sleeves, but to condition per-quadrant
-      factor behavior on far more Stagflation/bust months (our thinnest, most decision-relevant
-      samples; the actual 1970s are barely in the 1997+ window). Regime-conditioning is also the
-      honest answer to the stationarity objection: stability is only assumed *within* regimes.
+- [x] **P2 — Longer PROXY history for the regime layer** — DONE 2026-07 (first slice).
+      `ingest/ff_factors.py` (Ken French monthly factors 1926+, free, non-FRED) +
+      `analytics/long_history.py`: the classifier labels 789 months from 1960 (vs 353 modern —
+      real 1970s Stagflation included, ~2.1× more months per quadrant). **Findings:** 15/16
+      state×factor sign cells agree across eras — Value-in-Stagflation (+6.6%/yr over 66y) and
+      Momentum's quadrant pattern are structural; the one flip is the MARKET factor in
+      Stagflation (+0.5% long vs −5.4% modern) — the modern "equities always lose in
+      stagflation" reading is era-specific. Report: `outputs/analytics/long_history/`.
+  - [ ] Follow-up: feed the regime views' Q (and/or the maximin μ̂_q priors) with long-history
+        differentials **for the cells where both eras agree** — shrink toward the long sample,
+        never replace the modern one blindly. Also possible: MSCI World from 1970 as a second
+        proxy for region-level (not just factor-level) behavior.
 - [ ] **P3 — Live data feed** (see "Live data" below) — the nowcasting lesson: fresher data
       beats a fancier model; our ~1–2 month macro print lag bounds the regime call more than
       method choice does.

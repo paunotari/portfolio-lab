@@ -130,7 +130,7 @@ def _composite_score(macro: pd.DataFrame, components: dict[str, int], primary: s
     return score / score.std()
 
 
-def classify_states() -> pd.DataFrame:
+def classify_states(start: str = None) -> pd.DataFrame:
     """Return a DataFrame indexed by month with composite growth/inflation scores, soft quadrant
     probabilities, hard up/down booleans and the hard state label, starting once both primary
     indicators have enough history.
@@ -138,7 +138,11 @@ def classify_states() -> pd.DataFrame:
     FRED's macro history goes back to 1854 (industrial production) / 1919 (PPI), far earlier than
     our return series (1997+). Classifying that far back would make "historical frequency of each
     state" meaningless -- it'd be dominated by 19th/early-20th-century depression-era data that
-    has nothing to do with the indices we hold. So this clips to the return series' own history.
+    has nothing to do with the indices we hold. So this clips to the return series' own history
+    BY DEFAULT. Pass `start` to clip elsewhere (analytics/long_history.py uses the full
+    classifiable range for the Fama-French proxy study); the composite scores themselves are
+    identical either way -- they are computed on the full macro history before clipping, so a
+    different `start` never changes a month's label, only which months are returned.
     """
     macro = pd.read_csv(C.MACRO_MONTHLY, index_col=0, parse_dates=True).sort_index()
     g_col, i_col = C.MACRO_STATE_GROWTH_PRIMARY, C.MACRO_STATE_INFLATION_PRIMARY
@@ -163,8 +167,9 @@ def classify_states() -> pd.DataFrame:
     df["inflation_up"] = df.inflation_score > 0
     df["state"] = [STATES[(bool(gu), bool(iu))] for gu, iu in zip(df.growth_up, df.inflation_up)]
 
-    returns_start = pd.read_csv(C.LEVELS_WIDE, index_col=0, parse_dates=True).index.min()
-    return df.loc[returns_start:]
+    if start is None:
+        start = pd.read_csv(C.LEVELS_WIDE, index_col=0, parse_dates=True).index.min()
+    return df.loc[start:]
 
 
 def transition_matrix(states: pd.DataFrame) -> pd.DataFrame:

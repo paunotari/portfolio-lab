@@ -79,6 +79,8 @@ python -m portfolio_lab.dashboard.build
 | `ingest/factsheets.py` | Iterates registry rows with a PDF; parses each factsheet `*.pdf` → `sector_weights / country_weights / top_constituents / index_meta`. Handles 3 constituent-table layouts; `clean_name()` fixes pdfplumber row-merge. |
 | `ingest/asia_images.py` | Appends the 2 AC Asia ex Japan factor indices with no PDF (transcribed from web screenshots, `source=msci_web_image`). **Run after factsheets.** |
 | `ingest/macro.py` | Historical macro indicators from **FRED** → `macro_monthly.csv` (+`macro_meta.csv`), month-end aligned. **16 indicators** (added `breakeven_10y`/`breakeven_5y` = T10YIE/T5YIE market inflation expectations, `us_recession` = NBER USREC, and `baa10y_spread` = BAA10Y full-history credit stress — all for the 4-quadrant classifier below). Official JSON API when `FRED_API_KEY` is set, else keyless CSV endpoint. Uses `certifi` for SSL. |
+| `ingest/ff_factors.py` | **Fama-French research factors** (Ken French data library, free, not FRED) → `ff_factors_monthly.csv`: Mkt-RF/SMB/HML/RF from 1926-07, Mom from 1927 — ~100 years, monthly, fractions. Research proxies for the regime layer, **not investable sleeves** (deliberately outside the index registry). Network-dependent; WARNs and keeps the previous file on failure, like `ingest/macro.py`. |
+| `analytics/long_history.py` | **Long-history regime proxy** (data roadmap P2): joins the FF factors with `classify_states(start="1926-01-01")` — classifiable from 1960 (core PCE start), ~789 months ≈ 2.2× the modern window, including the real 1970s Stagflation. Per-quadrant factor stats long-vs-modern + a **sign-agreement verdict** (first run 2026-07: 15/16 cells agree; Value-in-Stagflation and Momentum patterns are structural; the market factor's Stagflation direction is the one era-specific flip). Outputs `outputs/analytics/long_history/` (`long_history_factor_states.csv`, `REPORT_long_history.md`). Research layer only — wiring agreed patterns into the regime views' Q is a recorded TODO follow-up. |
 | `analytics/regimes.py` | `REGIMES`: 10 hand-dated historical eras with analyst annotations (macro/factors/regions/shift) — event-driven narrative labels ("GFC," "dot-com bust"). Data only. Distinct from the systematic classifier below. |
 | `analytics/engine.py` | Performance summary (CAGR/vol/Sharpe/maxDD, one number per series over the common window — no more "cw_"/"full_" split), factor-vs-reference, per-regime performance, correlation matrices (full + per regime), 36m rolling correlation, and `REPORT.md`. |
 | `analytics/macro_link.py` | **Index↔macro correlation engine.** For each of the 21 return series × 16 indicators: contemporaneous + lagged (0/1/3/6/12m, macro leads) correlations on **two bases** — `chg` (Δ month-over-month, the sound basis) and `level` (regime context only) — plus univariate OLS betas. 36-month min-overlap guard flags short pairs as insufficient. Also computes **per-(named)-regime** correlation matrices (chg basis, lag 0; lower 6-month overlap floor since regimes run as short as ~15 months — `regime_correlations()`). Outputs to `outputs/analytics/macro/` (long CSV, two wide 21×16 matrices, betas, `correlation_by_regime/*.csv`, `REPORT_macro.md`). |
@@ -108,6 +110,8 @@ levels_wide.csv + regimes ─analytics.engine──► outputs/analytics/*  (+ R
 levels_wide.csv + macro_monthly.csv ─analytics.macro_link──► outputs/analytics/macro/*  (+ REPORT_macro.md)
 macro_monthly.csv ─analytics.macro_state──► outputs/analytics/macro_state/*  (+ REPORT_macro_state.md)
 macro_state's classify_states() + levels_wide.csv ─analytics.scenario──► outputs/analytics/scenario/*
+Ken French library (network) ─ingest.ff_factors──► ff_factors_monthly.csv
+ff_factors_monthly.csv + classify_states(start=1926) ─analytics.long_history──► outputs/analytics/long_history/*
 weights CSVs ─portfolio.diversification──► outputs/diversification/*
 levels_wide.csv + weights CSVs + macro_state outputs ─portfolio.optimizer (+validation, scenario.portfolio_cone)──► outputs/analytics/optimizer/*
 all of the above ─dashboard.build──► outputs/dashboard.html
@@ -135,7 +139,9 @@ explicit, not implied by which folders happen to exist. Columns:
 `weights_file` to hold a ticker or endpoint) and implement one new branch in `ingest/returns.py`
 keyed on `source`. The registry contract stays the same — see TODO.md.
 Macro ingest needs network; skip it (and macro_link/macro_state/scenario, which all depend on
-macro data) offline with `python scripts/run_pipeline.py --no-macro`. Pipeline is 11 steps; see
+macro data) offline with `python scripts/run_pipeline.py --no-macro` (this also skips the
+FF-factor fetch and long-history study, which need network/macro respectively). Pipeline is 13
+steps; see
 `scripts/run_pipeline.py`.
 
 ## 6. Data model / conventions

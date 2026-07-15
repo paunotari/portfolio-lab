@@ -203,6 +203,39 @@ def test_scenario_summary_valid():
         assert n == 21, f"scenario {name}: expected 21 series, got {n}"
 
 
+def test_ff_factors_valid():
+    # Fama-French proxy series (network-dependent; skipped if not fetched)
+    if not C.FF_FACTORS_MONTHLY.exists():
+        return
+    rows = _rows(C.FF_FACTORS_MONTHLY)
+    assert rows, "ff_factors_monthly.csv is empty"
+    for col in ("mkt_rf", "smb", "hml", "rf", "mom"):
+        assert col in rows[0], f"missing factor column {col}"
+    assert rows[0]["date"] <= "1927-01-31", f"history should start by 1927, got {rows[0]['date']}"
+    for r in rows:
+        for col in ("mkt_rf", "smb", "hml", "mom"):
+            if r[col] == "":
+                continue                                   # mom starts 1927; early months blank
+            v = float(r[col])
+            assert -0.6 <= v <= 0.6, f"implausible monthly factor return {col}={v} at {r['date']}"
+
+
+def test_long_history_factor_states_valid():
+    if not C.LONG_HISTORY_CSV.exists():
+        return
+    rows = _rows(C.LONG_HISTORY_CSV)
+    assert rows, "long_history_factor_states.csv is empty"
+    samples = {r["sample"] for r in rows}
+    assert len(samples) == 2, f"expected long+modern samples, got {samples}"
+    long_rows = [r for r in rows if r["sample"].startswith("long")]
+    states = {r["state"] for r in long_rows}
+    assert len(states) == 4, f"long sample should cover 4 quadrants, got {len(states)}"
+    assert sum(int(r["n_months"]) for r in long_rows if r["factor"] == "mkt_rf") > 700, \
+        "long sample should classify far more months than the modern window"
+    for r in rows:
+        assert 0.0 <= float(r["hit_rate"]) <= 1.0, f"hit_rate out of bounds: {r}"
+
+
 def test_optimizer_portfolios_valid():
     # structural validity of the optimizer stage's outputs (skipped if not generated);
     # unit tests of the optimizer internals live in tests/test_optimizer.py

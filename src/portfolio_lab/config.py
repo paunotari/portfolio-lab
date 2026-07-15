@@ -40,6 +40,7 @@ TOP_CONSTITUENTS = PROCESSED_DIR / "top_constituents.csv"
 INDEX_META = PROCESSED_DIR / "index_meta.csv"
 MACRO_MONTHLY = PROCESSED_DIR / "macro_monthly.csv"      # date x indicators (transformed)
 MACRO_META = PROCESSED_DIR / "macro_meta.csv"            # one row per indicator
+FF_FACTORS_MONTHLY = PROCESSED_DIR / "ff_factors_monthly.csv"  # Fama-French factors, 1926+
 
 # analytics output file handles
 PERFORMANCE_SUMMARY = ANALYTICS_DIR / "performance_summary.csv"
@@ -168,12 +169,26 @@ OPTIMIZER_GEO_ZONES = {
 }
 OPTIMIZER_GEO_CAP_PCT = 40.0        # default zone cap for the geo-capped flagship portfolio
 
+# long-history regime proxy (ingest/ff_factors.py + analytics/long_history.py): Fama-French
+# research factors from Ken French's data library (free, NOT FRED — no ToS constraint). These
+# are RESEARCH PROXIES for the regime layer, not investable sleeves — deliberately kept out of
+# the index registry. The macro-state classification extends back as far as both primary
+# indicators exist (core PCE YoY starts 1960), which triples the regime sample and finally
+# includes the real 1970s stagflation.
+FF_SOURCES = {
+    "factors": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_CSV.zip",
+    "momentum": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Momentum_Factor_CSV.zip",
+}
+LONG_HISTORY_DIR = ANALYTICS_DIR / "long_history"
+LONG_HISTORY_CSV = LONG_HISTORY_DIR / "long_history_factor_states.csv"
+LONG_HISTORY_REPORT = LONG_HISTORY_DIR / "REPORT_long_history.md"
+
 
 def ensure_dirs() -> None:
     """Create all writable output directories if missing (idempotent)."""
     for d in (PROCESSED_DIR, ANALYTICS_DIR, CORR_REGIME_DIR, DIVERSIFICATION_DIR,
               MACRO_ANALYTICS_DIR, MACRO_CORR_BY_REGIME_DIR, MACRO_STATE_DIR, SCENARIO_DIR,
-              OPTIMIZER_DIR):
+              OPTIMIZER_DIR, LONG_HISTORY_DIR):
         d.mkdir(parents=True, exist_ok=True)
 
 
