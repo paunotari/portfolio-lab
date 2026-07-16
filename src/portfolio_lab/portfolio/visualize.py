@@ -140,12 +140,43 @@ def build_data() -> dict:
         geo = {z: round(float(w @ Z[:, j]), 3) for j, z in enumerate(zones)}
         roster_weights[name] = dict(holdings=pairs, n_total=len(pairs), geo=geo)
 
+    # 8. long-history reality check (Fama-French factors x 66-year quadrant classification)
+    longhist = None
+    if C.FF_FACTORS_MONTHLY.exists():
+        from portfolio_lab.analytics.long_history import build as lh_build, _agreement, FACTOR_LABEL
+        st, freq, lmeta = lh_build()
+        agree = _agreement(st)
+        long_c = [c for c in agree.columns if c.startswith("long")][0]
+        mod_c = [c for c in agree.columns if c.startswith("modern")][0]
+        grid = [dict(state=_short(r.state), factor=r.factor, label=FACTOR_LABEL[r.factor],
+                     long=float(r[long_c]), modern=float(r[mod_c]), agree=bool(r.signs_agree))
+                for _, r in agree.iterrows()]
+        # per-quadrant annualized return, modern vs long, for the two view-feeding factors
+        def _by(fac):
+            sub = st[st.factor == fac]
+            states = [_short(s) for s in
+                      ["Goldilocks (disinflationary growth)", "Reflation (overheating)",
+                       "Stagflation (growth-inflation squeeze)", "Deflationary bust (recession/slowdown)"]]
+            g = lambda samp: [float(sub[(sub.state.str.startswith(s.split()[0])) &
+                              (sub['sample'].str.startswith(samp))].ann_return.iloc[0])
+                              if len(sub[(sub.state.str.startswith(s.split()[0])) &
+                                         (sub['sample'].str.startswith(samp))]) else None
+                              for s in states]
+            return dict(states=states, modern=g("modern"), long=g("long"))
+        longhist = dict(meta=lmeta,
+                        freq=dict(states=[_short(s) for s in freq.index],
+                                  long=[int(freq.iloc[:, 0][s]) for s in freq.index],
+                                  modern=[int(freq.iloc[:, 1][s]) for s in freq.index]),
+                        hml=_by("hml"), mom=_by("mom"),
+                        n_agree=int(agree.signs_agree.sum()), n_total=int(len(agree)),
+                        flips=[f"{g['label']} in {g['state']}" for g in grid if not g["agree"]])
+
     outlook = ({_short(k): round(float(v), 3) for k, v in inp["outlook"].items()}
                if inp["outlook"] else None)
     return dict(window=f"{rets.index[0].date()} → {rets.index[-1].date()}", T=inp["T"],
                 n=len(series), delta_star=round(inp["delta_star"], 3), outlook=outlook,
                 wf=wf, sleeves=sleeve_pts, portfolios=port_pts, quad=quad, bl=bl, wrc=wrc,
-                cones=cones, roster_weights=roster_weights)
+                cones=cones, roster_weights=roster_weights, longhist=longhist)
 
 
 TEMPLATE = """<!DOCTYPE html>
@@ -485,7 +516,37 @@ judging through it costs nothing and flags fragile portfolios.
 <div id="cones" class="chart" style="height:400px"></div>
 </div>
 
+<div id="lhsec">
+<div class="eyebrow">Appendix · the 66-year reality check</div>
+<h2>Are our regime patterns real, or a 28-year mirage?</h2>
+<p class="cap">The optimizer's regime views rest on how each factor behaves per macro quadrant —
+measured on 1997–2026. Are those patterns structural, or luck of a short window? We re-ran the
+same classifier over <b>Fama-French factor history back to 1960</b> (research proxies, not
+investable sleeves) and compared. <b id="lhverdict"></b> Where an era agrees, the views now
+shrink their estimate toward the century of data; where it flips, the modern reading is kept but
+flagged as era-specific.</p>
+<p class="cap mut" id="lhgain"></p>
+<div id="lhval" class="chart" style="height:340px"></div>
+<div style="height:10px"></div>
+<div id="lhmom" class="chart" style="height:340px"></div>
+<p class="cap" id="lhflip" style="margin-top:12px"></p>
+<details class="more"><summary>Method, math &amp; sources</summary><div class="body">
+The classifier's composite scores are computed on the full macro history, so extending the clip
+back to 1960 (core PCE's start) changes <i>which</i> months are labelled, never a month's label.
+Factors are Ken French's monthly research series (Mkt-RF / SMB / HML / Mom, free, not FRED). Each
+quadrant's bar is the annualized return of that factor pooled over its months in that state.
+Agreement = the long and modern samples share the sign of the factor's mean. Feeding it back:
+the regime view's per-quadrant excess <code>d</code> blends by months of evidence,
+<code>d = (n_mod·d_mod + n_long·β·f_long) / (n_mod + n_long)</code>, where β (OLS) maps the
+long-short academic factor into long-only MSCI-sleeve-excess space — only in agreeing cells.
+<ul class="src">
+<li>Fama &amp; French (1993) · Jegadeesh &amp; Titman (1993, momentum) — the factors</li>
+<li>Repo: <span class="num">ingest/ff_factors.py</span>, <span class="num">analytics/long_history.py</span>, <span class="num">portfolio/views.py::regime_views(long_prior=)</span> · report <span class="num">REPORT_long_history.md</span></li>
+</ul></div></details>
+</div>
+
 <hr><p class="cap">Companions: <span class="num">REPORT_optimizer.md</span> (numbers),
+<span class="num">REPORT_long_history.md</span> (the 66-year study),
 <span class="num">info/portfolio_optimization.md</span> (method),
 <span class="num">info/literature.md</span> (evidence). Charts need internet once for the
 Plotly CDN.</p>
@@ -611,6 +672,33 @@ if(DATA.cones.length){
   L({xaxis:{title:'simulated 10y CAGR (current_conditions)',tickformat:'.0%',gridcolor:LINE},
      yaxis:{automargin:true,autorange:'reversed'},margin:{l:200,r:20,t:10,b:45},showlegend:false}),CFG);
  }else{document.getElementById('conesec').style.display='none'}
+
+// 8 long-history reality check
+if(DATA.longhist){
+ const lh=DATA.longhist, m=lh.meta;
+ document.getElementById('lhverdict').textContent=
+   lh.n_agree+' of '+lh.n_total+' factor×quadrant patterns hold across both eras.';
+ document.getElementById('lhgain').innerHTML='The long sample classifies <b>'+m.long_months+
+   ' months</b> ('+m.long_start+'→'+m.long_end+') vs '+m.modern_months+
+   ' modern — roughly ×'+(m.long_months/m.modern_months).toFixed(1)+
+   ' more history per quadrant, finally including the real 1970s stagflation.';
+ const bars=(id,d,title)=>Plotly.newPlot(id,[
+   {x:d.states,y:d.modern.map(v=>v==null?null:v),name:'modern (1997–2026)',type:'bar',
+    marker:{color:'#C9C9D2'}},
+   {x:d.states,y:d.long.map(v=>v==null?null:v),name:'long (66 years)',type:'bar',
+    marker:{color:'#3B6FD4'}}],
+   L({barmode:'group',title:{text:title,font:{size:13},x:0,xanchor:'left'},
+      yaxis:{title:'annualized return',tickformat:'.0%',gridcolor:LINE},
+      margin:{l:60,r:20,t:34,b:40}}),CFG);
+ bars('lhval',lh.hml,'Value (HML) per quadrant — does the premium survive 66 years?');
+ bars('lhmom',lh.mom,'Momentum (Mom) per quadrant — same test');
+ document.getElementById('lhflip').innerHTML= lh.flips.length
+   ? '<b>The one flip:</b> '+lh.flips.join(', ')+'. The modern "equities always crash in '+
+     'stagflation" reading is a 2021–22 artifact — over 66 years the market factor was roughly '+
+     'flat in stagflation, not catastrophic. Exactly the cell a 28-year window would overfit, '+
+     'so the views keep it modern-only and say so.'
+   : 'Every modern per-quadrant sign survived the long sample.';
+}else{document.getElementById('lhsec').style.display='none'}
 </script></body></html>
 """
 
