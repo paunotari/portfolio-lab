@@ -264,6 +264,33 @@ def test_geo_cap_respected_and_costs_objective():
         pass
 
 
+def test_all_weather_optin_lifts_the_floor():
+    """The asset-class opt-in must (a) align on the same monthly window (the business-vs-
+    calendar month-end trap), (b) leave equity-only untouched as the default, and (c) give
+    maximin a worst-quadrant floor at least as good as equity-only (superset feasible set)."""
+    if not (C.LEVELS_WIDE.exists() and C.MACRO_STATE_MONTHLY.exists()
+            and C.ASSET_CLASS_MONTHLY.exists()):
+        return
+    O, inp_eq = _inputs()
+    inp_aw = O.build_inputs(include_asset_classes=True)
+    assert len(inp_aw["series"]) == len(inp_eq["series"]) + 3, "expected 3 proxy sleeves"
+    assert inp_aw["T"] >= inp_eq["T"] - 3, \
+        f"asset join lost months ({inp_aw['T']} vs {inp_eq['T']}) — date alignment regressed"
+    if inp_aw["mu_q"] is None:
+        return
+    worst = lambda r: min(r["per_quadrant_monthly"].values())
+    res_eq = O.optimize(maximin=True, inputs=inp_eq, n_starts=8)
+    res_aw = O.optimize(maximin=True, inputs=inp_aw, n_starts=8)
+    assert worst(res_aw) >= worst(res_eq) - 1e-6, \
+        "all-weather maximin cannot have a worse floor than equity-only (superset of assets)"
+    # proxy sleeves are exempt from geo caps (zero geographic exposure rows)
+    names = inp_aw["series"]
+    Z = inp_aw["geo_Z"]
+    for i, s in enumerate(names):
+        if s.startswith("Asset | "):
+            assert abs(Z[i].sum()) < 1e-12, f"{s} should have zero geographic exposure"
+
+
 def test_scenario_portfolio_cone_matches_per_series_when_one_hot():
     if not (C.LEVELS_WIDE.exists() and C.MACRO_STATE_MONTHLY.exists()):
         return

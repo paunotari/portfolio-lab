@@ -263,15 +263,20 @@ matrix was decent). So frequency is the least valuable axis; breadth and span ar
 Matches the round-2 backtest conclusion: at ~350 months, more data — not more conditioning — is
 what moves the needle.
 
-- [ ] **P1 — Asset classes beyond equities (bonds, commodities/gold, TIPS-like), 3–4 series.**
-      The single highest-value extension: all 21 current sleeves are equities, so every
-      quadrant profile is correlated and the maximin mode can only reshuffle equity tilts. True
-      All-Weather robustness needs assets that structurally win in different quadrants (bonds
-      in Deflationary bust, commodities in Stagflation) — the unlevered-equity limitation is
-      flagged in [literature/risk-parity-erc.md](literature/risk-parity-erc.md). Plugs in via
-      the `source=api` registry branch below. Adaptations needed: look-through diversification
-      tables (or exempt non-equity sleeves from that objective) and the regime-view builder's
-      factor-vs-Reference assumption (`portfolio/views.py`).
+- [x] **P1 — Asset classes beyond equities — DONE 2026-07 (free proxy slice).**
+      `ingest/asset_classes.py`: US Treasury 10y TR (constructed from `ust_10y`,
+      Swinkels-2019 approximation, sanity-checked vs 2008/2013/2022), Gold (LBMA mirror,
+      1833+), Cash (FF rf) — all free. Optimizer opt-in `include_asset_classes=True`
+      (**equity-only stays the product default** — house thesis: equities are the productive
+      asset; profiles opt in). **Measured (same window): the all-weather maximin more than
+      doubles the worst-quadrant floor (+0.31%→+0.73%/mo), halves vol (23.9%→13.5%), cuts
+      maxDD −61%→−34%, for −1.5pt CAGR — buying 40% gold + 13% bonds.** Ships as a report
+      flagship. Traps handled: business-vs-calendar month-end join (period-aligned), geo-cap
+      exemption, own-category diversification HHI.
+  - [ ] Follow-ups: extend the scenario universe so all-weather portfolios get cones; add an
+        all-weather contestant to the walk-forward; show it in optimizer_viz (roster +
+        charts — needs per-portfolio series lists, see visualize.build_data); TIPS-like
+        sleeve if a free long series exists.
 - [x] **P2 — Longer PROXY history for the regime layer** — DONE 2026-07 (first slice).
       `ingest/ff_factors.py` (Ken French monthly factors 1926+, free, non-FRED) +
       `analytics/long_history.py`: the classifier labels 789 months from 1960 (vs 353 modern —
@@ -318,6 +323,11 @@ what moves the needle.
 
 ## Tracker & product (vision.md Phase 5)
 
+- [ ] **ETF menu per index** (user idea 2026-07): for each sleeve the optimizer can recommend,
+      show the investable ETFs that track that index (ticker, TER, domicile, accumulating/
+      distributing) so a recommendation translates directly into "what to actually buy."
+      Needs an ETF-catalog data source (open question); natural companion to the `source=api`
+      registry branch and the live-data feed below.
 - [ ] Day-to-day portfolio tracking (positions, cost basis, live valuation).
 - [ ] Rebalancing alerts triggered by regime change.
 - [ ] Reporting (periodic summaries, exportable).

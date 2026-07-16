@@ -68,10 +68,24 @@ DISPLAY_MIN_W = 0.001          # weights below 0.1% are noise, dropped from disp
 
 # --------------------------------------------------------------------------- inputs
 
-def load_returns() -> pd.DataFrame:
-    """Monthly returns of all 21 series on the common window (same window the analytics use)."""
+def load_returns(include_asset_classes: bool = False) -> pd.DataFrame:
+    """Monthly returns of all 21 series on the common window (same window the analytics use).
+
+    include_asset_classes=True appends the non-equity PROXY sleeves (bond/gold/cash from
+    ingest/asset_classes.py) on the same window — the all-weather OPT-IN. Equity-only stays the
+    product default (house thesis: equity indices are the productive asset; other profiles can
+    opt in)."""
     lv = pd.read_csv(C.LEVELS_WIDE, index_col=0, parse_dates=True).sort_index()
-    return lv.dropna(how="any").pct_change().dropna()
+    rets = lv.dropna(how="any").pct_change().dropna()
+    if include_asset_classes and C.ASSET_CLASS_MONTHLY.exists():
+        ac = pd.read_csv(C.ASSET_CLASS_MONTHLY, index_col=0, parse_dates=True).sort_index()
+        # align by month PERIOD: equity levels stamp business month-ends (1999-01-29), the
+        # proxies calendar month-ends (1999-01-31) — an exact-date join silently drops ~30%
+        ac.index = ac.index.to_period("M")
+        aligned = ac.reindex(rets.index.to_period("M"))
+        aligned.index = rets.index
+        rets = pd.concat([rets, aligned], axis=1).dropna()
+    return rets
 
 
 def _div_matrices(series: list[str]) -> dict[str, np.ndarray]:
@@ -89,6 +103,9 @@ def _div_matrices(series: list[str]) -> dict[str, np.ndarray]:
         expo = {}
         for col in series:
             idx_name = col_to_index.get(col)
+            if idx_name is None:                 # non-equity proxy sleeve (no factsheet): it IS
+                expo[col] = {col: 100.0}         # its own category in every dimension — one
+                continue                         # whole independent bet, which is the truth
             w = dict(table.get(idx_name, {}))
             if dim == "country":
                 if not w and idx_name in usa_idx:
@@ -117,6 +134,8 @@ def _geo_matrix(series: list[str]) -> tuple[np.ndarray, list[str]]:
     Z = np.zeros((len(series), len(zones)))
     for i, col in enumerate(series):
         idx_name = col_to_index.get(col)
+        if idx_name is None:                     # non-equity proxy sleeve: zero geographic
+            continue                             # exposure — geo caps constrain equity bets only
         w = dict(ctry_by.get(idx_name, {})) or ({"United States": 100.0}
                                                 if idx_name in usa_idx else {})
         for c, pct in w.items():
@@ -148,10 +167,10 @@ def _state_mean_returns(rets: pd.DataFrame, states: pd.DataFrame,
     return pd.DataFrame(rows)
 
 
-def build_inputs(rets: pd.DataFrame = None) -> dict:
+def build_inputs(rets: pd.DataFrame = None, include_asset_classes: bool = False) -> dict:
     """Everything one optimization needs, computed once (pass a sliced `rets` to rebuild on a
-    training window — the walk-forward does)."""
-    rets = load_returns() if rets is None else rets
+    training window — the walk-forward does). include_asset_classes: see load_returns."""
+    rets = load_returns(include_asset_classes) if rets is None else rets
     series = list(rets.columns)
     R = rets.values
     T = len(rets)
@@ -498,7 +517,8 @@ def _package(inp, w, mode, risk_metric, diag, warnings) -> dict:
     weights = {series[i]: float(w[i]) for i in range(len(series)) if w[i] >= DISPLAY_MIN_W}
     geo_exposure = {z: float(w @ inp["geo_Z"][:, j]) for j, z in enumerate(inp["geo_zones"])}
     return dict(
-        mode=mode, weights=weights, w=w, performance=perf, geo_exposure=geo_exposure,
+        mode=mode, weights=weights, w=w, all_series=list(series), performance=perf,
+        geo_exposure=geo_exposure,
         objective_values={"return_monthly_mu_bl": fns["return"](w),
                           "risk": fns["risk"](w),
                           "effective_bets": fns["diversification"](w),
@@ -539,14 +559,24 @@ def run():
         portfolios["Maximin (robust across quadrants)"] = optimize(maximin=True, inputs=inp)
         portfolios[f"Maximin (geo ≤{C.OPTIMIZER_GEO_CAP_PCT:.0f}%)"] = optimize(
             maximin=True, geo_cap=C.OPTIMIZER_GEO_CAP_PCT / 100.0, inputs=inp)
+        if C.ASSET_CLASS_MONTHLY.exists():       # the all-weather OPT-IN (equity-only default)
+            try:
+                inp_aw = build_inputs(include_asset_classes=True)
+                if inp_aw["mu_q"] is not None:
+                    portfolios["Maximin (all-weather: +bonds/gold/cash)"] = optimize(
+                        maximin=True, inputs=inp_aw)
+            except Exception as e:
+                print(f"[optimizer] WARN all-weather flagship skipped ({e})")
 
     cones = {}
     if C.MACRO_STATE_MONTHLY.exists():
         from portfolio_lab.analytics.scenario import build_universe, portfolio_cone
         uni = build_universe()
         for name, res in portfolios.items():
-            full_w = {inp["series"][i]: float(res["w"][i])
-                      for i in range(len(inp["series"])) if res["w"][i] > 0}
+            full_w = dict(zip(res["all_series"], (float(x) for x in res["w"])))
+            full_w = {s: v for s, v in full_w.items() if v > 0}
+            if not set(full_w) <= set(uni["series"]):
+                continue                     # proxy sleeves aren't in the scenario universe yet
             cones[name] = portfolio_cone(full_w, uni=uni)
 
     from portfolio_lab.portfolio.validation import walk_forward

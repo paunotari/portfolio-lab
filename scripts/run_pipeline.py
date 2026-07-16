@@ -14,10 +14,11 @@ Steps:
   7. analytics.macro_state  4-quadrant classification + factor attribution -> outputs/analytics/macro_state
   8. analytics.scenario   bootstrap scenario simulation -> outputs/analytics/scenario
   9. ingest.ff_factors    Ken French factor series (network) -> ff_factors_monthly.csv
-  10. analytics.long_history  FF factors x long macro-state classification -> outputs/analytics/long_history
-  11. portfolio.diversification  example look-through -> outputs/diversification
-  12. portfolio.optimizer  anchor + benchmarks + flagship portfolios + walk-forward -> outputs/analytics/optimizer
-  13. dashboard.build     self-contained outputs/dashboard.html
+  10. ingest.asset_classes  bond/gold/cash proxy returns (network for gold) -> asset_class_monthly.csv
+  11. analytics.long_history  FF factors x long macro-state classification -> outputs/analytics/long_history
+  12. portfolio.diversification  example look-through -> outputs/diversification
+  13. portfolio.optimizer  anchor + benchmarks + flagship portfolios + walk-forward -> outputs/analytics/optimizer
+  14. dashboard.build     self-contained outputs/dashboard.html
 """
 import sys
 import argparse
@@ -26,7 +27,7 @@ from pathlib import Path
 # make src/ importable without an install
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from portfolio_lab.ingest import returns, factsheets, asia_images, macro, ff_factors
+from portfolio_lab.ingest import returns, factsheets, asia_images, macro, ff_factors, asset_classes
 from portfolio_lab.analytics import engine, macro_link, macro_state, scenario, long_history
 from portfolio_lab.portfolio import diversification, optimizer
 from portfolio_lab.dashboard import build as dashboard_build
@@ -38,22 +39,23 @@ def main():
     ap.add_argument("--no-macro", action="store_true", help="skip FRED macro fetch (needs network)")
     args = ap.parse_args()
 
-    print("=== 1/13 ingest returns ===");     returns.run()
-    print("=== 2/13 ingest factsheets ===");  factsheets.run()
-    print("=== 3/13 ingest asia images ==="); asia_images.run()
+    print("=== 1/14 ingest returns ===");     returns.run()
+    print("=== 2/14 ingest factsheets ===");  factsheets.run()
+    print("=== 3/14 ingest asia images ==="); asia_images.run()
     if not args.no_macro:
-        print("=== 4/13 ingest macro (FRED) ==="); macro.run()
-    print("=== 5/13 analytics ===");          engine.run()
+        print("=== 4/14 ingest macro (FRED) ==="); macro.run()
+    print("=== 5/14 analytics ===");          engine.run()
     if not args.no_macro:
-        print("=== 6/13 macro-link ===");      macro_link.run()
-        print("=== 7/13 macro-state ===");     macro_state.run()
-        print("=== 8/13 scenario ===");        scenario.run()
-        print("=== 9/13 ingest FF factors ==="); ff_factors.run()
-        print("=== 10/13 long-history ===");   long_history.run()
-    print("=== 11/13 diversification ===");   diversification.run()
-    print("=== 12/13 optimizer ===");         optimizer.run()
+        print("=== 6/14 macro-link ===");      macro_link.run()
+        print("=== 7/14 macro-state ===");     macro_state.run()
+        print("=== 8/14 scenario ===");        scenario.run()
+        print("=== 9/14 ingest FF factors ==="); ff_factors.run()
+        print("=== 10/14 asset classes ==="); asset_classes.run()
+        print("=== 11/14 long-history ===");   long_history.run()
+    print("=== 12/14 diversification ===");   diversification.run()
+    print("=== 13/14 optimizer ===");         optimizer.run()
     if not args.no_dashboard:
-        print("=== 13/13 dashboard ===");     dashboard_build.run()
+        print("=== 14/14 dashboard ===");     dashboard_build.run()
     print("\nPipeline complete.")
 
 

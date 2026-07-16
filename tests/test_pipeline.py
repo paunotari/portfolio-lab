@@ -220,6 +220,30 @@ def test_ff_factors_valid():
             assert -0.6 <= v <= 0.6, f"implausible monthly factor return {col}={v} at {r['date']}"
 
 
+def test_asset_class_proxies_valid():
+    # bond/gold/cash proxy returns (network for gold; skipped if not generated)
+    if not C.ASSET_CLASS_MONTHLY.exists():
+        return
+    rows = _rows(C.ASSET_CLASS_MONTHLY)
+    assert rows, "asset_class_monthly.csv is empty"
+    cols = [c for c in rows[0] if c.startswith("Asset | ")]
+    assert len(cols) >= 2, f"expected at least 2 proxy sleeves, got {cols}"
+    for r in rows:
+        for c in cols:
+            if r[c] == "":
+                continue
+            v = float(r[c])
+            assert -0.5 <= v <= 0.6, f"implausible monthly return {c}={v} at {r['date']}"
+    # construction sanity: 2022's rate shock must show up as a clearly negative bond year
+    if "Asset | US Treasury 10y" in rows[0]:
+        b22 = [float(r["Asset | US Treasury 10y"]) for r in rows
+               if r["date"].startswith("2022") and r["Asset | US Treasury 10y"] != ""]
+        year = 1.0
+        for v in b22:
+            year *= 1 + v
+        assert year - 1 < -0.05, f"2022 bond return {year - 1:.1%} — construction suspect"
+
+
 def test_long_history_factor_states_valid():
     if not C.LONG_HISTORY_CSV.exists():
         return

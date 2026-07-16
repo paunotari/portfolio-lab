@@ -41,6 +41,12 @@ INDEX_META = PROCESSED_DIR / "index_meta.csv"
 MACRO_MONTHLY = PROCESSED_DIR / "macro_monthly.csv"      # date x indicators (transformed)
 MACRO_META = PROCESSED_DIR / "macro_meta.csv"            # one row per indicator
 FF_FACTORS_MONTHLY = PROCESSED_DIR / "ff_factors_monthly.csv"  # Fama-French factors, 1926+
+ASSET_CLASS_MONTHLY = PROCESSED_DIR / "asset_class_monthly.csv"  # bond/gold/cash proxy returns
+# free LBMA gold price history (datasets/gold-prices mirror, monthly, 1833+; floats post-1971)
+GOLD_PRICES_URL = "https://raw.githubusercontent.com/datasets/gold-prices/master/data/monthly.csv"
+# EQUITY-ONLY IS THE PRODUCT DEFAULT (house thesis: equity indices are the productive asset).
+# Non-equity sleeves are an OPT-IN (optimizer include_asset_classes=True) so other user
+# profiles can complete the all-weather picture without imposing it on anyone.
 
 # analytics output file handles
 PERFORMANCE_SUMMARY = ANALYTICS_DIR / "performance_summary.csv"
