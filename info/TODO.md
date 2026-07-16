@@ -273,10 +273,12 @@ what moves the needle.
       maxDD −61%→−34%, for −1.5pt CAGR — buying 40% gold + 13% bonds.** Ships as a report
       flagship. Traps handled: business-vs-calendar month-end join (period-aligned), geo-cap
       exemption, own-category diversification HHI.
+  - [x] Shown in optimizer_viz (2026-07): roster entry (dark-gold), per-quadrant bars, map
+        point, weights/risk pairs — build_data now uses per-portfolio series lists
+        (`res["all_series"]`/`res["weights"]`), so mixed-universe portfolios render cleanly.
   - [ ] Follow-ups: extend the scenario universe so all-weather portfolios get cones; add an
-        all-weather contestant to the walk-forward; show it in optimizer_viz (roster +
-        charts — needs per-portfolio series lists, see visualize.build_data); TIPS-like
-        sleeve if a free long series exists.
+        all-weather contestant to the walk-forward; TIPS-like sleeve if a free long series
+        exists.
 - [x] **P2 — Longer PROXY history for the regime layer** — DONE 2026-07 (first slice).
       `ingest/ff_factors.py` (Ken French monthly factors 1926+, free, non-FRED) +
       `analytics/long_history.py`: the classifier labels 789 months from 1960 (vs 353 modern —

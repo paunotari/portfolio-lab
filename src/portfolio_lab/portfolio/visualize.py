@@ -66,6 +66,14 @@ def build_data() -> dict:
         portfolios["Maximin (worst quadrant)"] = opt.optimize(maximin=True, inputs=inp)
         portfolios[f"Maximin (geo ≤{C.OPTIMIZER_GEO_CAP_PCT:.0f}%)"] = opt.optimize(
             maximin=True, geo_cap=C.OPTIMIZER_GEO_CAP_PCT / 100.0, inputs=inp)
+        if C.ASSET_CLASS_MONTHLY.exists():       # the all-weather opt-in (equity-only default)
+            try:
+                inp_aw = opt.build_inputs(include_asset_classes=True)
+                if inp_aw["mu_q"] is not None:
+                    portfolios["Maximin (all-weather: +bonds/gold/cash)"] = opt.optimize(
+                        maximin=True, inputs=inp_aw)
+            except Exception as e:
+                print(f"[visualize] WARN all-weather skipped ({e})")
 
     # 1-2. walk-forward race + summary
     wf_summary, wf_monthly = _walkforward_data()
@@ -89,16 +97,18 @@ def build_data() -> dict:
         p = res["performance"]
         port_pts.append(dict(name=name, vol=p["ann_vol"], cagr=p["CAGR"]))
 
-    # 4. per-quadrant annualized returns for 1/N vs the flagships
+    # 4. per-quadrant annualized returns for 1/N vs the flagships (each portfolio's numbers come
+    # from ITS OWN universe — the all-weather one includes the proxy sleeves)
     quad = None
     if have_macro:
         mu_q = inp["mu_q"]
         states = list(mu_q.index)
-        rows = {"1/N": inp["anchors"]["1/N"], "ERC (anchor)": inp["anchors"]["ERC (anchor)"]}
-        rows.update({name: res["w"] for name, res in portfolios.items()})
-        quad = dict(states=[_short(s) for s in states],
-                    portfolios={name: [_ann(float(w @ mu_q.loc[s].values)) for s in states]
-                                for name, w in rows.items()})
+        qports = {name: [_ann(float(w @ mu_q.loc[s].values)) for s in states]
+                  for name, w in (("1/N", inp["anchors"]["1/N"]),
+                                  ("ERC (anchor)", inp["anchors"]["ERC (anchor)"]))}
+        for name, res in portfolios.items():
+            qports[name] = [_ann(res["per_quadrant_monthly"][s]) for s in states]
+        quad = dict(states=[_short(s) for s in states], portfolios=qports)
 
     # 5. Pi vs mu_BL (annualized, per sleeve)
     bl = dict(series=[s.replace(" | ", " · ") for s in series],
@@ -121,24 +131,33 @@ def build_data() -> dict:
     if C.MACRO_STATE_MONTHLY.exists():
         from portfolio_lab.analytics.scenario import build_universe, portfolio_cone
         uni = build_universe()
-        cone_sets = {"1/N": inp["anchors"]["1/N"], "ERC (anchor)": inp["anchors"]["ERC (anchor)"],
-                     "Min-variance": inp["anchors"]["Min-variance"]}
-        cone_sets.update({name: res["w"] for name, res in portfolios.items()})
-        for name, w in cone_sets.items():
-            full_w = {series[i]: float(w[i]) for i in range(len(series)) if w[i] > 0}
+        cone_sets = {name: dict(zip(series, map(float, inp["anchors"][name])))
+                     for name in ("1/N", "ERC (anchor)", "Min-variance")}
+        cone_sets.update({name: dict(zip(res["all_series"], map(float, res["w"])))
+                          for name, res in portfolios.items()})
+        for name, full_w in cone_sets.items():
+            full_w = {s: v for s, v in full_w.items() if v > 0}
+            if not set(full_w) <= set(uni["series"]):
+                continue                     # proxy sleeves aren't in the scenario universe yet
             cones.append(dict(name=name, **{k: v for k, v in portfolio_cone(full_w, uni=uni).items()
                                             if k not in ("scenario", "years")}))
 
-    # roster holdings: the actual sleeves+weights each strategy lands on (grounds the formulas)
-    wvecs = dict(inp["anchors"])                            # 1/N, ERC (anchor), HRP, Min-variance
-    wvecs.update({name: res["w"] for name, res in portfolios.items()})
+    # roster holdings: the actual sleeves+weights each strategy lands on (grounds the formulas).
+    # Anchors are vectors on the equity universe; flagships carry their own weights/geo dicts
+    # (the all-weather one holds proxy sleeves the equity series list doesn't know).
     roster_weights = {}
     Z, zones = inp["geo_Z"], inp["geo_zones"]
-    for name, w in wvecs.items():
+    for name, w in inp["anchors"].items():
         pairs = sorted([[series[i].replace(" | ", " · "), round(float(w[i]), 4)]
                         for i in range(len(series)) if w[i] > 0.001], key=lambda kv: -kv[1])
         geo = {z: round(float(w @ Z[:, j]), 3) for j, z in enumerate(zones)}
         roster_weights[name] = dict(holdings=pairs, n_total=len(pairs), geo=geo)
+    for name, res in portfolios.items():
+        pairs = sorted([[s.replace(" | ", " · "), round(float(v), 4)]
+                        for s, v in res["weights"].items()], key=lambda kv: -kv[1])
+        roster_weights[name] = dict(holdings=pairs, n_total=len(pairs),
+                                    geo={z: round(float(v), 3)
+                                         for z, v in res["geo_exposure"].items()})
 
     # 8. long-history reality check (Fama-French factors x 66-year quadrant classification)
     longhist = None
@@ -261,11 +280,11 @@ not a forecast.</b></p>
 <p class="meta num">window <span id="win"></span> · shrinkage δ* <span id="dstar"></span> · returns net of costs · portfolio/visualize.py</p>
 </header>
 
-<details class="more intro"><summary>New here? Meet the six portfolios these charts compare — principles, formulas &amp; papers</summary><div class="body">
-<p>Every chart on this page pits the same six allocation strategies against each other. Four are
-established methods from the portfolio-construction literature; two (marked ★) are ours, built on
-top of that literature. The deepest thing separating them is <b>how much each one bets on
-predicted returns</b> — the input the research says is the least trustworthy of all.</p>
+<details class="more intro"><summary>New here? Meet the portfolios these charts compare — principles, formulas &amp; papers</summary><div class="body">
+<p>Every chart on this page pits the same allocation strategies against each other. Four are
+established methods from the portfolio-construction literature; the ones marked ★ are ours,
+built on top of that literature. The deepest thing separating them is <b>how much each one bets
+on predicted returns</b> — the input the research says is the least trustworthy of all.</p>
 <div class="roster">
 <div class="rp" data-port="1/N"><span class="dot" style="background:#8E8E93"></span><b>1/N — equal weight</b><br>
 Split the money equally across all sleeves and ignore every input. Not really a "method" — it's
@@ -310,6 +329,16 @@ still picks the best sleeves; the cap only forbids piling everything into one re
 for the scenario where a different part of the world leads the next decade.
 <code>max_w min_q wᵀμ̂_q   s.t.  wᵀZ_zone ≤ 40% ∀zone</code><br>
 <span class="p mut">Constraints as implicit shrinkage: Jagannathan &amp; Ma (2003), <i>JF</i> — capping is itself a robustness device, not just a preference.</span>
+<div class="holds"></div></div>
+<div class="rp" data-port="Maximin (all-weather: +bonds/gold/cash)"><span class="dot" style="background:#8C6D1F"></span><b>★ Maximin, all-weather — the opt-in with bonds, gold &amp; cash</b><br>
+Same worst-quadrant objective, but the menu gains three <b>non-equity proxy sleeves</b> (10y
+Treasuries, gold, T-bills) — assets that structurally win where equities lose: bonds in
+deflationary busts, gold in stagflation. Measured on the same window: the worst-quadrant floor
+<b>more than doubles</b> (+0.31→+0.73%/mo), volatility halves (23.9→13.5%), max drawdown goes
+−61%→−34% — for 1.5pt of CAGR. <b>Equity-only remains the product default</b> (the house thesis:
+equities are the productive asset); this is the profile toggle for who wants the full
+all-weather.<br>
+<span class="p mut">Bridgewater's All Weather (1996) made literal; bond returns constructed per Swinkels (2019), <i>Data</i> 4(3):91. Proxies, not investable sleeves — see the ETF-menu roadmap item.</span>
 <div class="holds"></div></div>
 </div>
 <p class="key"><b>The pattern to watch across the charts:</b> the four methods that bet <i>least</i>
@@ -558,6 +587,7 @@ const PCOLOR={'1/N':'#8E8E93','ERC (anchor)':'#3B6FD4','HRP':'#7A5FD0','Min-vari
   'Balanced sliders (5/5/5)':'#E08A00','Maximin (worst quadrant)':'#C94F4F'};
 function pc(n){ if(PCOLOR[n]) return PCOLOR[n];
   if(n.startsWith('Maximin (geo')) return '#1F8A99';
+  if(n.startsWith('Maximin (all-weather')) return '#8C6D1F';
   if(n.startsWith('Momentum')) return '#B5892E';
   if(n.indexOf('vol-target')>=0) return '#5AA6B5';
   return '#E08A00'; }
@@ -569,7 +599,7 @@ const CFG={displayModeBar:false,responsive:true};
 document.getElementById('win').textContent=DATA.window+'  ('+DATA.T+'m × '+DATA.n+' series)';
 document.getElementById('dstar').textContent=DATA.delta_star;
 const rb=document.getElementById('ribbon');
-['1/N','Min-variance','ERC (anchor)','HRP','Balanced sliders (5/5/5)','Maximin (worst quadrant)','Maximin (geo ≤40%)']
+['1/N','Min-variance','ERC (anchor)','HRP','Balanced sliders (5/5/5)','Maximin (worst quadrant)','Maximin (geo ≤40%)','Maximin (all-weather: +bonds/gold/cash)']
  .forEach(n=>{const sp=document.createElement('span');sp.style.background=pc(n);rb.appendChild(sp);});
 document.querySelectorAll('.roster .rp[data-port]').forEach(rp=>{rp.style.borderLeftColor=pc(rp.dataset.port);});
 
