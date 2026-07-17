@@ -212,13 +212,47 @@ LONG_HISTORY_REPORT = LONG_HISTORY_DIR / "REPORT_long_history.md"
 PROXY_BACKTEST_DIR = ANALYTICS_DIR / "proxy_backtest"
 PROXY_BACKTEST_SUMMARY = PROXY_BACKTEST_DIR / "proxy_backtest_summary.csv"
 PROXY_BACKTEST_REPORT = PROXY_BACKTEST_DIR / "REPORT_proxy_backtest.md"
+# window-robustness (roadmap A2): re-run each race dropping the first k months, report the
+# DISPERSION of each rule's OOS Sharpe across window variants. CLI-only (not a pipeline stage —
+# it is several full races); python -m portfolio_lab.portfolio.proxy_backtest --dispersion
+PROXY_BACKTEST_DISPERSION = PROXY_BACKTEST_DIR / "proxy_backtest_dispersion.csv"
+PROXY_BACKTEST_DISPERSION_REPORT = PROXY_BACKTEST_DIR / "REPORT_window_robustness.md"
+PROXY_BACKTEST_OFFSETS = (0, 36, 72, 108)   # months of early history dropped per variant
+
+# named-episode stress library (portfolio/stress.py, roadmap A3): replay hand-dated historical
+# episodes on (a) the optimizer's flagship portfolios over the MSCI window and (b) four static
+# ARCHETYPE allocations over the century-scale proxy universe. Dates are month-ends, inclusive.
+STRESS_DIR = ANALYTICS_DIR / "stress"
+STRESS_SUMMARY = STRESS_DIR / "stress_summary.csv"
+STRESS_REPORT = STRESS_DIR / "REPORT_stress.md"
+STRESS_EPISODES_MODERN = {          # within the MSCI common window (1999+)
+    "Dot-com bust": ("2000-09-30", "2002-09-30"),
+    "Global Financial Crisis": ("2007-11-30", "2009-02-28"),
+    "COVID crash": ("2020-01-31", "2020-03-31"),
+    "2022 rate shock": ("2022-01-31", "2022-09-30"),
+}
+STRESS_EPISODES_HISTORIC = {        # proxy universe only (multi-asset from 1962)
+    "OPEC stagflation": ("1973-01-31", "1974-09-30"),
+    "Volcker squeeze": ("1981-01-31", "1982-07-31"),
+    "Black Monday era": ("1987-09-30", "1987-11-30"),
+    "Dot-com bust": ("2000-09-30", "2002-09-30"),
+    "Global Financial Crisis": ("2007-11-30", "2009-02-28"),
+    "2022 rate shock": ("2022-01-31", "2022-09-30"),
+}
+# archetype allocations for the historic table (fractions; proxy sleeves)
+STRESS_ARCHETYPES = {
+    "Pure equity (1/N of 6)": {"equity_equal": 1.0},
+    "60/40 stocks/bonds": {"equity_equal": 0.60, "Asset | US Treasury 10y": 0.40},
+    "All-weather static": {"equity_equal": 0.30, "Asset | US Treasury 10y": 0.30,
+                           "Asset | Gold": 0.25, "Asset | Cash (T-bill)": 0.15},
+}
 
 
 def ensure_dirs() -> None:
     """Create all writable output directories if missing (idempotent)."""
     for d in (PROCESSED_DIR, ANALYTICS_DIR, CORR_REGIME_DIR, DIVERSIFICATION_DIR,
               MACRO_ANALYTICS_DIR, MACRO_CORR_BY_REGIME_DIR, MACRO_STATE_DIR, SCENARIO_DIR,
-              OPTIMIZER_DIR, LONG_HISTORY_DIR, PROXY_BACKTEST_DIR):
+              OPTIMIZER_DIR, LONG_HISTORY_DIR, PROXY_BACKTEST_DIR, STRESS_DIR):
         d.mkdir(parents=True, exist_ok=True)
 
 

@@ -275,6 +275,19 @@ def test_proxy_backtest_valid():
     assert "1/N" in eq_names, "1/N benchmark missing from the equity race"
 
 
+def test_stress_library_valid():
+    if not C.STRESS_SUMMARY.exists():
+        return
+    rows = _rows(C.STRESS_SUMMARY)
+    assert rows, "stress_summary.csv is empty"
+    for r in rows:
+        assert -1.0 <= float(r["max_drawdown"]) <= 0.0, f"bad maxDD: {r}"
+        assert float(r["worst_month"]) <= 0.05, f"implausible worst month: {r}"
+        assert int(r["n_months"]) >= 2
+    tables = {r["table"] for r in rows}
+    assert "historic" in tables or "modern" in tables
+
+
 def test_optimizer_portfolios_valid():
     # structural validity of the optimizer stage's outputs (skipped if not generated);
     # unit tests of the optimizer internals live in tests/test_optimizer.py

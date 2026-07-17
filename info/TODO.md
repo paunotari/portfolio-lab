@@ -33,12 +33,17 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       the diversified maximin's edge survives the real stagflation decade out of sample.
       Design lesson found: with cash in the menu, min-var/HRP degenerate into T-bills
       (excess ≈0.07) — cap or exclude cash for min-var/HRP-style engines.
-- [ ] **A2 — window-robustness: bootstrap the walk-forward.** Re-run with shifted start dates /
-      warmups and report the DISPERSION of each rule's OOS Sharpe, not one number. Cheap
-      (machinery exists); turns "min-var won" into "min-var wins in X% of windows".
-- [ ] **A3 — named-episode stress library.** Replay 1973-74, 1987, 2000-02, 2008, 2022 on
-      every candidate portfolio — one table/chart per episode. Very communicative, nearly free
-      (subsetting the return matrix).
+- [x] **A2 — window-robustness — DONE 2026-07** (`proxy_backtest.py --dispersion`, 4 window
+      variants per race). **The equity finding is robust: HRP and ERC beat 1/N in 100% of
+      windows** (HRP top rule in 75%); min-variance beats 1/N in only 25% — its MSCI-era win
+      confirmed as era-specific. Multi-asset: ERC the most robust (beats 1/N in 75%, top in
+      50%); maximin variants mid-pack; min-var/HRP cash-degenerate in all windows.
+- [x] **A3 — named-episode stress library — DONE 2026-07** (`portfolio/stress.py`, pipeline
+      stage 13). Modern table (flagships through dot-com/GFC/COVID/2022): 2022 rate shock =
+      all-weather −16.9% vs −24.8% balanced / −27% anchors. Historic table (static archetypes,
+      century of storms): OPEC stagflation 1973-74 = **all-weather static +9.8% vs 60/40
+      −28.5% vs pure equity −44.6%**; the allocation-shape story per episode, free of any
+      optimizer's estimates.
 - [ ] **A4 — user profiles as presets + the "price of preferences" report.** Formalize
       pure-equity / equity-diversified / all-weather as constraint-set presets; for each,
       show what it costs vs the unconstrained best (we already measured one: equity-only

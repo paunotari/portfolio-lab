@@ -219,5 +219,59 @@ def _write_report(df: pd.DataFrame, metas: dict):
     C.PROXY_BACKTEST_REPORT.write_text("\n".join(L))
 
 
+def run_dispersion():
+    """Roadmap A2: window-robustness. Each race re-run dropping the first k months of history
+    (k in config.PROXY_BACKTEST_OFFSETS) — four different expanding-window paths per race.
+    A rule whose rank depends on the window is an era artifact; a rule that holds across
+    variants is a finding. CLI-only (several full races)."""
+    C.ensure_dirs()
+    universes = load_universes()
+    if not universes:
+        print("[proxy_backtest] inputs missing — skipping dispersion")
+        return
+    rows = []
+    for uname, rets in universes.items():
+        for off in C.PROXY_BACKTEST_OFFSETS:
+            sub = rets.iloc[off:]
+            if len(sub) < WARMUP + 5 * REFIT:
+                continue
+            summary, meta = run_race(sub, multi_asset=(uname == "multi_asset"))
+            for _, r in summary.iterrows():
+                rows.append(dict(race=uname, offset_months=off, oos_start=meta["oos_start"],
+                                 portfolio=r.portfolio, oos_sharpe=r.oos_sharpe,
+                                 oos_CAGR=r.oos_CAGR, oos_max_drawdown=r.oos_max_drawdown))
+            print(f"[dispersion] {uname} offset {off}: done (OOS from {meta['oos_start']})")
+    df = pd.DataFrame(rows)
+    df.to_csv(C.PROXY_BACKTEST_DISPERSION, index=False)
+
+    L = ["# Window-robustness of the construction-rule race (A2)", "",
+         "Each race re-run dropping the first k months of history — different expanding-window "
+         "paths, same rules and protocol. **A result that only holds in one window is an era "
+         "artifact; one that holds across variants is a finding.** Sharpe basis as in the main "
+         "report (equity: rf=0; multi-asset: excess over the cash sleeve).", ""]
+    for uname in df.race.unique():
+        sub = df[df.race == uname]
+        L += [f"## {uname.replace('_', ' ')} race — Sharpe across {sub.offset_months.nunique()} "
+              "window variants", "",
+              "| rule | median | min | max | beats 1/N in | top rule in |", "|---|---|---|---|---|---|"]
+        one_n = sub[sub.portfolio == "1/N"].set_index("offset_months").oos_sharpe
+        for port in sub.portfolio.unique():
+            s = sub[sub.portfolio == port].set_index("offset_months").oos_sharpe
+            beats = (s > one_n.reindex(s.index)).mean()
+            top = (sub.groupby("offset_months").apply(
+                lambda g: g.loc[g.oos_sharpe.idxmax(), "portfolio"], include_groups=False) == port).mean()
+            L += [f"| {port} | {s.median():.2f} | {s.min():.2f} | {s.max():.2f} | "
+                  f"{beats:.0%} | {top:.0%} |"]
+        L += [""]
+    C.PROXY_BACKTEST_DISPERSION_REPORT.write_text("\n".join(L))
+    print(f"[proxy_backtest] wrote {C.PROXY_BACKTEST_DISPERSION} and "
+          f"{C.PROXY_BACKTEST_DISPERSION_REPORT}")
+    return df
+
+
 if __name__ == "__main__":
-    run()
+    import sys
+    if "--dispersion" in sys.argv:
+        run_dispersion()
+    else:
+        run()
