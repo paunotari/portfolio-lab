@@ -264,6 +264,37 @@ def test_geo_cap_respected_and_costs_objective():
         pass
 
 
+def test_diversified_maximin_spreads_all_three_axes():
+    """The diversified preset must respect sleeve, geo AND factor caps, hold more sleeves than
+    the unconstrained corner solution, and (in-sample) pay for it with a floor no better than
+    unconstrained (superset argument in reverse)."""
+    if not (C.LEVELS_WIDE.exists() and C.MACRO_STATE_MONTHLY.exists()):
+        return
+    O, inp = _inputs()
+    if inp["mu_q"] is None:
+        return
+    s_cap = C.OPTIMIZER_DIVERSIFIED_SLEEVE_CAP_PCT / 100.0
+    f_cap = C.OPTIMIZER_FACTOR_CAP_PCT / 100.0
+    g_cap = C.OPTIMIZER_GEO_CAP_PCT / 100.0
+    res_u = O.optimize(maximin=True, inputs=inp, n_starts=8)
+    res_d = O.optimize(maximin=True, inputs=inp, n_starts=8,
+                       cap=s_cap, geo_cap=g_cap, factor_cap=f_cap)
+    assert res_d["w"].max() <= s_cap + 1e-4, "sleeve cap violated"
+    for b, v in res_d["factor_exposure"].items():
+        assert v <= f_cap + 1e-4, f"factor cap violated: {b} = {v:.1%}"
+    for z, v in res_d["geo_exposure"].items():
+        assert v <= g_cap + 1e-4, f"geo cap violated: {z} = {v:.1%}"
+    assert len(res_d["weights"]) > len(res_u["weights"]), "diversified should hold more sleeves"
+    worst = lambda r: min(r["per_quadrant_monthly"].values())
+    assert worst(res_d) <= worst(res_u) + 1e-9, "constrained cannot beat unconstrained in-sample"
+    # infeasible factor cap must raise
+    try:
+        O.optimize(maximin=True, factor_cap=0.10, inputs=inp, n_starts=4)
+        assert False, "infeasible factor_cap must raise"
+    except ValueError:
+        pass
+
+
 def test_all_weather_optin_lifts_the_floor():
     """The asset-class opt-in must (a) align on the same monthly window (the business-vs-
     calendar month-end trap), (b) leave equity-only untouched as the default, and (c) give

@@ -175,6 +175,15 @@ OPTIMIZER_GEO_ZONES = {
 }
 OPTIMIZER_GEO_CAP_PCT = 40.0        # default zone cap for the geo-capped flagship portfolio
 
+# "diversified maximin" preset: the answer to maximin's structural corner problem. Its linear
+# objective lands on vertices (few sleeves, weights at the caps) and per-quadrant means are
+# noisy (~90 months/state), so unconstrained maximin is a concentrated bet on the sleeves whose
+# quadrant history LOOKS best (Michaud, per quadrant). The literature's fix, measured on our own
+# data (geo-capped beat unconstrained OOS, Sharpe 0.84 vs 0.73): constraints as implicit
+# shrinkage (Jagannathan-Ma) across all three concentration axes — sleeve, geography, factor.
+OPTIMIZER_FACTOR_CAP_PCT = 40.0             # max exposure per factor bucket (label-based)
+OPTIMIZER_DIVERSIFIED_SLEEVE_CAP_PCT = 25.0  # forces >= 4 sleeves before geo/factor caps bite
+
 # long-history regime proxy (ingest/ff_factors.py + analytics/long_history.py): Fama-French
 # research factors from Ken French's data library (free, NOT FRED — no ToS constraint). These
 # are RESEARCH PROXIES for the regime layer, not investable sleeves — deliberately kept out of

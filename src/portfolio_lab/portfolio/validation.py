@@ -45,8 +45,10 @@ def _contestants(inp: dict, n_starts: int, seed: int) -> dict:
     if inp["mu_q"] is not None and len(inp["mu_q"]) >= 2:
         out["Maximin (worst quadrant)"] = opt.optimize(
             maximin=True, inputs=inp, n_starts=n_starts, seed=seed)["w"]
-        out[f"Maximin (geo ≤{C.OPTIMIZER_GEO_CAP_PCT:.0f}%)"] = opt.optimize(
-            maximin=True, geo_cap=C.OPTIMIZER_GEO_CAP_PCT / 100.0,
+        out["Maximin (diversified)"] = opt.optimize(
+            maximin=True, cap=C.OPTIMIZER_DIVERSIFIED_SLEEVE_CAP_PCT / 100.0,
+            geo_cap=C.OPTIMIZER_GEO_CAP_PCT / 100.0,
+            factor_cap=C.OPTIMIZER_FACTOR_CAP_PCT / 100.0,
             inputs=inp, n_starts=n_starts, seed=seed)["w"]
     return out
 

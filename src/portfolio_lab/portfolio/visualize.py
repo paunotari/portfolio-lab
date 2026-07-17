@@ -63,15 +63,17 @@ def build_data() -> dict:
     portfolios = {"Balanced sliders (5/5/5)": opt.optimize(
         prefs={"return": 5, "risk": 5, "diversification": 5}, inputs=inp)}
     if have_macro:
+        div_kw = dict(cap=C.OPTIMIZER_DIVERSIFIED_SLEEVE_CAP_PCT / 100.0,
+                      geo_cap=C.OPTIMIZER_GEO_CAP_PCT / 100.0,
+                      factor_cap=C.OPTIMIZER_FACTOR_CAP_PCT / 100.0)
         portfolios["Maximin (worst quadrant)"] = opt.optimize(maximin=True, inputs=inp)
-        portfolios[f"Maximin (geo ≤{C.OPTIMIZER_GEO_CAP_PCT:.0f}%)"] = opt.optimize(
-            maximin=True, geo_cap=C.OPTIMIZER_GEO_CAP_PCT / 100.0, inputs=inp)
+        portfolios["Maximin (diversified)"] = opt.optimize(maximin=True, inputs=inp, **div_kw)
         if C.ASSET_CLASS_MONTHLY.exists():       # the all-weather opt-in (equity-only default)
             try:
                 inp_aw = opt.build_inputs(include_asset_classes=True)
                 if inp_aw["mu_q"] is not None:
                     portfolios["Maximin (all-weather: +bonds/gold/cash)"] = opt.optimize(
-                        maximin=True, inputs=inp_aw)
+                        maximin=True, inputs=inp_aw, **div_kw)
             except Exception as e:
                 print(f"[visualize] WARN all-weather skipped ({e})")
 
@@ -321,23 +323,25 @@ regime can sink you. Accepts higher volatility as the price of that safety.
 <code>max_w  min_q  wᵀμ̂_q</code> (solved as a linear program)<br>
 <span class="p mut">Ang &amp; Bekaert (2002/2004) — regime value comes from surviving the bad state; = All Weather's whole philosophy.</span>
 <div class="holds"></div></div>
-<div class="rp" data-port="Maximin (geo ≤40%)"><span class="dot" style="background:#1F8A99"></span><b>★ Maximin, geo-capped — robust <i>and</i> spread across the world</b><br>
-Same worst-quadrant objective, plus a hard cap on the <b>look-through</b> exposure to each
-geographic zone (North America / Europe / Asia-Pacific / Rest, from the factsheet country
-weights — so an "EM" sleeve counts as the Asia it really holds). Within each zone the optimizer
-still picks the best sleeves; the cap only forbids piling everything into one region — insurance
-for the scenario where a different part of the world leads the next decade.
-<code>max_w min_q wᵀμ̂_q   s.t.  wᵀZ_zone ≤ 40% ∀zone</code><br>
-<span class="p mut">Constraints as implicit shrinkage: Jagannathan &amp; Ma (2003), <i>JF</i> — capping is itself a robustness device, not just a preference.</span>
+<div class="rp" data-port="Maximin (diversified)"><span class="dot" style="background:#1F8A99"></span><b>★ Maximin, diversified — robust without the corner bets</b><br>
+Unconstrained maximin is structurally concentrated: a linear objective lands on corners (3–4
+sleeves, one factor, one region), betting on whichever per-quadrant history <i>looks</i> best —
+noisy estimates, Michaud's trap per quadrant. This preset closes all three concentration axes
+with hard caps: <b>sleeve ≤ 25%</b> (forces ≥ 4 holdings), <b>look-through geography ≤ 40%</b>
+per zone, <b>factor bucket ≤ 40%</b> (no more all-Enhanced-Value). Within the caps the objective
+still picks the best sleeves — spread by constraint, never filler.
+<code>max_w min_q wᵀμ̂_q   s.t.  w ≤ 25%, wᵀZ_zone ≤ 40%, wᵀF_factor ≤ 40%</code><br>
+<span class="p mut">Constraints as implicit shrinkage: Jagannathan &amp; Ma (2003), <i>JF</i> — and our own walk-forward: the capped maximin beat the unconstrained one out of sample. The honest trade-off, measured: on equities alone the stagflation floor nearly vanishes when you force spread (it WAS the concentrated Value bet); with bonds/gold in the menu it barely costs anything.</span>
 <div class="holds"></div></div>
 <div class="rp" data-port="Maximin (all-weather: +bonds/gold/cash)"><span class="dot" style="background:#8C6D1F"></span><b>★ Maximin, all-weather — the opt-in with bonds, gold &amp; cash</b><br>
-Same worst-quadrant objective, but the menu gains three <b>non-equity proxy sleeves</b> (10y
-Treasuries, gold, T-bills) — assets that structurally win where equities lose: bonds in
-deflationary busts, gold in stagflation. Measured on the same window: the worst-quadrant floor
-<b>more than doubles</b> (+0.31→+0.73%/mo), volatility halves (23.9→13.5%), max drawdown goes
-−61%→−34% — for 1.5pt of CAGR. <b>Equity-only remains the product default</b> (the house thesis:
-equities are the productive asset); this is the profile toggle for who wants the full
-all-weather.<br>
+The diversified preset (same three cap families) over a menu extended with three <b>non-equity
+proxy sleeves</b> (10y Treasuries, gold, T-bills) — assets that structurally win where equities
+lose: bonds in deflationary busts, gold in stagflation. The measured punchline: with real
+diversifiers in the menu, <b>diversification is nearly free</b> — the worst-quadrant floor stays
+close to the concentrated version's (+0.59 vs +0.73%/mo) at 11% volatility and −28% drawdown,
+while on equities alone forcing the same spread erases the floor. <b>Equity-only remains the
+product default</b> (the house thesis: equities are the productive asset); this is the profile
+toggle for who wants the full all-weather.<br>
 <span class="p mut">Bridgewater's All Weather (1996) made literal; bond returns constructed per Swinkels (2019), <i>Data</i> 4(3):91. Proxies, not investable sleeves — see the ETF-menu roadmap item.</span>
 <div class="holds"></div></div>
 </div>
@@ -586,7 +590,7 @@ const INK='#1D1D1F', MUT='#6E6E73', LINE='#E3E3E8';
 const PCOLOR={'1/N':'#8E8E93','ERC (anchor)':'#3B6FD4','HRP':'#7A5FD0','Min-variance':'#2E9E68',
   'Balanced sliders (5/5/5)':'#E08A00','Maximin (worst quadrant)':'#C94F4F'};
 function pc(n){ if(PCOLOR[n]) return PCOLOR[n];
-  if(n.startsWith('Maximin (geo')) return '#1F8A99';
+  if(n.startsWith('Maximin (geo')||n.startsWith('Maximin (diversified')) return '#1F8A99';
   if(n.startsWith('Maximin (all-weather')) return '#8C6D1F';
   if(n.startsWith('Momentum')) return '#B5892E';
   if(n.indexOf('vol-target')>=0) return '#5AA6B5';
@@ -599,7 +603,7 @@ const CFG={displayModeBar:false,responsive:true};
 document.getElementById('win').textContent=DATA.window+'  ('+DATA.T+'m × '+DATA.n+' series)';
 document.getElementById('dstar').textContent=DATA.delta_star;
 const rb=document.getElementById('ribbon');
-['1/N','Min-variance','ERC (anchor)','HRP','Balanced sliders (5/5/5)','Maximin (worst quadrant)','Maximin (geo ≤40%)','Maximin (all-weather: +bonds/gold/cash)']
+['1/N','Min-variance','ERC (anchor)','HRP','Balanced sliders (5/5/5)','Maximin (worst quadrant)','Maximin (diversified)','Maximin (all-weather: +bonds/gold/cash)']
  .forEach(n=>{const sp=document.createElement('span');sp.style.background=pc(n);rb.appendChild(sp);});
 document.querySelectorAll('.roster .rp[data-port]').forEach(rp=>{rp.style.borderLeftColor=pc(rp.dataset.port);});
 

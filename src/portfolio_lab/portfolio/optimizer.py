@@ -144,6 +144,18 @@ def _geo_matrix(series: list[str]) -> tuple[np.ndarray, list[str]]:
     return Z, zones
 
 
+def _factor_matrix(series: list[str]) -> tuple[np.ndarray, list[str]]:
+    """(F, bucket_names): F[i, b] = 1 if sleeve i belongs to factor bucket b (its label after
+    ' | ' — Reference/Momentum/Enhanced Value/Quality, and each non-equity proxy is its own
+    bucket). Portfolio factor exposure is the linear form w'F — cheap as a constraint, closing
+    the third concentration axis (sleeve, geography, FACTOR)."""
+    buckets = sorted({s.split(" | ")[1] for s in series})
+    F = np.zeros((len(series), len(buckets)))
+    for i, s in enumerate(series):
+        F[i, buckets.index(s.split(" | ")[1])] = 1.0
+    return F, buckets
+
+
 def _load_states(index: pd.DatetimeIndex = None) -> pd.DataFrame | None:
     """Monthly macro-state labels + soft probabilities, or None when macro outputs are absent."""
     if not C.MACRO_STATE_MONTHLY.exists():
@@ -202,10 +214,12 @@ def build_inputs(rets: pd.DataFrame = None, include_asset_classes: bool = False)
         mu_q = (perf_long.pivot(index="state", columns="series", values="mean_monthly_return")
                 .reindex(columns=series))
     Z, zones = _geo_matrix(series)
+    F, buckets = _factor_matrix(series)
     return dict(rets=rets, series=series, T=T, sigma=sigma, delta_star=delta_star,
                 anchors=anchor_set, w_anchor=w_erc, pi=pi, delta_ra=delta_ra, mu_bl=mu_bl,
                 mu_q=mu_q, outlook=outlook, view_descs=view_descs,
-                div_mats=_div_matrices(series), geo_Z=Z, geo_zones=zones)
+                div_mats=_div_matrices(series), geo_Z=Z, geo_zones=zones,
+                factor_F=F, factor_buckets=buckets)
 
 
 # --------------------------------------------------------------------------- blended-path stats
@@ -335,8 +349,8 @@ def _score(value: float, rng_pair: tuple) -> float:
 
 def optimize(prefs: dict = None, regime_weights: dict = None, maximin: bool = False,
              risk_metric: str = "vol", cap: float = None, min_sleeves: int = None,
-             target: tuple = None, geo_cap: float = None, inputs: dict = None,
-             n_starts: int = None, seed: int = None) -> dict:
+             target: tuple = None, geo_cap: float = None, factor_cap: float = None,
+             inputs: dict = None, n_starts: int = None, seed: int = None) -> dict:
     """One optimization run.
 
     prefs           {"return": 0-10, "risk": 0-10, "diversification": 0-10, "regime": 0-10} —
@@ -353,6 +367,10 @@ def optimize(prefs: dict = None, regime_weights: dict = None, maximin: bool = Fa
                     zone (config.OPTIMIZER_GEO_ZONES). Forces geographic spread while the
                     objective still picks the best sleeves *within* each zone — diversification
                     by constraint, never "investing somewhere just because".
+    factor_cap      optional cap (fraction) on the exposure to each factor bucket (the sleeve
+                    label: Reference/Momentum/Enhanced Value/Quality, each proxy its own) —
+                    closes the third concentration axis (an all-Enhanced-Value maximin is a
+                    single-factor bet even when geographically spread).
     """
     inp = inputs or build_inputs()
     n, series, R = len(inp["series"]), inp["series"], inp["rets"].values
@@ -373,6 +391,12 @@ def optimize(prefs: dict = None, regime_weights: dict = None, maximin: bool = Fa
             raise ValueError(f"geo_cap {geo_cap:.0%} x {len(zones)} zones cannot hold 100%")
         for z in range(len(zones)):
             cons.append({"type": "ineq", "fun": (lambda w, z=z: geo_cap - float(w @ Z[:, z]))})
+    if factor_cap is not None:
+        F, buckets = inp["factor_F"], inp["factor_buckets"]
+        if factor_cap * len(buckets) < 1.0 - 1e-9:
+            raise ValueError(f"factor_cap {factor_cap:.0%} x {len(buckets)} buckets cannot hold 100%")
+        for b in range(len(buckets)):
+            cons.append({"type": "ineq", "fun": (lambda w, b=b: factor_cap - float(w @ F[:, b]))})
     if target is not None:
         kind, x = target
         if kind == "cagr":
@@ -516,9 +540,12 @@ def _package(inp, w, mode, risk_metric, diag, warnings) -> dict:
                     {st: float(w @ inp["mu_q"].loc[st].values) for st in inp["mu_q"].index})
     weights = {series[i]: float(w[i]) for i in range(len(series)) if w[i] >= DISPLAY_MIN_W}
     geo_exposure = {z: float(w @ inp["geo_Z"][:, j]) for j, z in enumerate(inp["geo_zones"])}
+    factor_exposure = {b: float(w @ inp["factor_F"][:, j])
+                       for j, b in enumerate(inp["factor_buckets"])
+                       if float(w @ inp["factor_F"][:, j]) >= DISPLAY_MIN_W}
     return dict(
         mode=mode, weights=weights, w=w, all_series=list(series), performance=perf,
-        geo_exposure=geo_exposure,
+        geo_exposure=geo_exposure, factor_exposure=factor_exposure,
         objective_values={"return_monthly_mu_bl": fns["return"](w),
                           "risk": fns["risk"](w),
                           "effective_bets": fns["diversification"](w),
@@ -556,15 +583,20 @@ def run():
     portfolios = {"Balanced sliders (5/5/5)": optimize(
         prefs={"return": 5, "risk": 5, "diversification": 5}, inputs=inp)}
     if inp["mu_q"] is not None and len(inp["mu_q"]) >= 2:
-        portfolios["Maximin (robust across quadrants)"] = optimize(maximin=True, inputs=inp)
-        portfolios[f"Maximin (geo ≤{C.OPTIMIZER_GEO_CAP_PCT:.0f}%)"] = optimize(
-            maximin=True, geo_cap=C.OPTIMIZER_GEO_CAP_PCT / 100.0, inputs=inp)
+        # unconstrained maximin kept as the pedagogical exhibit of the corner problem; the
+        # DIVERSIFIED preset (sleeve/geo/factor caps = implicit shrinkage on all three
+        # concentration axes) is the recommended robust mode
+        div_kw = dict(cap=C.OPTIMIZER_DIVERSIFIED_SLEEVE_CAP_PCT / 100.0,
+                      geo_cap=C.OPTIMIZER_GEO_CAP_PCT / 100.0,
+                      factor_cap=C.OPTIMIZER_FACTOR_CAP_PCT / 100.0)
+        portfolios["Maximin (worst quadrant)"] = optimize(maximin=True, inputs=inp)
+        portfolios["Maximin (diversified)"] = optimize(maximin=True, inputs=inp, **div_kw)
         if C.ASSET_CLASS_MONTHLY.exists():       # the all-weather OPT-IN (equity-only default)
             try:
                 inp_aw = build_inputs(include_asset_classes=True)
                 if inp_aw["mu_q"] is not None:
                     portfolios["Maximin (all-weather: +bonds/gold/cash)"] = optimize(
-                        maximin=True, inputs=inp_aw)
+                        maximin=True, inputs=inp_aw, **div_kw)
             except Exception as e:
                 print(f"[optimizer] WARN all-weather flagship skipped ({e})")
 
@@ -644,7 +676,9 @@ def _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta):
         L += ["Effective look-through bets: " +
               ", ".join(f"{d} {v:.1f}" for d, v in by_dim.items())]
         L += ["Look-through geographic exposure: " +
-              " · ".join(f"{z} {v:.0%}" for z, v in res["geo_exposure"].items()), ""]
+              " · ".join(f"{z} {v:.0%}" for z, v in res["geo_exposure"].items())]
+        L += ["Factor exposure: " +
+              " · ".join(f"{b} {v:.0%}" for b, v in res["factor_exposure"].items()), ""]
         L += ["| weight | sleeve | risk contribution (share) |", "|---|---|---|"]
         total_rc = sum(res["risk_contributions"].values()) or 1.0
         for s, w in sorted(res["weights"].items(), key=lambda kv: -kv[1]):
@@ -705,6 +739,8 @@ def _render(res: dict) -> str:
                      f"{res['risk_contributions'].get(s, 0.0):.4f})")
     lines.append("\nlook-through geographic exposure: " +
                  "  ".join(f"{z} {v:.0%}" for z, v in res["geo_exposure"].items()))
+    lines.append("factor exposure: " +
+                 "  ".join(f"{b} {v:.0%}" for b, v in res["factor_exposure"].items()))
     if res["per_quadrant_monthly"]:
         lines.append("\nper-quadrant mean monthly return:")
         for st, v in res["per_quadrant_monthly"].items():
