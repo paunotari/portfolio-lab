@@ -337,6 +337,19 @@ def test_profiles_respect_their_caps_and_have_twins():
         assert abs(res["w"].sum() - 1) < 1e-6 and abs(twin["w"].sum() - 1) < 1e-6
 
 
+def test_extended_scenario_universe_covers_proxies_and_default_unchanged():
+    if not (C.LEVELS_WIDE.exists() and C.MACRO_STATE_MONTHLY.exists()
+            and C.ASSET_CLASS_MONTHLY.exists()):
+        return
+    from portfolio_lab.analytics import scenario as S
+    uni_def = S.build_universe()
+    assert len(uni_def["series"]) == 21, "default universe must stay 21 series"
+    uni_ext = S.build_universe(include_asset_classes=True)
+    assert len(uni_ext["series"]) >= 24, "extended universe should include the proxy sleeves"
+    cone = S.portfolio_cone({"Asset | Gold": 1.0}, uni=uni_ext, n_trials=100, seed=5)
+    assert cone["cagr_p5"] <= cone["cagr_p50"] <= cone["cagr_p95"]
+
+
 def test_scenario_portfolio_cone_matches_per_series_when_one_hot():
     if not (C.LEVELS_WIDE.exists() and C.MACRO_STATE_MONTHLY.exists()):
         return

@@ -70,14 +70,25 @@ def _region(col): return col.split(" | ")[0]
 def _factor(col): return col.split(" | ")[1]
 
 
-def build_universe() -> dict:
+def build_universe(include_asset_classes: bool = False) -> dict:
     """Everything the simulators need, computed once:
-    rets (T x 21 array of real monthly returns on the common window), series names, per-state
+    rets (T x n array of real monthly returns on the common window), series names, per-state
     positions into rets (chronological), the empirical transition matrix, and the current state.
+
+    include_asset_classes=True appends the bond/gold/cash proxy sleeves (period-aligned — their
+    sources stamp calendar month-ends) so portfolio_cone can validate all-weather portfolios.
+    Default False keeps the 21-series universe and every existing output byte-identical.
     """
     states = classify_states()
     lv = pd.read_csv(C.LEVELS_WIDE, index_col=0, parse_dates=True).sort_index()
-    rets = lv.pct_change().reindex(states.index)
+    base = lv.pct_change()
+    if include_asset_classes and C.ASSET_CLASS_MONTHLY.exists():
+        ac = pd.read_csv(C.ASSET_CLASS_MONTHLY, index_col=0, parse_dates=True).sort_index()
+        ac.index = ac.index.to_period("M")
+        aligned = ac.reindex(base.index.to_period("M"))
+        aligned.index = base.index
+        base = pd.concat([base, aligned], axis=1)
+    rets = base.reindex(states.index)
     ok = rets.notna().all(axis=1)          # restrict to months where every series has a return
     rets, st = rets.loc[ok], states.state.loc[ok]
 

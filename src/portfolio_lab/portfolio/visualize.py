@@ -137,11 +137,20 @@ def build_data() -> dict:
                      for name in ("1/N", "ERC (anchor)", "Min-variance")}
         cone_sets.update({name: dict(zip(res["all_series"], map(float, res["w"])))
                           for name, res in portfolios.items()})
+        uni_ext = None
         for name, full_w in cone_sets.items():
             full_w = {s: v for s, v in full_w.items() if v > 0}
+            u = uni
             if not set(full_w) <= set(uni["series"]):
-                continue                     # proxy sleeves aren't in the scenario universe yet
-            cones.append(dict(name=name, **{k: v for k, v in portfolio_cone(full_w, uni=uni).items()
+                if uni_ext is None:
+                    try:
+                        uni_ext = build_universe(include_asset_classes=True)
+                    except Exception:
+                        uni_ext = {}
+                if not (uni_ext and set(full_w) <= set(uni_ext["series"])):
+                    continue
+                u = uni_ext
+            cones.append(dict(name=name, **{k: v for k, v in portfolio_cone(full_w, uni=u).items()
                                             if k not in ("scenario", "years")}))
 
     # roster holdings: the actual sleeves+weights each strategy lands on (grounds the formulas).

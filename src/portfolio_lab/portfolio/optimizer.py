@@ -664,12 +664,21 @@ def run():
     if C.MACRO_STATE_MONTHLY.exists():
         from portfolio_lab.analytics.scenario import build_universe, portfolio_cone
         uni = build_universe()
+        uni_ext = None
         for name, res in portfolios.items():
             full_w = dict(zip(res["all_series"], (float(x) for x in res["w"])))
             full_w = {s: v for s, v in full_w.items() if v > 0}
-            if not set(full_w) <= set(uni["series"]):
-                continue                     # proxy sleeves aren't in the scenario universe yet
-            cones[name] = portfolio_cone(full_w, uni=uni)
+            if set(full_w) <= set(uni["series"]):
+                cones[name] = portfolio_cone(full_w, uni=uni)
+                continue
+            if uni_ext is None:              # extended universe for proxy-holding portfolios
+                try:
+                    uni_ext = build_universe(include_asset_classes=True)
+                except Exception as e:
+                    print(f"[optimizer] WARN extended scenario universe unavailable ({e})")
+                    uni_ext = {}
+            if uni_ext and set(full_w) <= set(uni_ext["series"]):
+                cones[name] = portfolio_cone(full_w, uni=uni_ext)
 
     from portfolio_lab.portfolio.validation import walk_forward
     wf_summary, wf_meta, wf_monthly = walk_forward()

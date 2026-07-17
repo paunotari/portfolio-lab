@@ -354,10 +354,15 @@ what moves the needle.
         same caps. Measured: equity-only spread erases the stagflation floor (it WAS the
         concentrated Value bet); with bonds/gold spreading is nearly free (+0.59 vs +0.73
         floor). OOS Sharpe 0.84 vs 0.73 unconstrained.
-  - [ ] Follow-ups: extend the scenario universe so all-weather portfolios get cones; add an
-        all-weather contestant to the walk-forward; TIPS-like sleeve if a free long series
-        exists; shrink the maximin's μ̂_q toward long-history values (the views got this,
-        the maximin objective still consumes raw modern per-quadrant means).
+  - [x] **All-weather honesty loop closed — DONE 2026-07 (see MILESTONES M7):**
+        `scenario.build_universe(include_asset_classes=True)` gives all-weather portfolios
+        their `current_conditions` cone (flagship: P(10y loss) 0.4%, maxDD p50 −14.5%);
+        walk-forward gains the "Maximin (all-weather div)" contestant on its own extended
+        universe. **Verdict: OOS Sharpe 0.94 (2009–2026, net of costs) — above every equity
+        construction — at the lowest vol in the table (10.6%), maxDD −22.5%.**
+  - [ ] Remaining follow-ups: TIPS-like sleeve if a free long series exists; shrink the
+        maximin's μ̂_q toward long-history values (the views got this, the maximin objective
+        still consumes raw modern per-quadrant means).
 - [x] **P2 — Longer PROXY history for the regime layer** — DONE 2026-07 (first slice).
       `ingest/ff_factors.py` (Ken French monthly factors 1926+, free, non-FRED) +
       `analytics/long_history.py`: the classifier labels 789 months from 1960 (vs 353 modern —

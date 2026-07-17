@@ -81,10 +81,20 @@ gold LBMA mirror; FF rf).
 **Status:** floor/vol numbers **in-sample**; shape century-scale (stress + proxy race).
 ~~The specific flagship weights lack an OOS verdict~~ → see M7.
 
-## M7 — (pending this entry's run) All-weather flagship out-of-sample verdict
-Placeholder: being measured now — the all-weather diversified maximin as a walk-forward
-contestant on the real MSCI+proxies menu, plus its scenario cone. This entry will record the
-verdict either way.
+## M7 — The all-weather flagship SURVIVES out of sample
+**Claim:** as a walk-forward contestant on its own extended universe (choosing
+equities/bonds/gold/cash each year from TRAINING data only, diversified caps, net of 10 bps):
+**OOS Sharpe 0.94, 2009–2026** — above every equity construction (HRP 0.88, ERC 0.86,
+equity-diversified maximin 0.84, 1/N 0.84) — with the LOWEST volatility in the table (10.6%)
+and maxDD −22.5%. Only min-variance (1.06 — era-flagged by M2) and its vol-target overlay rank
+higher. M6's in-sample promise holds out of sample on the modern window.
+**See:** `REPORT_optimizer.md` walk-forward table (row "Maximin (all-weather div)") · viz
+charts 01–02 (new line/bar) · its `current_conditions` scenario cone now in chart 07.
+**Code:** `portfolio/validation.py::walk_forward` (all-weather contestant on `rets_aw`),
+`analytics/scenario.py::build_universe(include_asset_classes=True)` + `portfolio_cone`.
+**Data:** `levels_wide.csv` + `asset_class_monthly.csv`. **Status:** OOS modern; the SHAPE is
+additionally century-scale via M6's stress/proxy evidence. Caveat: 2009–2026 contains no
+prolonged bear market; the proxy race (M2/M3) is the longer-track complement.
 
 ## M8 — The price of preferences is measurable (profiles)
 **Claim:** preference bundles cost measurable CAGR vs their unrestricted twins: the owner's

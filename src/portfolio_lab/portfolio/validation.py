@@ -7,17 +7,21 @@ constant-mix for the next refit interval, and is judged only on months it never 
 warmup/refit discipline as the quadrant-forecasting backtests (info/TODO.md, 2026-07).
 
 Contestants: 1/N (the DeMiguel benchmark — with 330 months it may well win, and saying so is a
-feature, not a failure), min-variance, ERC (the anchor), HRP, the balanced-slider default
-(return 5 / risk 5 / diversification 5) and maximin. This table is also the evidence that will
+feature, not a failure), min-variance, ERC (the anchor), HRP, the balanced-slider default,
+momentum, the maximin family (unconstrained, diversified) and — when the proxy sleeves exist —
+the **all-weather diversified maximin on its own extended universe** (equities + bonds/gold/
+cash), so the project's flagship robust portfolio gets the same OOS verdict as everything else.
+Vol-target overlays are applied on selected bases. This table is also the evidence that will
 eventually confirm or flip ERC vs HRP as the default anchor.
 
 Honesty caveats, stated not hidden:
 - The macro-state labels carry the classifier's mild full-sample z-normalization look-ahead
   (CLAUDE.md caveat #17) — it affects component weighting, never the primary trend's direction.
   Per-quadrant means, transitions and the outlook are recomputed on the training window only.
-- Turnover is reported (mean one-way turnover per refit); no transaction costs are modeled —
-  at annual refits on index sleeves the ranking is unlikely to flip, but the number is shown so
-  the reader can apply their own cost assumption.
+- Returns are net of transaction costs (config.OPTIMIZER_TC_BPS one-way on turnover); gross
+  Sharpe is reported alongside.
+- The all-weather contestant's data tail can be 1-2 months shorter than the equity menu's
+  (proxy sources lag) — its stats cover its own months.
 
 Run:  python -m portfolio_lab.portfolio.validation
 """
@@ -68,6 +72,16 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
     if T <= warmup + refit:
         raise ValueError(f"not enough history for walk-forward (T={T}, warmup={warmup})")
 
+    AW_NAME = "Maximin (all-weather div)"
+    div_kw = dict(cap=C.OPTIMIZER_DIVERSIFIED_SLEEVE_CAP_PCT / 100.0,
+                  geo_cap=C.OPTIMIZER_GEO_CAP_PCT / 100.0,
+                  factor_cap=C.OPTIMIZER_FACTOR_CAP_PCT / 100.0)
+    rets_aw = None
+    if C.ASSET_CLASS_MONTHLY.exists():
+        aw = opt.load_returns(include_asset_classes=True)
+        if aw.shape[1] > rets.shape[1]:                     # proxies actually joined
+            rets_aw = aw
+
     # per contestant: gross monthly return + monthly one-way turnover (only rebalance months > 0)
     gross_chunks: dict[str, list] = {}
     turn_chunks: dict[str, list] = {}
@@ -77,8 +91,22 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
         inp = opt.build_inputs(rets.iloc[:t])
         refit_dates.append(str(rets.index[t - 1].date()))
         oos = rets.iloc[t:t + refit].values
-        for name, w in _contestants(inp, n_starts, seed).items():
-            chunk = oos @ w
+        entries = [(name, w, oos) for name, w in _contestants(inp, n_starts, seed).items()]
+        if rets_aw is not None:                             # flagship on its own universe
+            train_aw = rets_aw.loc[:rets.index[t - 1]]
+            oos_aw = rets_aw.loc[rets.index[t]:rets.index[min(t + refit, T) - 1]]
+            if len(train_aw) >= warmup - 12 and len(oos_aw):
+                try:
+                    inp_aw = opt.build_inputs(train_aw)
+                    if inp_aw["mu_q"] is not None:
+                        w_aw = opt.optimize(maximin=True, inputs=inp_aw,
+                                            n_starts=n_starts, seed=seed, **div_kw)["w"]
+                        entries.append((AW_NAME, w_aw, oos_aw.values))
+                except Exception as e:
+                    print(f"[validation] WARN all-weather refit at {rets.index[t - 1].date()} "
+                          f"skipped ({e})")
+        for name, w, oos_m in entries:
+            chunk = oos_m @ w
             tmonth = np.zeros(len(chunk))
             if name in prev_w:                              # trading happens on the first month
                 tmonth[0] = float(np.abs(w - prev_w[name]).sum() / 2)
