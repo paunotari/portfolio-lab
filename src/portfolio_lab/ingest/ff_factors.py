@@ -55,7 +55,7 @@ def _parse_monthly(lines: list[str]) -> pd.DataFrame:
     df = pd.read_csv(io.StringIO("\n".join(rows)), header=None, index_col=0)
     df.columns = header
     df.index = pd.PeriodIndex(df.index.astype(str), freq="M").to_timestamp("M")
-    df = df.apply(pd.to_numeric, errors="coerce").replace(-99.99, pd.NA)
+    df = df.apply(pd.to_numeric, errors="coerce").replace([-99.99, -999.0], pd.NA)
     return df / 100.0
 
 
@@ -78,6 +78,17 @@ def run():
     print(f"[ff_factors] wrote {C.FF_FACTORS_MONTHLY} "
           f"({len(df)} months, {df.index[0].date()} -> {df.index[-1].date()}, "
           f"cols: {', '.join(df.columns)})")
+
+    # 6 long-only size x value portfolios — the proxy-race equity menu
+    try:
+        pf = _parse_monthly(_fetch_csv_lines(C.FF_PORTFOLIOS_URL))
+        pf.columns = [C.FF_PORTFOLIO_RENAME.get(c.strip(), c.strip()) for c in pf.columns]
+        pf.index.name = "date"
+        pf.to_csv(C.FF_PORTFOLIOS_MONTHLY)
+        print(f"[ff_factors] wrote {C.FF_PORTFOLIOS_MONTHLY} "
+              f"({len(pf)} months, {len(pf.columns)} long-only portfolios)")
+    except Exception as e:
+        print(f"[ff_factors] WARN portfolios fetch failed ({e}) — skipping")
 
 
 if __name__ == "__main__":

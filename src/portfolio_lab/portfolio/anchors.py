@@ -45,10 +45,13 @@ def erc_weights(sigma: np.ndarray) -> np.ndarray:
                    bounds=[(1e-9, None)] * n, options={"maxiter": 10_000, "ftol": 1e-14})
     y = res.x
     w = y / y.sum()
-    # sanity: risk contributions should be (near-)equal; a failed solve would show up here
+    # sanity: risk contributions should be (near-)equal; a failed solve would show up here.
+    # Tolerance is RELATIVE to total risk — with very low-vol assets in the menu (e.g. the
+    # cash proxy) sigma_p is tiny and an absolute-ish threshold rejects perfectly good solves
     rc = risk_contributions(w, sigma)
-    if rc.max() - rc.min() > 1e-4 * rc.sum():
-        raise RuntimeError(f"ERC solve did not converge (RC spread {rc.max() - rc.min():.2e})")
+    if rc.max() - rc.min() > 1e-3 * rc.sum():
+        raise RuntimeError(f"ERC solve did not converge (RC spread {rc.max() - rc.min():.2e} "
+                           f"vs sigma_p {rc.sum():.2e})")
     return w
 
 

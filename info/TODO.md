@@ -20,12 +20,19 @@ Check items off as completed. Add new ones as they come up; keep entries short a
 
 ### Phase A — squeeze what we already have (no new data needed)
 
-- [ ] **A1 — 60-year walk-forward on the proxy universe.** Run the construction-rule race
-      (1/N, min-var, ERC, HRP, maximin variants, balanced) over FF factors + bond/gold/cash,
-      1962→2026, expanding window. Tests every rule across SIX decades and all real regimes
-      (the 1970s included) instead of one kind 17-year OOS window — the single biggest
-      confidence upgrade available, and the honest answer to DeMiguel's 3,000-month bar.
-      All ingredients already ingested.
+- [x] **A1 — 60-year walk-forward on the proxy universe — DONE 2026-07.**
+      `portfolio/proxy_backtest.py` (+ 6 FF size×value long-only portfolios ingested,
+      `ff_portfolios_monthly.csv`). Two races, same engines and honesty protocol:
+      **Equity, OOS 1936→2026 (~90y, 1079 months):** HRP 0.76 > ERC 0.75 ≈ 1/N 0.74 >
+      min-variance 0.71 — **min-var's 2009-2026 MSCI win does NOT generalize across eras**
+      (consistent with the low-vol caveat about the Quality decade). Structure-based rules
+      (HRP/ERC) match or edge 1/N over 90 years, at low turnover.
+      **Multi-asset, OOS 1972→2026 (~54y incl. the real 1970s; Sharpe vs cash):**
+      **ERC 0.64 wins** (risk balance across stocks/bonds/gold — Bridgewater's thesis at
+      century scale); **maximin sleeve≤25% 0.59 > 1/N 0.58 > unconstrained maximin 0.56** —
+      the diversified maximin's edge survives the real stagflation decade out of sample.
+      Design lesson found: with cash in the menu, min-var/HRP degenerate into T-bills
+      (excess ≈0.07) — cap or exclude cash for min-var/HRP-style engines.
 - [ ] **A2 — window-robustness: bootstrap the walk-forward.** Re-run with shifted start dates /
       warmups and report the DISPERSION of each rule's OOS Sharpe, not one number. Cheap
       (machinery exists); turns "min-var won" into "min-var wins in X% of windows".

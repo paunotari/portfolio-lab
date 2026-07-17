@@ -260,6 +260,21 @@ def test_long_history_factor_states_valid():
         assert 0.0 <= float(r["hit_rate"]) <= 1.0, f"hit_rate out of bounds: {r}"
 
 
+def test_proxy_backtest_valid():
+    # 60-year construction-rule race (skipped if not generated)
+    if not C.PROXY_BACKTEST_SUMMARY.exists():
+        return
+    rows = _rows(C.PROXY_BACKTEST_SUMMARY)
+    races = {r["race"] for r in rows}
+    assert "equity" in races, "equity race missing"
+    for r in rows:
+        assert r["portfolio"], "empty contestant name"
+        assert -1.0 <= float(r["oos_max_drawdown"]) <= 0.0
+        assert abs(float(r["oos_sharpe"])) < 10, f"implausible Sharpe: {r}"
+    eq_names = {r["portfolio"] for r in rows if r["race"] == "equity"}
+    assert "1/N" in eq_names, "1/N benchmark missing from the equity race"
+
+
 def test_optimizer_portfolios_valid():
     # structural validity of the optimizer stage's outputs (skipped if not generated);
     # unit tests of the optimizer internals live in tests/test_optimizer.py

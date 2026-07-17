@@ -194,16 +194,31 @@ FF_SOURCES = {
     "factors": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_CSV.zip",
     "momentum": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Momentum_Factor_CSV.zip",
 }
+# 6 value-weighted size x book-to-market portfolios (1926+): LONG-ONLY total-return proxies for
+# the 60-year construction-rule race (portfolio/proxy_backtest.py). Column renames applied on
+# ingest (LoBM = growth, HiBM = value).
+FF_PORTFOLIOS_URL = "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/6_Portfolios_2x3_CSV.zip"
+FF_PORTFOLIOS_MONTHLY = PROCESSED_DIR / "ff_portfolios_monthly.csv"
+FF_PORTFOLIO_RENAME = {
+    "SMALL LoBM": "Proxy | Small Growth", "ME1 BM2": "Proxy | Small Neutral",
+    "SMALL HiBM": "Proxy | Small Value", "BIG LoBM": "Proxy | Big Growth",
+    "ME2 BM2": "Proxy | Big Neutral", "BIG HiBM": "Proxy | Big Value",
+}
 LONG_HISTORY_DIR = ANALYTICS_DIR / "long_history"
 LONG_HISTORY_CSV = LONG_HISTORY_DIR / "long_history_factor_states.csv"
 LONG_HISTORY_REPORT = LONG_HISTORY_DIR / "REPORT_long_history.md"
+
+# 60-year construction-rule race on the proxy universe (portfolio/proxy_backtest.py, roadmap A1)
+PROXY_BACKTEST_DIR = ANALYTICS_DIR / "proxy_backtest"
+PROXY_BACKTEST_SUMMARY = PROXY_BACKTEST_DIR / "proxy_backtest_summary.csv"
+PROXY_BACKTEST_REPORT = PROXY_BACKTEST_DIR / "REPORT_proxy_backtest.md"
 
 
 def ensure_dirs() -> None:
     """Create all writable output directories if missing (idempotent)."""
     for d in (PROCESSED_DIR, ANALYTICS_DIR, CORR_REGIME_DIR, DIVERSIFICATION_DIR,
               MACRO_ANALYTICS_DIR, MACRO_CORR_BY_REGIME_DIR, MACRO_STATE_DIR, SCENARIO_DIR,
-              OPTIMIZER_DIR, LONG_HISTORY_DIR):
+              OPTIMIZER_DIR, LONG_HISTORY_DIR, PROXY_BACKTEST_DIR):
         d.mkdir(parents=True, exist_ok=True)
 
 
