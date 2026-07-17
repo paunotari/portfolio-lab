@@ -192,12 +192,40 @@ def build_data() -> dict:
                         n_agree=int(agree.signs_agree.sum()), n_total=int(len(agree)),
                         flips=[f"{g['label']} in {g['state']}" for g in grid if not g["agree"]])
 
+    # 9-12. phase-A research evidence (cached CSVs + a fresh profiles solve)
+    phase_a = {}
+    if C.PROXY_BACKTEST_SUMMARY.exists():
+        phase_a["race"] = pd.read_csv(C.PROXY_BACKTEST_SUMMARY).round(4).to_dict("records")
+    if C.PROXY_BACKTEST_DISPERSION.exists():
+        dp = pd.read_csv(C.PROXY_BACKTEST_DISPERSION)
+        agg = (dp.groupby(["race", "portfolio"]).oos_sharpe
+               .agg(median="median", lo="min", hi="max").round(3).reset_index())
+        one_n = dp[dp.portfolio == "1/N"].set_index(["race", "offset_months"]).oos_sharpe
+        beats = (dp.set_index(["race", "offset_months"])
+                 .assign(b=lambda d: d.oos_sharpe > one_n.reindex(d.index))
+                 .groupby(["race", "portfolio"]).b.mean().round(2).rename("beats").reset_index())
+        phase_a["dispersion"] = agg.merge(beats, on=["race", "portfolio"]).to_dict("records")
+    if C.STRESS_SUMMARY.exists():
+        phase_a["stress"] = pd.read_csv(C.STRESS_SUMMARY).round(4).to_dict("records")
+    try:
+        profs = opt.run_profiles(inp)
+        phase_a["profiles"] = [
+            dict(name=n, cagr=p["res"]["performance"]["CAGR"],
+                 vol=p["res"]["performance"]["ann_vol"], sleeves=len(p["res"]["weights"]),
+                 twin_cagr=p["twin"]["performance"]["CAGR"],
+                 twin_vol=p["twin"]["performance"]["ann_vol"],
+                 twin_sleeves=len(p["twin"]["weights"]), twin_label=p["twin_label"])
+            for n, p in profs.items()]
+    except Exception as e:
+        print(f"[visualize] WARN profiles skipped ({e})")
+
     outlook = ({_short(k): round(float(v), 3) for k, v in inp["outlook"].items()}
                if inp["outlook"] else None)
     return dict(window=f"{rets.index[0].date()} → {rets.index[-1].date()}", T=inp["T"],
                 n=len(series), delta_star=round(inp["delta_star"], 3), outlook=outlook,
                 wf=wf, sleeves=sleeve_pts, portfolios=port_pts, quad=quad, bl=bl, wrc=wrc,
-                cones=cones, roster_weights=roster_weights, longhist=longhist)
+                cones=cones, roster_weights=roster_weights, longhist=longhist,
+                phase_a=phase_a)
 
 
 TEMPLATE = """<!DOCTYPE html>
@@ -578,7 +606,55 @@ long-short academic factor into long-only MSCI-sleeve-excess space — only in a
 </ul></div></details>
 </div>
 
+<div id="pa1">
+<div class="eyebrow">Evidence · the 90-year race</div>
+<h2>Which construction rules survive nine decades?</h2>
+<p class="cap">The same rules as chart 2, raced on the proxy universe: 6 long-only Fama-French
+size×value portfolios (equity race, OOS <b>1936–2026</b>) and the same plus bonds/gold/cash
+(multi-asset, OOS <b>1972–2026</b>, the real 1970s included; Sharpe measured over cash).
+<b>Min-variance's modern win does not generalize</b> — over 90 years the structure rules
+(HRP, ERC) match or edge 1/N and min-var trails. In multi-asset, risk balance (ERC) wins and
+the diversified maximin beats 1/N through the real stagflation decade.</p>
+<div id="parace" class="chart" style="height:420px"></div>
+</div>
+
+<div id="pa2">
+<div class="eyebrow">Evidence · window robustness</div>
+<h2>Does the winner depend on when you start looking?</h2>
+<p class="cap">Each race re-run dropping the first 3/6/9 years of history. Dots are the median
+OOS Sharpe across window variants, whiskers span min→max; the label shows how often each rule
+beats 1/N. <b>HRP and ERC beat 1/N in 100% of equity windows</b> — a finding, not an era
+artifact. A rule whose whisker crosses the pack (min-variance) needed a particular era.</p>
+<div id="padisp" class="chart" style="height:420px"></div>
+</div>
+
+<div id="pa3">
+<div class="eyebrow">Evidence · a century of storms</div>
+<h2>Named episodes: what would each shape have done?</h2>
+<p class="cap">Constant-mix replay of hand-dated episodes. Top: static allocation ARCHETYPES on
+the proxy universe — pure shapes, no optimizer estimates. The row that settles the all-weather
+argument: <b>OPEC stagflation 1973-74, all-weather +9.8% while pure equity lost 44.6%</b>.
+Bottom: today's recommended flagships through the modern storms (a stress replay, not a claim
+we'd have held them then).</p>
+<div id="pastress_h" class="chart" style="height:380px"></div>
+<div style="height:10px"></div>
+<div id="pastress_m" class="chart" style="height:380px"></div>
+</div>
+
+<div id="pa4">
+<div class="eyebrow">Evidence · the price of preferences</div>
+<h2>User profiles: what your guardrails cost — and buy</h2>
+<p class="cap">Preferences are personal; their cost is measurable. Each profile (solid) is a
+preference bundle under the diversified caps (sleeve ≤25%, geo ≤40%, factor ≤40%); its
+unrestricted twin (pale) drops the caps. The gap is the price of the guardrails in CAGR — paid
+in exchange for lower volatility and more spread. In-sample; note the same caps <b>improved</b>
+out-of-sample results in every test we ran.</p>
+<div id="paprof" class="chart" style="height:380px"></div>
+</div>
+
 <hr><p class="cap">Companions: <span class="num">REPORT_optimizer.md</span> (numbers),
+<span class="num">REPORT_proxy_backtest.md</span> + <span class="num">REPORT_window_robustness.md</span>
+(the 90-year race), <span class="num">REPORT_stress.md</span> (episodes),
 <span class="num">REPORT_long_history.md</span> (the 66-year study),
 <span class="num">info/portfolio_optimization.md</span> (method),
 <span class="num">info/literature.md</span> (evidence). Charts need internet once for the
@@ -587,8 +663,10 @@ Plotly CDN.</p>
 <script>
 const DATA = __DATA__;
 const INK='#1D1D1F', MUT='#6E6E73', LINE='#E3E3E8';
-const PCOLOR={'1/N':'#8E8E93','ERC (anchor)':'#3B6FD4','HRP':'#7A5FD0','Min-variance':'#2E9E68',
-  'Balanced sliders (5/5/5)':'#E08A00','Maximin (worst quadrant)':'#C94F4F'};
+const PCOLOR={'1/N':'#8E8E93','ERC (anchor)':'#3B6FD4','ERC':'#3B6FD4','HRP':'#7A5FD0',
+  'Min-variance':'#2E9E68','Balanced sliders (5/5/5)':'#E08A00',
+  'Maximin (worst quadrant)':'#C94F4F','Maximin (unconstrained)':'#C94F4F',
+  'Maximin (sleeve ≤25%)':'#1F8A99'};
 function pc(n){ if(PCOLOR[n]) return PCOLOR[n];
   if(n.startsWith('Maximin (geo')||n.startsWith('Maximin (diversified')) return '#1F8A99';
   if(n.startsWith('Maximin (all-weather')) return '#8C6D1F';
@@ -733,6 +811,74 @@ if(DATA.longhist){
      'so the views keep it modern-only and say so.'
    : 'Every modern per-quadrant sign survived the long sample.';
 }else{document.getElementById('lhsec').style.display='none'}
+
+// 9-12 phase-A research evidence
+const PA=DATA.phase_a||{};
+const hideIf=(cond,id)=>{if(cond)document.getElementById(id).style.display='none';};
+// 9 the 90-year race
+if(PA.race){
+ const races=[...new Set(PA.race.map(r=>r.race))];
+ Plotly.newPlot('parace',races.map(rc=>{
+   const sub=PA.race.filter(r=>r.race===rc);
+   return {y:sub.map(r=>r.portfolio),x:sub.map(r=>r.oos_sharpe),name:rc.replace('_',' '),
+     type:'bar',orientation:'h',marker:{color:sub.map(r=>pc(r.portfolio)),
+     opacity:rc==='equity'?1:.55},
+     hovertemplate:'%{y} ('+rc+')<br>Sharpe %{x:.2f}<extra></extra>'};}),
+  L({barmode:'group',xaxis:{title:'OOS Sharpe (equity: rf=0 · multi-asset: over cash)',gridcolor:LINE},
+     yaxis:{automargin:true,autorange:'reversed'},margin:{l:190,r:20,t:10,b:45}}),CFG);
+}else hideIf(true,'pa1');
+// 10 window robustness
+if(PA.dispersion){
+ const races=[...new Set(PA.dispersion.map(r=>r.race))];
+ const traces=[];
+ races.forEach((rc,i)=>{const sub=PA.dispersion.filter(r=>r.race===rc);
+  traces.push({y:sub.map(r=>r.portfolio+(i?'  ·M':'  ·E')),x:sub.map(r=>r.median),
+   mode:'markers+text',name:rc.replace('_',' '),
+   text:sub.map(r=>' beats 1/N '+Math.round(r.beats*100)+'%'),textposition:'middle right',
+   textfont:{size:10.5,color:MUT},
+   error_x:{type:'data',symmetric:false,array:sub.map(r=>r.hi-r.median),
+            arrayminus:sub.map(r=>r.median-r.lo),color:'#B9B9C0'},
+   marker:{size:10,color:sub.map(r=>pc(r.portfolio))}});});
+ Plotly.newPlot('padisp',traces,
+  L({xaxis:{title:'OOS Sharpe across window variants (median, min→max)',gridcolor:LINE},
+     yaxis:{automargin:true,autorange:'reversed'},margin:{l:210,r:110,t:10,b:45},showlegend:false}),CFG);
+}else hideIf(true,'pa2');
+// 11 stress episodes
+if(PA.stress){
+ const ACOL={'Pure equity (1/N of 6)':'#8E8E93','60/40 stocks/bonds':'#3B6FD4','All-weather static':'#8C6D1F'};
+ const hist=PA.stress.filter(r=>r.table==='historic');
+ const eps=[...new Set(hist.map(r=>r.episode))];
+ Plotly.newPlot('pastress_h',Object.keys(ACOL).map(a=>({x:eps,
+   y:eps.map(e=>{const m=hist.find(r=>r.episode===e&&r.portfolio===a);return m?m.cum_return:null;}),
+   name:a,type:'bar',marker:{color:ACOL[a]}})),
+  L({barmode:'group',title:{text:'Static archetypes — a century of storms',font:{size:13},x:0},
+     yaxis:{title:'cumulative return in episode',tickformat:'.0%',gridcolor:LINE},margin:{l:60,r:20,t:34,b:60}}),CFG);
+ const mod=PA.stress.filter(r=>r.table==='modern');
+ const want=['1/N','Min-variance','Balanced sliders (5/5/5)','Maximin (diversified)','Maximin (all-weather)'];
+ const ports=want.filter(p=>mod.some(r=>r.portfolio===p));
+ const meps=[...new Set(mod.map(r=>r.episode))];
+ Plotly.newPlot('pastress_m',ports.map(p=>({x:meps,
+   y:meps.map(e=>{const m=mod.find(r=>r.episode===e&&r.portfolio===p);return m?m.cum_return:null;}),
+   name:p,type:'bar',marker:{color:pc(p)}})),
+  L({barmode:'group',title:{text:"Today's flagships — modern storms (stress replay)",font:{size:13},x:0},
+     yaxis:{title:'cumulative return in episode',tickformat:'.0%',gridcolor:LINE},margin:{l:60,r:20,t:34,b:60}}),CFG);
+}else{hideIf(true,'pa3');}
+// 12 profiles: price of preferences
+if(PA.profiles&&PA.profiles.length){
+ const ps=PA.profiles;
+ Plotly.newPlot('paprof',[
+  {x:ps.map(p=>p.name),y:ps.map(p=>p.cagr),name:'profile (capped)',type:'bar',
+   marker:{color:'#3B6FD4'},text:ps.map(p=>p.sleeves+' sleeves'),textposition:'outside',
+   hovertemplate:'%{x}<br>CAGR %{y:.2%} · vol %{customdata:.1%}<extra>profile</extra>',
+   customdata:ps.map(p=>p.vol)},
+  {x:ps.map(p=>p.name),y:ps.map(p=>p.twin_cagr),name:'unrestricted twin',type:'bar',
+   marker:{color:'#3B6FD4',opacity:.35},text:ps.map(p=>p.twin_sleeves+' sleeves'),
+   textposition:'outside',
+   hovertemplate:'%{x}<br>CAGR %{y:.2%} · vol %{customdata:.1%}<extra>twin</extra>',
+   customdata:ps.map(p=>p.twin_vol)}],
+  L({barmode:'group',yaxis:{title:'historical CAGR (common window)',tickformat:'.0%',gridcolor:LINE},
+     xaxis:{automargin:true},margin:{l:60,r:20,t:10,b:70}}),CFG);
+}else hideIf(true,'pa4');
 </script></body></html>
 """
 
