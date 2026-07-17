@@ -276,9 +276,18 @@ what moves the needle.
   - [x] Shown in optimizer_viz (2026-07): roster entry (dark-gold), per-quadrant bars, map
         point, weights/risk pairs — build_data now uses per-portfolio series lists
         (`res["all_series"]`/`res["weights"]`), so mixed-universe portfolios render cleanly.
+  - [x] **Diversified maximin (2026-07, from user critique):** unconstrained maximin is a
+        structural corner solution (LP vertices + noisy per-quadrant means) — 3-4 sleeves,
+        100% Enhanced Value, 83% Asia. New `factor_cap` (w·F per label bucket) completes the
+        three cap axes; "Maximin (diversified)" preset (sleeve ≤25%, geo ≤40%, factor ≤40%)
+        replaces the geo-only flagship/WF contestant, all-weather flagship rebuilt with the
+        same caps. Measured: equity-only spread erases the stagflation floor (it WAS the
+        concentrated Value bet); with bonds/gold spreading is nearly free (+0.59 vs +0.73
+        floor). OOS Sharpe 0.84 vs 0.73 unconstrained.
   - [ ] Follow-ups: extend the scenario universe so all-weather portfolios get cones; add an
         all-weather contestant to the walk-forward; TIPS-like sleeve if a free long series
-        exists.
+        exists; shrink the maximin's μ̂_q toward long-history values (the views got this,
+        the maximin objective still consumes raw modern per-quadrant means).
 - [x] **P2 — Longer PROXY history for the regime layer** — DONE 2026-07 (first slice).
       `ingest/ff_factors.py` (Ken French monthly factors 1926+, free, non-FRED) +
       `analytics/long_history.py`: the classifier labels 789 months from 1960 (vs 353 modern —
