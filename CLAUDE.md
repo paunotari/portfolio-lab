@@ -13,13 +13,19 @@ For what the code does and how it's structured, read **[info/CLAUDE.md](info/CLA
    flow, adds a config constant, or introduces a new caveat/gotcha — update the relevant section
    of `info/CLAUDE.md` in the same turn you make the change, not as an afterthought later.
 
-2. **Keep `info/TODO.md` current.**
+2. **Keep `info/MILESTONES.md` current.** When a critical finding is MEASURED (a rule wins or
+   loses a race, a claim gains or loses a validation level, a number that changes what we'd
+   recommend), record it there in the same turn — claim, numbers, where to see it, what code
+   produces it, from what data, validation status. If a regeneration contradicts an entry,
+   correct the entry.
+
+3. **Keep `info/TODO.md` current.**
    - If you notice a needed follow-up while working (a gap, a rough edge, a deferred piece),
      add it as a checklist item in the right section — don't just mention it in chat and drop it.
    - When a TODO item is completed, mark it `[x]` or remove it (whichever keeps the file
      readable) in the same turn you finish the work.
 
-3. **Commit and push automatically once a change is implemented and verified working** — i.e.
+4. **Commit and push automatically once a change is implemented and verified working** — i.e.
    after the relevant tests pass (`python tests/test_pipeline.py` and
    `python tests/test_optimizer.py`) and, if applicable, the pipeline runs clean
    (`python scripts/run_pipeline.py`). Do not ask for permission to commit/push
