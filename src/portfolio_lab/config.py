@@ -239,6 +239,26 @@ STRESS_EPISODES_HISTORIC = {        # proxy universe only (multi-asset from 1962
     "Global Financial Crisis": ("2007-11-30", "2009-02-28"),
     "2022 rate shock": ("2022-01-31", "2022-09-30"),
 }
+# user profiles (roadmap A4): preference bundles as constraint presets. The empirical/personal
+# split made concrete — the engine finds the best portfolio WITHIN each profile and the report
+# quantifies what each preference costs vs its unrestricted twin ("the price of preferences").
+# All profiles use the diversified cap family (sleeve 25 / geo 40 / factor 40); they differ in
+# objective and menu. "Pure equity — diversified growth" is the owner's own stated profile.
+OPTIMIZER_PROFILES = {
+    "Pure equity — diversified growth": dict(
+        include_asset_classes=False,
+        kwargs=dict(prefs={"return": 6, "risk": 2, "diversification": 4}),
+        twin="same sliders, no caps"),
+    "Equity — balanced": dict(
+        include_asset_classes=False,
+        kwargs=dict(prefs={"return": 4, "risk": 4, "diversification": 4}),
+        twin="same sliders, no caps"),
+    "All-weather — defensive": dict(
+        include_asset_classes=True,
+        kwargs=dict(maximin=True),
+        twin="same objective, no caps"),
+}
+
 # archetype allocations for the historic table (fractions; proxy sleeves)
 STRESS_ARCHETYPES = {
     "Pure equity (1/N of 6)": {"equity_equal": 1.0},

@@ -570,6 +570,66 @@ def benchmark_table(inp: dict) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+# --------------------------------------------------------------------------- profiles (A4)
+
+def run_profiles(inp: dict = None) -> dict:
+    """The preference layer made concrete (config.OPTIMIZER_PROFILES): each profile is a
+    constraint preset; for each we solve the best portfolio WITHIN it and its unrestricted
+    TWIN, so the report can state what the profile's guardrails cost — and buy. Returns
+    {profile: {res, twin, twin_label}}."""
+    div_kw = dict(cap=C.OPTIMIZER_DIVERSIFIED_SLEEVE_CAP_PCT / 100.0,
+                  geo_cap=C.OPTIMIZER_GEO_CAP_PCT / 100.0,
+                  factor_cap=C.OPTIMIZER_FACTOR_CAP_PCT / 100.0)
+    inp_eq = inp or build_inputs()
+    inputs_cache = {False: inp_eq}
+    out = {}
+    for name, spec in C.OPTIMIZER_PROFILES.items():
+        aw = spec["include_asset_classes"]
+        if aw and not C.ASSET_CLASS_MONTHLY.exists():
+            continue
+        if aw not in inputs_cache:
+            inputs_cache[aw] = build_inputs(include_asset_classes=True)
+        pinp = inputs_cache[aw]
+        if spec["kwargs"].get("maximin") and pinp["mu_q"] is None:
+            continue
+        try:
+            out[name] = dict(
+                res=optimize(inputs=pinp, **spec["kwargs"], **div_kw),
+                twin=optimize(inputs=pinp, **spec["kwargs"]),
+                twin_label=spec["twin"])
+        except Exception as e:
+            print(f"[optimizer] WARN profile {name!r} skipped ({e})")
+    return out
+
+
+def _profiles_section(profiles: dict) -> list[str]:
+    L = ["## User profiles — the price of preferences", "",
+         "Preferences are personal; their COST is measurable. Each profile is a constraint "
+         "preset (sleeve ≤25%, geo ≤40%, factor ≤40% — the diversified family) around a "
+         "stated objective; its 'unrestricted twin' drops the caps. The delta line is what "
+         "the guardrails cost in headline CAGR — and what they buy in concentration, "
+         "drawdown and floor. In-sample numbers; the same caps IMPROVED out-of-sample "
+         "results in every test we ran (see the walk-forward and A2).", ""]
+    for name, p in profiles.items():
+        r, t = p["res"]["performance"], p["twin"]["performance"]
+        rw, tw = p["res"], p["twin"]
+        floor = (min(rw["per_quadrant_monthly"].values())
+                 if rw["per_quadrant_monthly"] else None)
+        tfloor = (min(tw["per_quadrant_monthly"].values())
+                  if tw["per_quadrant_monthly"] else None)
+        L += [f"### {name}", "",
+              "| | CAGR | vol | maxDD | sleeves | worst quadrant (mo) |", "|---|---|---|---|---|---|",
+              f"| profile | {r['CAGR']:.2%} | {r['ann_vol']:.2%} | {r['max_drawdown']:.1%} | "
+              f"{len(rw['weights'])} | " + (f"{floor:+.2%} |" if floor is not None else "— |"),
+              f"| twin ({p['twin_label']}) | {t['CAGR']:.2%} | {t['ann_vol']:.2%} | "
+              f"{t['max_drawdown']:.1%} | {len(tw['weights'])} | "
+              + (f"{tfloor:+.2%} |" if tfloor is not None else "— |")]
+        L += [f"", f"Price of the guardrails: {r['CAGR'] - t['CAGR']:+.2%} CAGR for "
+              f"{r['ann_vol'] - t['ann_vol']:+.2%} vol and "
+              f"{len(rw['weights']) - len(tw['weights']):+d} sleeves of spread.", ""]
+    return L
+
+
 # --------------------------------------------------------------------------- pipeline stage
 
 def run():
@@ -616,10 +676,12 @@ def run():
     wf_summary.to_csv(C.OPTIMIZER_WALKFORWARD, index=False)
     wf_monthly.to_csv(C.OPTIMIZER_WALKFORWARD_RETURNS)   # cached for portfolio/visualize.py
 
+    profiles = run_profiles(inp)
+
     rows = [dict(portfolio=name, series=s, weight=w)
             for name, res in portfolios.items() for s, w in res["weights"].items()]
     pd.DataFrame(rows).to_csv(C.OPTIMIZER_PORTFOLIOS, index=False)
-    _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta)
+    _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta, profiles)
     print(f"[optimizer] wrote {C.OPTIMIZER_REPORT} and {C.OPTIMIZER_PORTFOLIOS}")
 
 
@@ -631,7 +693,7 @@ def _md_table(df: pd.DataFrame, fmts: dict) -> list[str]:
     return lines
 
 
-def _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta):
+def _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta, profiles=None):
     rets = inp["rets"]
     L = ["# Portfolio optimizer — default report", ""]
     L += [f"Common window **{rets.index[0].date()} → {rets.index[-1].date()}** "
@@ -697,6 +759,9 @@ def _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta):
                   f"P(cumulative loss) {c['prob_cumulative_loss']:.1%}.", ""]
         for wmsg in res["warnings"]:
             L += [f"> ⚠ {wmsg}", ""]
+
+    if profiles:
+        L += _profiles_section(profiles)
 
     L += ["## Walk-forward out-of-sample (the honesty table)", ""]
     L += [f"Expanding window, warmup {wf_meta['warmup_months']}m, refit every "

@@ -322,6 +322,21 @@ def test_all_weather_optin_lifts_the_floor():
             assert abs(Z[i].sum()) < 1e-12, f"{s} should have zero geographic exposure"
 
 
+def test_profiles_respect_their_caps_and_have_twins():
+    if not (C.LEVELS_WIDE.exists() and C.MACRO_STATE_MONTHLY.exists()):
+        return
+    O, inp = _inputs()
+    profiles = O.run_profiles(inp)
+    assert profiles, "no profiles built"
+    s_cap = C.OPTIMIZER_DIVERSIFIED_SLEEVE_CAP_PCT / 100.0
+    for name, p in profiles.items():
+        res, twin = p["res"], p["twin"]
+        assert res["w"].max() <= s_cap + 1e-4, f"{name}: sleeve cap violated"
+        for v in res["geo_exposure"].values():
+            assert v <= C.OPTIMIZER_GEO_CAP_PCT / 100.0 + 1e-4, f"{name}: geo cap violated"
+        assert abs(res["w"].sum() - 1) < 1e-6 and abs(twin["w"].sum() - 1) < 1e-6
+
+
 def test_scenario_portfolio_cone_matches_per_series_when_one_hot():
     if not (C.LEVELS_WIDE.exists() and C.MACRO_STATE_MONTHLY.exists()):
         return

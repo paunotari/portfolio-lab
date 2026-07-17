@@ -44,11 +44,15 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       century of storms): OPEC stagflation 1973-74 = **all-weather static +9.8% vs 60/40
       −28.5% vs pure equity −44.6%**; the allocation-shape story per episode, free of any
       optimizer's estimates.
-- [ ] **A4 — user profiles as presets + the "price of preferences" report.** Formalize
-      pure-equity / equity-diversified / all-weather as constraint-set presets; for each,
-      show what it costs vs the unconstrained best (we already measured one: equity-only
-      erases the stagflation floor). Turns the "es personal, no lo sé" into quantified
-      trade-offs a user can choose between.
+- [x] **A4 — user profiles + "price of preferences" — DONE 2026-07.**
+      `config.OPTIMIZER_PROFILES` + `optimizer.run_profiles()` + report section. Three
+      presets (all with the diversified cap family): **Pure equity — diversified growth**
+      (the owner's stated profile: return-tilted sliders; lands on 7 sleeves, momentum+value
+      spread across regions, price −0.8pt CAGR vs its uncapped twin), Equity — balanced
+      (10 sleeves), All-weather — defensive (maximin over the extended menu; price −2.0pt
+      CAGR vs uncapped for −2.4pt vol and +1 sleeve). Each profile printed next to its
+      unrestricted twin so the guardrails' cost — and what they buy — is a number, not a
+      debate. Follow-up someday: profiles in the viz / dashboard tab (3c).
 
 ### Phase B — data that moves the needle (owner offered to source)
 
