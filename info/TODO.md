@@ -8,9 +8,63 @@ Check items off as completed. Add new ones as they come up; keep entries short a
 
 ---
 
-## Now / quick wins
+## MAIN GOAL — research roadmap: which portfolio distributions are actually optimal (2026-07)
 
-_(both done — see Portfolio optimization below for what builds on them next)_
+> The owner's framing: this is the project's primary objective. The honest split the whole
+> plan rests on: **"optimal" = an empirical part (which construction rules survive
+> out-of-sample — the engine tests this) + a preference part (risk profile, equity-only vs
+> all-weather, home bias — profiles select this, and the engine MEASURES what each preference
+> costs).** The owner's own profile (equity-heavy, factor-diversified even among correlated
+> good performers, geographically spread, anti-recency on USA) is already expressible:
+> equity-only + factor caps + geo caps + return-tilted sliders.
+
+### Phase A — squeeze what we already have (no new data needed)
+
+- [ ] **A1 — 60-year walk-forward on the proxy universe.** Run the construction-rule race
+      (1/N, min-var, ERC, HRP, maximin variants, balanced) over FF factors + bond/gold/cash,
+      1962→2026, expanding window. Tests every rule across SIX decades and all real regimes
+      (the 1970s included) instead of one kind 17-year OOS window — the single biggest
+      confidence upgrade available, and the honest answer to DeMiguel's 3,000-month bar.
+      All ingredients already ingested.
+- [ ] **A2 — window-robustness: bootstrap the walk-forward.** Re-run with shifted start dates /
+      warmups and report the DISPERSION of each rule's OOS Sharpe, not one number. Cheap
+      (machinery exists); turns "min-var won" into "min-var wins in X% of windows".
+- [ ] **A3 — named-episode stress library.** Replay 1973-74, 1987, 2000-02, 2008, 2022 on
+      every candidate portfolio — one table/chart per episode. Very communicative, nearly free
+      (subsetting the return matrix).
+- [ ] **A4 — user profiles as presets + the "price of preferences" report.** Formalize
+      pure-equity / equity-diversified / all-weather as constraint-set presets; for each,
+      show what it costs vs the unconstrained best (we already measured one: equity-only
+      erases the stagflation floor). Turns the "es personal, no lo sé" into quantified
+      trade-offs a user can choose between.
+
+### Phase B — data that moves the needle (owner offered to source)
+
+- [ ] **B1 — investable non-equity sleeves beyond the proxies**: REITs, broad commodities,
+      TIPS, IG credit — each a DISTINCT quadrant profile (we only have gold+treasuries).
+      Free candidates to evaluate first: FRED (TIPS yields → constructed TR, same Swinkels
+      pattern), FTSE Nareit (REITs, downloadable), commodities likely needs a provider.
+      Lands via the `source=api` registry branch.
+- [ ] **B2 — fill the equity menu gaps** (USA Enhanced Value, EM Momentum/Quality, Japan…):
+      makes factor/geo caps more expressive — right now some cap combinations have few
+      sleeves to choose from.
+- [ ] **B3 — currency: returns in EUR as well as USD.** All results are USD today; for a
+      European investor hedged/unhedged outcomes genuinely differ. Needs FX data (free, FRED)
+      + a return transformation + the hedging-literature deep dive (C2).
+
+### Phase C — targeted literature (specific gaps, not more canon)
+
+- [ ] **C1 — rebalancing**: frequency/bands, the "rebalancing premium" literature — we
+      rebalance monthly by assumption, never tested.
+- [ ] **C2 — currency hedging**: Campbell, Serfaty-de Medeiros & Viceira (2010) — pairs
+      with B3.
+- [ ] **C3 — factor valuation/timing**: the Asness-vs-Arnott debate (can you time factors on
+      valuation spreads?) — directly relevant to "factores que rinden bien AHORA" and the
+      anti-recency discipline.
+
+_Sequencing: A first (all free, 1-2 sessions each), B in parallel as sourcing decisions land,
+C as each deep-dive becomes load-bearing. Every result flows through the same honesty
+protocol: walk-forward, net of costs, 1/N on screen._
 
 ## Dashboard: Tier-1 essentials layer (vision.md "Product design principle")
 
