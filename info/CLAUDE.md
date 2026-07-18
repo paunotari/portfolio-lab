@@ -8,7 +8,8 @@ optimizer* (the unified method, v2 — engine + regime/maximin + walk-forward BU
 dashboard tab 3c pending), see
 [portfolio_optimization.md](portfolio_optimization.md). For the *critical-findings ledger* (every load-bearing
 claim with its numbers, producing code, data and validation status), see
-[MILESTONES.md](MILESTONES.md). For the *literature canon* grounding the
+[MILESTONES.md](MILESTONES.md). For the *paper-style synthesis of everything measured* (the
+project's thesis, each result citing its ledger entry), see [THESIS.md](THESIS.md). For the *literature canon* grounding the
 optimizer and the regime forecasting (with adopt/adapt verdicts), see
 [literature.md](literature.md) — index + verdicts — with implementation-grade deep dives
 (formulas, algorithms, pitfalls; codeable without fetching the papers) in
