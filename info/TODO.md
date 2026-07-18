@@ -61,9 +61,29 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       Free candidates to evaluate first: FRED (TIPS yields → constructed TR, same Swinkels
       pattern), FTSE Nareit (REITs, downloadable), commodities likely needs a provider.
       Lands via the `source=api` registry branch.
-- [ ] **B2 — fill the equity menu gaps** (USA Enhanced Value, EM Momentum/Quality, Japan…):
-      makes factor/geo caps more expressive — right now some cap combinations have few
-      sleeves to choose from.
+- [ ] **B2 — fill the equity menu gaps, prioritized by evidence (2026-07 review):**
+      1. **USA Enhanced Value** — Value is THE structural stagflation factor (M4) and we
+         cannot express it in the largest market; factor caps currently have few sleeves to
+         pick from in that cell.
+      2. **Japan as a region** — the one major developed market with a genuinely distinct
+         macro history (decades of deflation): real regime diversification, not redundancy.
+      3. **Quality for EM / AC Asia** — the defensive factor missing exactly in the
+         highest-volatility regions.
+      4. (low priority) Small-cap sleeves — the size axis is absent, but SMB showed little
+         premium in our 90-year proxy race.
+      **Explicitly NOT needed for research: S&P 500** (≈0.99 correlated with MSCI USA — pure
+      redundancy). May still enter the ETF catalog later for mapping convenience (more ETFs
+      track it), never as a research sleeve.
+- [ ] **B1b — broad commodities (energy-weighted)** as the next asset class: gold alone
+      carries the stagflation quadrant and energy was the actual OPEC-era winner — a second,
+      mechanically different stagflation asset is the highest-value menu extension left.
+      Free long-history sources are poor (GSCI licensed; BCOM ~1991) — needs a sourcing
+      decision (owner). REITs/credit: distinct but lower priority (equity-correlated in
+      crises / middle profile).
+- [ ] **Horizon-parametrized cones per profile**: the engine reflects the user's HORIZON only
+      through the fixed 10y scenario cone. Cheap upgrade: P(loss) and drawdown cones at
+      5/10/20y for each profile (scenario.portfolio_cone already takes `years`) — turns time
+      horizon into a measured input for the applied thesis instead of a narrative one.
 - [ ] **B3 — currency: returns in EUR as well as USD.** All results are USD today; for a
       European investor hedged/unhedged outcomes genuinely differ. Needs FX data (free, FRED)
       + a return transformation + the hedging-literature deep dive (C2).
