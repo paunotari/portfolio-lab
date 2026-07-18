@@ -95,6 +95,24 @@ charts 01–02 (new line/bar) · its `current_conditions` scenario cone now in c
 **Data:** `levels_wide.csv` + `asset_class_monthly.csv`. **Status:** OOS modern; the SHAPE is
 additionally century-scale via M6's stress/proxy evidence. Caveat: 2009–2026 contains no
 prolonged bear market; the proxy race (M2/M3) is the longer-track complement.
+**Update (M10):** with the long-anchored objective the flagship improves further — OOS Sharpe
+0.954, vol 8.7%, maxDD −16.7%.
+
+## M10 — Anchoring the maximin OBJECTIVE on long history improves every variant OOS
+**Claim:** blending the maximin's per-quadrant means toward long-history values (proxy sleeves:
+their own 1962+ quadrant means, sign-agree rule, month-weighted; factor sleeves: β-scaled FF
+excess as in the views; **cash excluded on principle** — its quadrant "mean" is the era's
+policy-rate level, not transferable behavior) improved the OOS Sharpe of every maximin variant:
+all-weather 0.942→**0.954** with vol 10.6→**8.7%** and maxDD −22.5→**−16.7%**; unconstrained
+0.729→0.754. Concrete corrections that drove it: gold-in-bust tempered +1.20→+0.71%/mo (the
+modern number was the 2008-11 artifact), Treasuries-in-bust raised +0.43→+0.66%/mo (six decades
+of flight-to-quality).
+**See:** `REPORT_optimizer.md` walk-forward table · MILESTONES M7 superseded numbers.
+**Code:** `analytics/long_history.py::asset_class_prior` +
+`portfolio/optimizer.py::_anchor_mu_q`/`_objective_mu_q` (objectives consume `mu_q_obj`;
+reporting keeps the empirical `mu_q`). **Data:** `asset_class_monthly.csv` (1962+),
+`ff_factors_monthly.csv`, macro states. **Status:** OOS modern (walk-forward, net of costs);
+prior clipped to each training window (no look-ahead).
 
 ## M8 — The price of preferences is measurable (profiles)
 **Claim:** preference bundles cost measurable CAGR vs their unrestricted twins: the owner's

@@ -179,6 +179,39 @@ def _state_mean_returns(rets: pd.DataFrame, states: pd.DataFrame,
     return pd.DataFrame(rows)
 
 
+def _anchor_mu_q(mu_q: pd.DataFrame, long_prior: dict, asset_prior: dict,
+                 n_by_state: dict) -> pd.DataFrame:
+    """Sleeve-level long-anchored per-quadrant means for the OBJECTIVES (mu_q_obj).
+
+    Same rule the BL views use (agree-only, month-weighted), now applied to the maximin /
+    regime-row input itself: factor sleeves blend their modern EXCESS over their region's
+    Reference toward beta*f_long; proxy sleeves blend their own mean toward their 1962+
+    per-quadrant mean. Reference/Quality sleeves and disagreeing cells stay modern — shrink
+    toward a century of evidence, never replace it blindly."""
+    mu = mu_q.copy()
+    for state in mu.index:
+        n_mod = int(n_by_state.get(state, 0))
+        for col in mu.columns:
+            region, label = col.split(" | ", 1)
+            if region == "Asset" and asset_prior:
+                st = (asset_prior.get(col) or {}).get(state)
+                if st and st["agree"]:
+                    mu.loc[state, col] = ((n_mod * mu_q.loc[state, col]
+                                           + st["n_long"] * st["long_mean"])
+                                          / (n_mod + st["n_long"]))
+            elif long_prior and label in long_prior:
+                ref = f"{region} | Reference"
+                if ref not in mu.columns:
+                    continue
+                st = long_prior[label]["states"].get(state)
+                if st and st["agree"]:
+                    e_mod = float(mu_q.loc[state, col] - mu_q.loc[state, ref])
+                    e = ((n_mod * e_mod + st["n_long"] * st["long_diff"])
+                         / (n_mod + st["n_long"]))
+                    mu.loc[state, col] = float(mu_q.loc[state, ref]) + e
+    return mu
+
+
 def build_inputs(rets: pd.DataFrame = None, include_asset_classes: bool = False) -> dict:
     """Everything one optimization needs, computed once (pass a sliced `rets` to rebuild on a
     training window — the walk-forward does). include_asset_classes: see load_returns."""
@@ -194,7 +227,7 @@ def build_inputs(rets: pd.DataFrame = None, include_asset_classes: bool = False)
 
     pi, delta_ra = bl.implied_returns(sigma, w_erc, float((R @ w_erc).mean()))
 
-    mu_q, view_descs, outlook = None, [], None
+    mu_q, mu_q_obj, view_descs, outlook = None, None, [], None
     mu_bl = pi.copy()
     states = _load_states(rets.index)
     if states is not None and len(states) >= C.MACRO_MIN_OVERLAP_MONTHS:
@@ -213,11 +246,24 @@ def build_inputs(rets: pd.DataFrame = None, include_asset_classes: bool = False)
         mu_bl = bl.posterior(pi, sigma, T, P, Q, conf)
         mu_q = (perf_long.pivot(index="state", columns="series", values="mean_monthly_return")
                 .reindex(columns=series))
+        # objectives consume the long-anchored version; mu_q itself stays the empirical
+        # modern record (descriptive reporting must not be blended)
+        mu_q_obj = mu_q
+        try:
+            asset_prior = None
+            if any(c.startswith("Asset | ") for c in series):
+                from portfolio_lab.analytics.long_history import asset_class_prior
+                asset_prior = asset_class_prior(rets)
+            if long_prior or asset_prior:
+                n_by_state = perf_long.groupby("state").n_months.first().to_dict()
+                mu_q_obj = _anchor_mu_q(mu_q, long_prior or {}, asset_prior, n_by_state)
+        except Exception as e:
+            print(f"[optimizer] WARN mu_q anchoring unavailable ({e}) — modern-only objective")
     Z, zones = _geo_matrix(series)
     F, buckets = _factor_matrix(series)
     return dict(rets=rets, series=series, T=T, sigma=sigma, delta_star=delta_star,
                 anchors=anchor_set, w_anchor=w_erc, pi=pi, delta_ra=delta_ra, mu_bl=mu_bl,
-                mu_q=mu_q, outlook=outlook, view_descs=view_descs,
+                mu_q=mu_q, mu_q_obj=mu_q_obj, outlook=outlook, view_descs=view_descs,
                 div_mats=_div_matrices(series), geo_Z=Z, geo_zones=zones,
                 factor_F=F, factor_buckets=buckets)
 
@@ -329,13 +375,20 @@ def _normalize_ranges(inp: dict, active: list[str], regime_weights: dict, risk_m
                             _linear_extreme(inp["mu_bl"], cap, True))
         elif name == "regime":
             for state in regime_weights:
-                mu_s = inp["mu_q"].loc[state].values
+                mu_s = _objective_mu_q(inp).loc[state].values
                 ranges[f"regime:{state}"] = (_linear_extreme(mu_s, cap, False),
                                              _linear_extreme(mu_s, cap, True))
         else:
             ranges[name] = (_solve_extreme(fns[name], n, cap, False, n_starts, rng),
                             _solve_extreme(fns[name], n, cap, True, n_starts, rng))
     return ranges
+
+
+def _objective_mu_q(inp: dict) -> pd.DataFrame:
+    """The per-quadrant means the OBJECTIVES consume: the long-anchored version when available
+    (see _anchor_mu_q), else the modern empirical one. Reporting always uses inp['mu_q']."""
+    obj = inp.get("mu_q_obj")
+    return obj if obj is not None else inp["mu_q"]
 
 
 def _score(value: float, rng_pair: tuple) -> float:
@@ -454,7 +507,7 @@ def _solve_blend(inp, prefs, regime_weights, risk_metric, cap, cons, n_starts, r
                                max(6, n_starts // 6), rng)
     tot = sum(prefs[k] for k in active)
     imp = {k: prefs[k] / tot for k in active}
-    mu_q = inp["mu_q"]
+    mu_q = _objective_mu_q(inp)
 
     def total_score(w):
         s = 0.0
@@ -480,8 +533,9 @@ def _solve_blend(inp, prefs, regime_weights, risk_metric, cap, cons, n_starts, r
 
 
 def _solve_maximin(inp, cap, cons, n_starts, rng):
-    """Epigraph reformulation: variables (w, z), maximize z s.t. w' mu_q >= z for every state."""
-    mu_q = inp["mu_q"]
+    """Epigraph reformulation: variables (w, z), maximize z s.t. w' mu_q >= z for every state.
+    Consumes the long-anchored per-quadrant means when available (_objective_mu_q)."""
+    mu_q = _objective_mu_q(inp)
     n = len(inp["series"])
     states = list(mu_q.index)
     M = mu_q.values

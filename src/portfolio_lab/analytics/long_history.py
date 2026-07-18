@@ -151,6 +151,48 @@ def msci_factor_prior(rets: pd.DataFrame) -> dict | None:
     return out or None
 
 
+def asset_class_prior(rets: pd.DataFrame) -> dict | None:
+    """Long-history prior for the NON-EQUITY proxy sleeves' per-quadrant means.
+
+    Unlike the factor prior (which needs a beta to translate long-short factors into sleeve
+    space), the proxies ARE the same series over the long sample — bond/gold/cash have
+    per-quadrant means from 1962+ (~64y vs ~27y modern). Per sleeve x state:
+    {agree (era sign-agreement), long_mean, n_long}. Clipped to rets.index.max() for
+    walk-forward honesty. Returns None when the proxy file is absent."""
+    if not C.ASSET_CLASS_MONTHLY.exists():
+        return None
+    end = rets.index.max()
+    ac = pd.read_csv(C.ASSET_CLASS_MONTHLY, index_col=0, parse_dates=True).sort_index()
+    # cash is EXCLUDED on principle: its per-quadrant "mean" is the era's policy-rate LEVEL
+    # (5-15% in the 1962-1990 sample), not a cross-era asset behavior — anchoring it would
+    # smuggle high-rate-era yields into today's expectations. Gold/bond quadrant dynamics
+    # (flight-to-quality, real-asset behavior) are the transferable signal; rate levels are not.
+    cols = [c for c in ac.columns if c in rets.columns and "Cash" not in c]
+    if not cols:
+        return None
+    states_long = classify_states(start="1926-01-01")[["state"]]
+    ac.index = pd.PeriodIndex(ac.index, freq="M")
+    states_long.index = pd.PeriodIndex(states_long.index, freq="M")
+    joined = ac[cols].join(states_long, how="inner").dropna(subset=["state"])
+    joined = joined.loc[:pd.Period(end, freq="M")]
+    modern_start = pd.Period(rets.index.min(), freq="M")
+
+    out = {}
+    for col in cols:
+        per_state = {}
+        for state, g in joined.groupby("state"):
+            f_long = g[col].dropna()
+            f_mod = g.loc[modern_start:, col].dropna()
+            if len(f_long) < 24 or len(f_mod) < 6:
+                continue
+            per_state[state] = dict(
+                agree=bool(np.sign(f_long.mean()) == np.sign(f_mod.mean())),
+                long_mean=float(f_long.mean()), n_long=int(len(f_long)))
+        if per_state:
+            out[col] = per_state
+    return out or None
+
+
 def _short(state: str) -> str:
     return state.split(" (")[0]
 

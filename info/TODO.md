@@ -360,9 +360,14 @@ what moves the needle.
         walk-forward gains the "Maximin (all-weather div)" contestant on its own extended
         universe. **Verdict: OOS Sharpe 0.94 (2009–2026, net of costs) — above every equity
         construction — at the lowest vol in the table (10.6%), maxDD −22.5%.**
-  - [ ] Remaining follow-ups: TIPS-like sleeve if a free long series exists; shrink the
-        maximin's μ̂_q toward long-history values (the views got this, the maximin objective
-        still consumes raw modern per-quadrant means).
+  - [x] **μ̂_q long-anchoring — DONE 2026-07 (MILESTONES M10):** the maximin/regime objectives
+        now consume `mu_q_obj` (proxy sleeves anchored on their own 1962+ quadrant means,
+        factor sleeves on β-scaled FF excess; cash excluded on principle — rate levels aren't
+        transferable behavior; reporting keeps empirical `mu_q`). Every maximin variant
+        improved OOS; flagship: Sharpe 0.954, vol 8.7%, maxDD −16.7%.
+  - [ ] TIPS sleeve — RE-SCOPED 2026-07: FRED's TIPS yield starts 2003; joining it would
+        truncate the common window by 4 years (the mixed-window trap) for little testable
+        gain. Revisit only with a longer (paid) real-yield series.
 - [x] **P2 — Longer PROXY history for the regime layer** — DONE 2026-07 (first slice).
       `ingest/ff_factors.py` (Ken French monthly factors 1926+, free, non-FRED) +
       `analytics/long_history.py`: the classifier labels 789 months from 1960 (vs 353 modern —
