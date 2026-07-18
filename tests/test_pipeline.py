@@ -30,8 +30,12 @@ def test_registry_files_exist_and_are_consistent():
     for idx in reg:
         assert idx["region"] in C.REGIONS, f"{idx['index_id']}: unknown region {idx['region']}"
         assert idx["factor_type"] in C.FACTOR_TYPES, f"{idx['index_id']}: bad factor {idx['factor_type']}"
-        rf = C.RAW_DIR / idx["region"] / idx["returns_file"]
-        assert rf.exists(), f"{idx['index_id']}: missing returns file {rf}"
+        if idx["source"] == "msci_api":
+            cache = C.MSCI_API_CACHE_DIR / f"{idx['returns_file']}.json"
+            assert cache.exists(), f"{idx['index_id']}: msci_api cache missing at {cache}"
+        else:
+            rf = C.RAW_DIR / idx["region"] / idx["returns_file"]
+            assert rf.exists(), f"{idx['index_id']}: missing returns file {rf}"
         if idx["weights_file"]:
             wf = C.RAW_DIR / idx["region"] / idx["weights_file"]
             assert wf.exists(), f"{idx['index_id']}: missing weights file {wf}"
@@ -64,9 +68,10 @@ def test_ten_constituents_each():
         assert n == 10, f"{idx} has {n} constituents (expected 10)"
 
 
-def test_all_21_return_series_present():
+def test_all_registry_return_series_present():
+    expected = len(C.load_registry())
     series = {(r["region"], r["factor_type"]) for r in _rows(C.RETURNS_LONG)}
-    assert len(series) == 21, f"expected 21 return series, got {len(series)}"
+    assert len(series) == expected, f"expected {expected} return series, got {len(series)}"
 
 
 def test_usa_indices_have_no_country_chart():
@@ -105,7 +110,8 @@ def test_macro_link_wide_matrices_shape():
     n_indicators = len(_rows(C.MACRO_META))
     for path in (C.MACRO_CORR_CONTEMP_LEVEL, C.MACRO_CORR_CONTEMP_CHG):
         rows = _rows(path)
-        assert len(rows) == 21, f"{path.name}: expected 21 series rows, got {len(rows)}"
+        expected = len(C.load_registry())
+        assert len(rows) == expected, f"{path.name}: expected {expected} series rows, got {len(rows)}"
         n_ind = len(rows[0]) - 1  # minus the series index column
         assert n_ind == n_indicators, f"{path.name}: expected {n_indicators} indicator cols, got {n_ind}"
 
@@ -117,7 +123,8 @@ def test_macro_link_per_regime_matrices_valid():
     assert files, "no per-regime macro correlation matrices found"
     for f in files:
         rows = _rows(f)
-        assert len(rows) == 21, f"{f.name}: expected 21 series rows, got {len(rows)}"
+        expected = len(C.load_registry())
+        assert len(rows) == expected, f"{f.name}: expected {expected} series rows, got {len(rows)}"
         for r in rows:
             for k, v in r.items():
                 if k == "" or v == "":
@@ -171,8 +178,9 @@ def test_macro_state_performance_valid():
     for r in rows:
         series_per_state[r["state"]] += 1
         assert int(r["n_months"]) >= 3, f"{r['state']}/{r['series']}: n_months < 3"
+    expected = len(C.load_registry())
     for state, n in series_per_state.items():
-        assert n == 21, f"{state}: expected 21 series, got {n}"
+        assert n == expected, f"{state}: expected {expected} series, got {n}"
 
 
 def test_macro_state_factor_attribution_valid():
@@ -199,8 +207,9 @@ def test_scenario_summary_valid():
         assert p5 <= p25 <= p50 <= p75 <= p95, f"{r['scenario']}/{r['series']}: percentiles out of order"
         pl = float(r["prob_cumulative_loss"])
         assert 0.0 <= pl <= 1.0, f"{r['scenario']}/{r['series']}: prob_cumulative_loss out of bounds"
+    expected = len(C.load_registry())
     for name, n in scenarios.items():
-        assert n == 21, f"scenario {name}: expected 21 series, got {n}"
+        assert n == expected, f"scenario {name}: expected {expected} series, got {n}"
 
 
 def test_ff_factors_valid():

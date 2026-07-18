@@ -113,6 +113,9 @@ of flight-to-quality).
 reporting keeps the empirical `mu_q`). **Data:** `asset_class_monthly.csv` (1962+),
 `ff_factors_monthly.csv`, macro states. **Status:** OOS modern (walk-forward, net of costs);
 prior clipped to each training window (no look-ahead).
+**Re-measured 2026-07 after the B2 menu expansion (+USA Enhanced Value, Japan Momentum, EM
+Quality via `msci_api`):** flagship OOS Sharpe 0.93 on the 24-sleeve menu — numbers shift by
+~0.01-0.02 with the menu, every ranking and conclusion unchanged.
 
 ## M8 — The price of preferences is measurable (profiles)
 **Claim:** preference bundles cost measurable CAGR vs their unrestricted twins: the owner's

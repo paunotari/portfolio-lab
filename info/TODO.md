@@ -61,19 +61,21 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       Free candidates to evaluate first: FRED (TIPS yields → constructed TR, same Swinkels
       pattern), FTSE Nareit (REITs, downloadable), commodities likely needs a provider.
       Lands via the `source=api` registry branch.
-- [ ] **B2 — fill the equity menu gaps, prioritized by evidence (2026-07 review):**
-      1. **USA Enhanced Value** — Value is THE structural stagflation factor (M4) and we
-         cannot express it in the largest market; factor caps currently have few sleeves to
-         pick from in that cell.
-      2. **Japan as a region** — the one major developed market with a genuinely distinct
-         macro history (decades of deflation): real regime diversification, not redundancy.
-      3. **Quality for EM / AC Asia** — the defensive factor missing exactly in the
-         highest-volatility regions.
-      4. (low priority) Small-cap sleeves — the size axis is absent, but SMB showed little
-         premium in our 90-year proxy race.
+- [x] **B2 — equity menu gaps — MOSTLY DONE 2026-07 via the new `source=msci_api` branch**
+      (MSCI's own end-of-day service, keyless, verified identical to the xlsx source to 9
+      significant figures; codes discovered by probing — names are embedded in the XLS
+      responses). Added: **USA Enhanced Value (705973, 1997-12+), Japan Momentum (703763,
+      1997-01+), EM Quality (702788, 1997-01+)** — all preserve the 331-month common window.
+      Look-through for api sleeves approximated by borrowing the region Reference factsheet
+      (caveat #18). **Japan Reference fetched and REJECTED:** NETR history starts 2000-12 —
+      would shrink the common window 330→307 months (the mixed-window trap).
+  - [ ] Owner option: manually export MSCI Japan (NETR USD, monthly) from the msci.com
+        end-of-day tool — if the UI serves pre-2001 net history, Japan becomes a full region.
+  - [ ] Not found in probed code ranges: AC Asia ex Japan Quality, Japan Quality, Japan
+        Enhanced Value (probed 702780-702815, 705960-705995, 707695-707705). Extend probes or
+        find codes on the MSCI index pages someday.
       **Explicitly NOT needed for research: S&P 500** (≈0.99 correlated with MSCI USA — pure
-      redundancy). May still enter the ETF catalog later for mapping convenience (more ETFs
-      track it), never as a research sleeve.
+      redundancy). May still enter the ETF catalog later for mapping convenience.
 - [ ] **B1b — broad commodities (energy-weighted)** as the next asset class: gold alone
       carries the stagflation quadrant and energy was the actual OPEC-era winner — a second,
       mechanically different stagflation asset is the highest-value menu extension left.
@@ -87,6 +89,29 @@ Check items off as completed. Add new ones as they come up; keep entries short a
 - [ ] **B3 — currency: returns in EUR as well as USD.** All results are USD today; for a
       European investor hedged/unhedged outcomes genuinely differ. Needs FX data (free, FRED)
       + a return transformation + the hedging-literature deep dive (C2).
+
+### Paper track — toward a publishable contribution (owner goal, 2026-07)
+
+> Honest assessment: the replications (DeMiguel, constraints-as-shrinkage) are solid but not
+> novel alone. The **candidate headline contribution** is the era-agreement-gated long-history
+> shrinkage for regime-conditioned inputs (M5+M10): a simple, transparent estimator (sign-agree
+> rule, month-weighting, β-mapped cross-universe transfer, principled exclusions) with measured
+> OOS improvement on two universes. Realistic targets: SSRN working paper → *Journal of
+> Portfolio Management* / *Journal of Asset Management* / a quant-finance conference. Top
+> academic journals (JF/RFS) are not realistic for this design. What's missing before writing:
+
+- [ ] **Statistical significance for Sharpe differences** — Ledoit & Wolf (2008) bootstrap
+      test for Sharpe equality (+ deflated Sharpe / López de Prado's PBO as overfitting
+      checks). Without this, no referee reads past the tables.
+- [ ] **A third universe** (international FF portfolios from the same Ken French library —
+      Europe/Japan/Asia-Pacific factor portfolios, free) so the estimator's OOS gain is shown
+      on data it never touched during development.
+- [ ] **Sensitivity grids**: cost levels (0/10/25 bps), refit frequencies, cap levels,
+      agreement-rule variants (sign vs magnitude bands) — show the result isn't a knife-edge.
+- [ ] **Formalize the estimator** (notation, assumptions, relation to James-Stein and
+      empirical-Bayes shrinkage) and position against the regime-allocation literature
+      (Ang-Bekaert; Guidolin-Timmermann).
+- [ ] Then: paper draft from THESIS.md skeleton → SSRN → journal submission.
 
 ### Phase C — targeted literature (specific gaps, not more canon)
 

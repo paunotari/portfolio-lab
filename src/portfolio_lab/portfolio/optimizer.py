@@ -103,9 +103,15 @@ def _div_matrices(series: list[str]) -> dict[str, np.ndarray]:
         expo = {}
         for col in series:
             idx_name = col_to_index.get(col)
-            if idx_name is None:                 # non-equity proxy sleeve (no factsheet): it IS
-                expo[col] = {col: 100.0}         # its own category in every dimension — one
-                continue                         # whole independent bet, which is the truth
+            if idx_name is None:
+                # api-sourced equity sleeve without a factsheet: borrow its REGION's Reference
+                # look-through as an approximation (documented, CLAUDE.md caveat #19); anything
+                # still unresolved (Asset proxies, Japan without a Reference) is its own
+                # category — one whole independent bet
+                idx_name = col_to_index.get(f"{col.split(' | ')[0]} | Reference")
+                if idx_name is None:
+                    expo[col] = {col: 100.0}
+                    continue
             w = dict(table.get(idx_name, {}))
             if dim == "country":
                 if not w and idx_name in usa_idx:
@@ -131,11 +137,17 @@ def _geo_matrix(series: list[str]) -> tuple[np.ndarray, list[str]]:
     col_to_index = {v: k for k, v in series_key.items()}
     country_zone = {c: z for z, cs in C.OPTIMIZER_GEO_ZONES.items() for c in cs}
     zones = list(C.OPTIMIZER_GEO_ZONES) + ["Rest of world"]
+    STATIC_COUNTRY = {"Japan": "Japan"}          # single-country regions lacking any factsheet
     Z = np.zeros((len(series), len(zones)))
     for i, col in enumerate(series):
         idx_name = col_to_index.get(col)
-        if idx_name is None:                     # non-equity proxy sleeve: zero geographic
-            continue                             # exposure — geo caps constrain equity bets only
+        region = col.split(" | ")[0]
+        if idx_name is None:
+            idx_name = col_to_index.get(f"{region} | Reference")  # borrow (caveat #19)
+        if idx_name is None:
+            if region in STATIC_COUNTRY:
+                Z[i, zones.index(country_zone.get(STATIC_COUNTRY[region], "Rest of world"))] = 1.0
+            continue                             # Asset proxies: zero geographic exposure
         w = dict(ctry_by.get(idx_name, {})) or ({"United States": 100.0}
                                                 if idx_name in usa_idx else {})
         for c, pct in w.items():

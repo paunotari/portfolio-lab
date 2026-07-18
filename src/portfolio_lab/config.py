@@ -22,6 +22,7 @@ except ImportError:
 
 DATA_DIR = PROJECT_ROOT / "data"
 RAW_DIR = DATA_DIR / "raw" / "msci_indexes"             # region subfolders: xlsx + pdf
+MSCI_API_CACHE_DIR = DATA_DIR / "raw" / "msci_api"      # committed JSON cache for source=msci_api
 PROCESSED_DIR = DATA_DIR / "processed"                  # tidy CSVs (regenerable)
 INDEX_REGISTRY = DATA_DIR / "index_registry.csv"        # the manifest of tracked indexes
 
@@ -277,7 +278,7 @@ def ensure_dirs() -> None:
 
 
 # --- domain constants ----------------------------------------------------
-REGIONS = ["ACWI", "World", "World_ex_USA", "USA", "EM", "Europe", "AC_Asia_ex_Japan"]
+REGIONS = ["ACWI", "World", "World_ex_USA", "USA", "EM", "Europe", "AC_Asia_ex_Japan", "Japan"]
 
 FACTOR_TYPES = ["Reference", "Momentum", "Enhanced Value", "Quality"]
 

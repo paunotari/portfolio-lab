@@ -133,7 +133,7 @@ explicit, not implied by which folders happen to exist. Columns:
 | `index_id` | MSCI numeric code (also prefixes the returns filename) |
 | `display_name` | full index name (as it appears in the returns xlsx) |
 | `region`, `factor_type` | the series key — **unique together** |
-| `source` | how ingest loads it: `msci_local` (xlsx + factsheet pdf) · `msci_local_webweights` (xlsx local, weights via `ingest/asia_images.py`) · *(future: `api`)* |
+| `source` | how ingest loads it: `msci_local` (xlsx + factsheet pdf) · `msci_local_webweights` (xlsx local, weights via `ingest/asia_images.py`) · **`msci_api`** (MSCI's end-of-day data service, same source as the xlsx — verified to 9 significant figures; `returns_file` holds the numeric index code; responses cached to `data/raw/msci_api/<code>.json`, committed, so offline runs work) |
 | `returns_file` | xlsx basename inside `data/raw/msci_indexes/<region>/` |
 | `weights_file` | factsheet pdf basename, or empty (webweights / none) |
 
@@ -246,7 +246,18 @@ is 14 steps; see
     Changing any classifier constant reshuffles the
     hard labels and therefore per-state performance, attribution AND scenario outputs — they
     all share `classify_states()`.
-18. **The optimizer never sees raw historical mean returns.** The only expected-return vector any
+18. **`msci_api` sleeves have no factsheet — their look-through is APPROXIMATED.** The 2026-07
+    additions (USA Enhanced Value 705973, Japan Momentum 703763, EM Quality 702788) borrow
+    their REGION's Reference factsheet weights for sector/country/stock look-through and geo
+    caps (a factor subset of the parent universe — right ballpark, not exact); Japan, having
+    no Reference sleeve, is statically mapped to Japan/Asia-Pacific for geo and is its own
+    category in the diversification HHIs. **Japan | Reference was fetched and REMOVED**: its
+    net-return history via the service starts 2000-12, which would shrink the common window
+    330→307 months (the mixed-window trap) — revisit only via a manual MSCI export with longer
+    NETR history. Codes were discovered by probing the service (names embedded in the XLS
+    responses); AC Asia Quality / Japan Quality / Japan Enhanced Value were not found in the
+    probed ranges.
+19. **The optimizer never sees raw historical mean returns.** The only expected-return vector any
     objective consumes is the Black-Litterman posterior μ_BL (`portfolio/views.py`) — anchored on
     ERC-implied returns and tilted only by confidence-weighted regime views. Per-quadrant means
     μ̂_q do enter the regime/maximin objectives directly (that's the signature feature, licensed
