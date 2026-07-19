@@ -146,6 +146,32 @@ Check items off as completed. Add new ones as they come up; keep entries short a
 - [ ] **Formalize the estimator** (notation, assumptions, relation to James-Stein and
       empirical-Bayes shrinkage) and position against the regime-allocation literature
       (Ang-Bekaert; Guidolin-Timmermann).
+- [ ] **Pre-draft checks (audit 2026-07-19)** — the remaining attackable assumptions:
+  - [x] Sharpe convention: recomputed the walk-forward table as EXCESS over T-bill
+        (rf ~1.3%/yr avg) — rankings identical (only #8/#9 swap), min-var vs 1/N p_boot
+        0.067 (vs 0.055 rf0): conclusions robust; paper tables will use the excess
+        convention (standard).
+  - [ ] **Real-time discipline of the regime layer (the biggest one).** The maximin /
+        all-weather results depend on state labels that (a) carry the classifier's mild
+        full-sample z-normalization (caveat #17, stated never quantified), (b) assume
+        month-t macro is known at month t (INDPRO/PCE publish with 1-2m lag), and (c) use
+        revised, not vintage, FRED data. Decisive cheap test: re-run the walk-forward with
+        labels LAGGED 2 months (+ optionally expanding-window z-norm) — only the
+        regime-dependent contestants can change. If they hold, the results are
+        real-time-implementable; if they collapse, that's look-ahead leakage and must be
+        said. (Full ALFRED-vintage replay = heavy, appendix-later.)
+  - [ ] **MSCI backfill/selection bias (limitations paragraph + one cheap split).** The
+        factor indices were launched ~2013-15 with backfilled pre-launch history — index
+        providers launch what backtested well, so 1997-2013 factor-index history is a
+        provider backtest. Mitigation already in hand: every structural conclusion
+        replicates on continuously-computed academic FF data (M2 proxy race, M16 virgin
+        universe). Add the cheap live-era check: hierarchy on 2015+ months only, from the
+        cached walk-forward returns.
+  - [ ] Limitations to STATE (no test needed): within-interval constant-mix drift turnover
+        is uncosted (small; C1/C3 survive 25 bps anyway); DSR's N=11 counts fielded
+        contestants, not every dev-time variant (the pre-registered M16 test is the
+        stronger multiplicity defense); USD-only (B3); 1/N is menu-relative — the menu is
+        a design layer and the paper must say so.
 - [ ] Then: paper draft from THESIS.md skeleton → SSRN → journal submission.
 
 ### Phase C — targeted literature (specific gaps, not more canon)
