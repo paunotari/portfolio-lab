@@ -232,3 +232,29 @@ mechanism stays in the codebase behind the flag for reproducibility.
 **Data:** FF market total return 1960+ × macro states × MSCI menu. **Status:** OOS modern
 (walk-forward A/B, net of costs); negative result recorded per the honesty principle — for
 the paper this is the "we tried the obvious refinement and show why it cannot work" section.
+
+## M16 — The confirmatory test: the frozen estimator CONFIRMS on a virgin universe
+**Claim:** with the protocol declared and committed BEFORE the first run (fixed thresholds,
+one A/B, no re-tuning), the frozen long-history estimator improves both maximin variants on
+9 Ken French international sleeves (Europe/Japan/Asia-Pacific × Reference/Value/Momentum,
+1990-11→2026-05) that were NEVER touched during development: worst-quadrant 0.582→0.584
+(Δ+0.002), diversified 0.597→0.614 (**Δ+0.016**) — net OOS Sharpe over 307 OOS months
+(2000-11→2026-05) containing the dot-com bust AND the GFC. Declared verdict: **CONFIRMS**
+(every Δ≥0, one >+0.005). The estimator's record now: improves or leaves unchanged on three
+universes, one of them virgin, never degrades.
+**The secondary readouts are just as load-bearing (reported ungated):** (a) on this
+two-bear window the maximin FAMILY ranks last (0.58-0.61 vs 1/N 0.68, maxDD −63/−65%) —
+equity-only regime-maximin through real bears is bad, consistent with M6's "equity-only
+cannot have both" and M2's era-specificity; the estimator improves it, but cannot rescue it.
+(b) The hierarchy compresses: min-var +0.019, HRP +0.022, ERC +0.001 over 1/N — signs
+consistent with M2, magnitudes ~noise. (c) Ledoit-Wolf on the third universe: **nothing
+beats 1/N significantly (best p=0.246)** — the DeMiguel verdict now holds with p-values on
+all three universes. The paper's humility thesis is now triple-confirmed.
+**See:** `outputs/analytics/ff_intl/REPORT_ff_intl.md` (+ `ff_intl_ab.csv`,
+`ff_intl_inference.csv`). **Code:** `portfolio/ff_intl_test.py` (protocol in docstring,
+pre-registration commit precedes the results commit in git history),
+`ingest/ff_international.py`. **Data:** Ken French international library, fetched
+2026-07-19; frozen snapshot committed at
+`data/raw/ff_intl/ff_intl_monthly_snapshot_2026-07-19.csv` (the library restates history —
+the snapshot is what this verdict was computed on). **Status:** OOS on a pre-registered
+virgin universe, net of costs — the strongest validation level in this ledger.

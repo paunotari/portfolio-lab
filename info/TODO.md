@@ -130,9 +130,12 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         Default OFF. The estimator is self-limiting where eras disagree — a feature, and a
         paper section ("the obvious refinement, and why it cannot work"). EM's mitigations
         remain the caps + the M12/M13 diagnostics.
-- [ ] **A third universe** (international FF portfolios from the same Ken French library —
-      Europe/Japan/Asia-Pacific factor portfolios, free) so the estimator's OOS gain is shown
-      on data it never touched during development.
+- [x] **A third universe — RUN 2026-07-19, verdict: CONFIRMS (M16).** Pre-registered
+      protocol (`portfolio/ff_intl_test.py`, committed before the run), 9 virgin Ken French
+      international sleeves, 307 OOS months incl. dot-com + GFC: the frozen estimator
+      improves both maximin variants (Δ+0.002/+0.016); secondary — nothing beats 1/N
+      significantly there either (best p=0.246), maximin family ranks last through two
+      bears (equity-only, consistent M6). Snapshot frozen in `data/raw/ff_intl/`.
 - [ ] **Sensitivity grids**: cost levels (0/10/25 bps), refit frequencies, cap levels,
       agreement-rule variants (sign vs magnitude bands) — show the result isn't a knife-edge.
 - [ ] **Formalize the estimator** (notation, assumptions, relation to James-Stein and

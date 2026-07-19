@@ -393,6 +393,24 @@ def test_vol_managed_is_causal_and_derisks():
     assert (extra >= 0).all(), "turnover is non-negative"
 
 
+def test_ff_intl_hi_mean_and_universe_shape():
+    import pandas as pd
+    from portfolio_lab.ingest.ff_international import _hi_mean
+    df = pd.DataFrame({"SMALL LoBM": [0.0], "ME1 BM2": [0.1], "SMALL HiBM": [0.2],
+                       "BIG LoBM": [0.0], "ME2 BM2": [0.1], "BIG HiBM": [0.4]})
+    assert abs(_hi_mean(df).iloc[0] - 0.3) < 1e-12
+    try:
+        _hi_mean(df[["SMALL LoBM", "ME1 BM2"]])
+        assert False, "should raise without exactly 2 Hi columns"
+    except ValueError:
+        pass
+    if C.FF_INTL_MONTHLY.exists():                    # virgin universe, if fetched
+        rets = pd.read_csv(C.FF_INTL_MONTHLY, index_col=0, parse_dates=True)
+        assert rets.shape[1] == 9, f"expected 9 sleeves, got {list(rets.columns)}"
+        assert all(" | " in c for c in rets.columns)
+        assert rets.index.min().year <= 1991 and rets.notna().all().all()
+
+
 def test_regional_anchor_mechanics():
     """Pass 1 of _anchor_mu_q: agree-gated regional base anchoring (M13 follow-up / M15)."""
     import pandas as pd

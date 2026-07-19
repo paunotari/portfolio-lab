@@ -147,3 +147,7 @@ def _write_report(rets, runs, ab, deltas, verdict, infer):
     L += ["", "_One run, whatever it says. No re-tuning followed this measurement — any "
           "refinement it motivates belongs to a NEW test on data this one didn't use._", ""]
     C.FF_INTL_REPORT.write_text("\n".join(L))
+
+
+if __name__ == "__main__":
+    run()
