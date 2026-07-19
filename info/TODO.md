@@ -283,12 +283,12 @@ protocol: walk-forward, net of costs, 1/N on screen._
       unconstrained maximin OOS (Sharpe 0.84 vs 0.73 — constraints as implicit shrinkage,
       confirmed live).
 
-- [ ] **3c — dashboard "Optimizer" tab**: three sliders + Tier-2 panel (regime row, risk-metric
-      toggle, caps, hard target) running live in the browser; JS mirror of the objective + a
-      simple multi-start/projected-gradient solver (serverless, same dual-implementation pattern
-      and caveat #12 sync warning as `computeSeriesStats`); frontier strip showing the chosen
-      portfolio vs neighbors; Tier-1 output = recommended allocation + the "why" (scorecard, RC,
-      benchmarks) per the layering item above.
+- [x] **3c — dashboard "Optimizer" tab — SHIPPED AS A VIEWER 2026-07-19.** New 8th tab:
+      flagship picker (weights bar + OOS metrics + top-3 attribution per portfolio) + the
+      honesty table (walk-forward net OOS with LW Δ/p vs 1/N and DSR columns; significantly-
+      worse rows in red). Live sliders deliberately stay CLI (SLSQP is Python — a slider
+      grid would need precomputed combos; revisit only on demand). Header subtitle made
+      dynamic (28 series · 8 regions — was hardcoded 21/7).
 - [ ] CVaR-95 as third Tier-2 risk metric — un-parking route in
       [literature/cvar-optimization.md](literature/cvar-optimization.md): feed the
       Rockafellar-Uryasev LP with scenario-engine months instead of raw history.

@@ -153,13 +153,42 @@ def _collect_data() -> dict:
                 r[k] = float(r[k])
         scenario = {"rows": rows, "years": C.SCENARIO_YEARS, "trials": C.SCENARIO_TRIALS}
 
+    # optimizer tab (3c, viewer: precomputed flagships + the honesty table; optional)
+    optimizer = None
+    if C.OPTIMIZER_PORTFOLIOS.exists() and C.OPTIMIZER_WALKFORWARD.exists():
+        ports: dict = {}
+        for r in _rd(C.OPTIMIZER_PORTFOLIOS):
+            ports.setdefault(r["portfolio"], []).append(
+                {"series": r["series"], "w": round(float(r["weight"]), 4)})
+        wf = _rd(C.OPTIMIZER_WALKFORWARD)
+        for r in wf:
+            for k in ("oos_CAGR", "oos_ann_vol", "oos_sharpe_rf0", "oos_max_drawdown",
+                      "mean_turnover_per_refit"):
+                r[k] = float(r[k])
+        infer = None
+        if C.OPTIMIZER_INFERENCE.exists():
+            infer = {}
+            for r in _rd(C.OPTIMIZER_INFERENCE):
+                infer[r["portfolio"]] = {
+                    k: (None if r[key] in ("", "nan") else round(float(r[key]), 4))
+                    for k, key in (("d", "delta_ann_vs_1/N"), ("p", "p_boot_vs_1/N"),
+                                   ("dsr", "dsr"))}
+        attr = None
+        if C.OPTIMIZER_ATTRIBUTION.exists():
+            attr = {}
+            for r in _rd(C.OPTIMIZER_ATTRIBUTION):
+                attr.setdefault(r["portfolio"], []).append(
+                    {"series": r["sleeve"], "share": round(float(r["share"]), 4)})
+        optimizer = {"portfolios": ports, "walkforward": wf, "inference": infer,
+                     "attribution": attr, "tc_bps": C.OPTIMIZER_TC_BPS}
+
     return dict(perf=perf, fvr=fvr, regperf=regperf, regime_meta=regime_meta, levels=levels,
                 corr=corr, rolling=rolling, sec_by=sec_by, ctry_by=ctry_by, stk_by=stk_by,
                 usa_idx=usa_idx, indices=sorted(sec_by.keys()), idx_series_key=idx_series_key,
                 thresh=C.CONCENTRATION_THRESHOLDS, country_fix=C.COUNTRY_FIX,
                 weight_tolerance_pct=C.PORTFOLIO_WEIGHT_TOLERANCE_PCT,
                 macro=macro, macro_meta=macro_meta, macro_corr=macro_corr,
-                macro_state=macro_state, scenario=scenario)
+                macro_state=macro_state, scenario=scenario, optimizer=optimizer)
 
 
 def run():

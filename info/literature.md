@@ -34,6 +34,7 @@ codeable without fetching the paper:
 | [sharpe-inference.md](literature/sharpe-inference.md) | JK/Memmel baseline · Ledoit-Wolf 2008 HAC + studentized circular block bootstrap · deflated Sharpe (Bailey-LdP) · CSCV PBO · our pairwise protocol + pitfalls |
 | [rebalancing.md](literature/rebalancing.md) | frequency/bands · diversification return (Booth-Fama, Willenbrock) · our M22 measurement: constant-mix vs buy-and-hold is not load-bearing |
 | [currency-hedging.md](literature/currency-hedging.md) | Campbell-Serfaty-Viceira 2010 (safe-haven currencies = embedded hedges; hedge bonds, not necessarily equity) · our M24 unhedged-EUR re-statement · the hedged-half implementation sketch |
+| [factor-timing.md](literature/factor-timing.md) | the Asness-Arnott valuation-spread debate · why no factor timing enters the optimizer · the M9/M12 tie-in |
 
 ---
 

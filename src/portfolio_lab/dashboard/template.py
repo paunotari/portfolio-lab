@@ -203,6 +203,25 @@ details summary{cursor:pointer}
    <div class="card"><h2>Single-stock look-through <span class="muted">(top-10 holdings only — lower bound)</span></h2>
      <div id="divstock" style="height:420px"></div></div>
  </section>
+
+ <section class="tab" id="t-opt">
+   <div class="card"><h2>Flagship portfolios <span class="muted">(precomputed by the optimizer pipeline — live sliders stay in the CLI)</span></h2>
+     <div class="muted">Each portfolio is <b>historically optimal under its stated priorities — not a
+       forecast</b>. Pick one to see its weights and, where available, which sleeves actually paid its
+       out-of-sample return. Full method &amp; charts: <span class="num">REPORT_optimizer.md</span> ·
+       <span class="num">optimizer_viz.html</span>; custom runs:
+       <span class="num">python -m portfolio_lab.portfolio.optimizer --return 5 --risk 5 --div 5</span>.</div>
+     <select id="optsel" style="margin-top:10px"></select>
+     <div id="optmetrics" style="margin-top:10px"></div>
+     <div id="optw" style="height:380px"></div>
+     <div id="optattr" class="muted"></div></div>
+   <div class="card"><h2>The honesty table <span class="muted">(walk-forward out of sample, net of costs)</span></h2>
+     <div class="muted">Expanding window, annual refits, everything re-estimated on training data only.
+       Δ and p vs 1/N from the Ledoit-Wolf (2008) block bootstrap — <b>no contestant beats equal weight
+       significantly at 5%</b>; red rows are significantly <i>worse</i>. DSR = deflated Sharpe
+       (multiplicity-adjusted P(true Sharpe &gt; 0)).</div>
+     <div id="opttbl" style="margin-top:10px;overflow-x:auto"></div></div>
+ </section>
 </main>
 <script>const DATA=__DATA__;</script>
 <script>__JS__</script>
@@ -225,7 +244,9 @@ const SORDER=Object.keys(SCOLOR);
 
 // header
 const allDates=DATA.levels.dates;
-$('#sub').textContent=`${allDates[0]} → ${allDates[allDates.length-1]} · ${DATA.indices.length} indices · 7 regions × 4 factor types · monthly net USD`;
+const _serNames=Object.keys(DATA.levels.series);
+const _nRegions=new Set(_serNames.map(s=>s.split(' | ')[0])).size;
+$('#sub').textContent=`${allDates[0]} → ${allDates[allDates.length-1]} · ${_serNames.length} index series · ${_nRegions} regions × 4 factor types · monthly net USD`;
 
 // header chip + regime ribbon: the product's thesis (regimes over time) as the identity mark
 if(DATA.macro_state){
@@ -238,7 +259,8 @@ if(DATA.macro_state){
 
 // nav/tabs
 const TABS=[['perf','Performance'],['fvr','Factor vs Reference'],['reg','Regimes'],
-  ['corr','Correlations'],['macro','Macro'],['state','Macro State'],['div','Diversification']];
+  ['corr','Correlations'],['macro','Macro'],['state','Macro State'],['div','Diversification'],
+  ['opt','Optimizer']];
 const nav=$('#nav');
 TABS.forEach(([id,label],i)=>{const b=document.createElement('button');b.textContent=label;
   b.onclick=()=>show(id,b);if(i==0)b.classList.add('on');nav.appendChild(b);});
@@ -878,4 +900,65 @@ function recompute(){
      +`<div class="muted">Window: ${perf.start} → ${perf.end} (${perf.months} months)</div>`;
 }
 buildInputs();recompute();
+
+// ---------- Optimizer tab (3c viewer: precomputed flagships + the honesty table) ----------
+(function(){
+ const O=DATA.optimizer;
+ if(!O){ $('#t-opt').innerHTML='<div class="card"><h2>Optimizer</h2><div class="muted">No '
+   +'optimizer outputs found — run the pipeline first.</div></div>'; return; }
+ const names=Object.keys(O.portfolios);
+ const sel=$('#optsel');
+ names.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;
+   sel.appendChild(o);});
+ const wfByName=n=>{ const m=O.walkforward.find(r=>r.portfolio===n); if(m) return m;
+   if(n.startsWith('Maximin (all-weather'))
+     return O.walkforward.find(r=>r.portfolio.startsWith('Maximin (all-weather'));
+   return null; };
+ const attrByName=n=>{ if(!O.attribution) return null;
+   if(O.attribution[n]) return O.attribution[n];
+   if(n.startsWith('Maximin (all-weather'))
+     return O.attribution['Maximin (all-weather div)']||null;
+   return null; };
+ function draw(name){
+   const rows=[...O.portfolios[name]].sort((a,b)=>b.w-a.w);
+   Plotly.newPlot('optw',[{y:rows.map(r=>r.series.replace(' | ',' · ')),x:rows.map(r=>r.w),
+     type:'bar',orientation:'h',marker:{color:'#3B6FD4'},
+     hovertemplate:'%{y}: %{x:.1%}<extra></extra>'}],
+    {paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)',
+     font:{family:'Instrument Sans, sans-serif',size:12},
+     xaxis:{tickformat:'.0%',gridcolor:'#ECECF1'},yaxis:{automargin:true,autorange:'reversed'},
+     margin:{l:10,r:20,t:10,b:40}},{displayModeBar:false,responsive:true});
+   const m=wfByName(name);
+   $('#optmetrics').innerHTML = m
+     ? `<div class="metric">OOS Sharpe <b>${m.oos_sharpe_rf0.toFixed(2)}</b></div>`
+      +`<div class="metric">OOS CAGR <b>${pct(m.oos_CAGR)}</b></div>`
+      +`<div class="metric">Vol <b>${pct(m.oos_ann_vol)}</b></div>`
+      +`<div class="metric">Max drawdown <b>${pct(m.oos_max_drawdown)}</b></div>`
+     : '<div class="muted">Full-sample flagship — its closest walk-forward twin is in the '
+       +'honesty table below.</div>';
+   const at=attrByName(name);
+   $('#optattr').innerHTML = at
+     ? 'Where its out-of-sample return came from: '+at.slice(0,3)
+        .map(a=>`${a.series.replace(' | ',' · ')} <b>${Math.round(a.share*100)}%</b>`)
+        .join(' · ')
+     : '';
+ }
+ sel.onchange=()=>draw(sel.value); draw(names[0]);
+ const inf=O.inference||{};
+ const rows=[...O.walkforward].sort((a,b)=>b.oos_sharpe_rf0-a.oos_sharpe_rf0);
+ let h='<table><thead><tr><th>portfolio</th><th>OOS Sharpe</th><th>CAGR</th><th>vol</th>'
+   +'<th>maxDD</th><th>turnover/refit</th><th>Δ vs 1/N (ann)</th><th>p (bootstrap)</th>'
+   +'<th>DSR</th></tr></thead><tbody>';
+ rows.forEach(r=>{const i=inf[r.portfolio]||{};
+   const sig=i.p!=null&&i.p<0.05&&i.d!=null&&i.d<0;
+   h+=`<tr${sig?' style="color:#C94F4F"':''}><td>${r.portfolio}</td>`
+     +`<td>${r.oos_sharpe_rf0.toFixed(2)}</td><td>${pct(r.oos_CAGR)}</td>`
+     +`<td>${pct(r.oos_ann_vol)}</td><td>${pct(r.oos_max_drawdown)}</td>`
+     +`<td>${pct(r.mean_turnover_per_refit)}</td>`
+     +`<td>${i.d==null?'—':(i.d>0?'+':'')+i.d.toFixed(2)}</td>`
+     +`<td>${i.p==null?'—':i.p.toFixed(3)}</td>`
+     +`<td>${i.dsr==null?'—':i.dsr.toFixed(3)}</td></tr>`;});
+ h+='</tbody></table>';
+ $('#opttbl').innerHTML=h;
+})();
 """
