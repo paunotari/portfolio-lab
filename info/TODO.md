@@ -107,13 +107,22 @@ Check items off as completed. Add new ones as they come up; keep entries short a
 - [ ] **Statistical significance for Sharpe differences** — Ledoit & Wolf (2008) bootstrap
       test for Sharpe equality (+ deflated Sharpe / López de Prado's PBO as overfitting
       checks). Without this, no referee reads past the tables.
-- [ ] **Exposure-robustness of the walk-forward verdicts** (motivated by M12 — the equity
-      maximin's OOS record is ~an EM ride). Promote the ad-hoc M12 decomposition into a
-      standing validation-report section: (a) sub-period OOS Sharpe split (pre/post-2024 or
-      rolling 5y), (b) per-contestant correlation with each region Reference, (c)
-      **leave-one-region-out walk-forward** (drop EM sleeves, re-run — does each contestant's
-      rank survive?), (d) OOS return attribution by sleeve. A rule only gets credit if its
-      edge survives removing its favorite region.
+- [x] **Exposure-robustness of the walk-forward verdicts — BUILT 2026-07-19** (motivated by
+      M12). (a) half-sample Sharpe split + (b) rolling-36m beats-1/N share + per-region
+      Reference correlations are now a standing section of `REPORT_optimizer.md`
+      (`validation.exposure_diagnostics`, `optimizer_exposure.csv`); (c) leave-one-region-out
+      walk-forward via `python -m portfolio_lab.portfolio.validation --loro`
+      (`REPORT_exposure_robustness.md`). First read: min-var 100% / ERC 99% / HRP 98% of
+      rolling windows beat 1/N; equity maximin 33%, momentum 36%.
+  - [ ] (d) OOS return attribution by sleeve — needs storing per-refit weights in the
+        walk-forward; deferred.
+  - [ ] **Anchor REGIONAL per-quadrant means** (M13 follow-up, paper-relevant): the M10
+        long-history anchor disciplines factor cells (FF β-mapping) but not regional premia —
+        LORO showed the undisciplined EM cells are exactly where the maximin got hurt
+        (dropping EM improved every variant; all-weather 0.93→1.18). Candidate: shrink each
+        region's Reference per-quadrant mean toward the long-history MARKET factor's quadrant
+        mean (same agree-gate, months-weighted), or toward the cross-region pooled mean.
+        Measure like M10: every maximin variant, net OOS Sharpe, before/after.
 - [ ] **A third universe** (international FF portfolios from the same Ken French library —
       Europe/Japan/Asia-Pacific factor portfolios, free) so the estimator's OOS gain is shown
       on data it never touched during development.

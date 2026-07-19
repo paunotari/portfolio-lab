@@ -393,6 +393,45 @@ def test_vol_managed_is_causal_and_derisks():
     assert (extra >= 0).all(), "turnover is non-negative"
 
 
+def test_exposure_diagnostics_bounds():
+    if not (C.LEVELS_WIDE.exists() and C.OPTIMIZER_WALKFORWARD_RETURNS.exists()):
+        return
+    import pandas as pd
+    from portfolio_lab.portfolio.validation import exposure_diagnostics
+    monthly = pd.read_csv(C.OPTIMIZER_WALKFORWARD_RETURNS, index_col=0, parse_dates=True)
+    expo = exposure_diagnostics(monthly)
+    assert len(expo) == monthly.shape[1]
+    corr_cols = [c for c in expo.columns if c.startswith("corr_")]
+    assert corr_cols, "no region-Reference correlation columns"
+    for c in corr_cols:
+        v = expo[c].dropna()
+        assert ((v >= -1) & (v <= 1)).all(), f"{c}: correlation out of bounds"
+    roll = next(c for c in expo.columns if c.startswith("beats_1N_roll"))
+    v = expo[roll].dropna()
+    assert ((v >= 0) & (v <= 1)).all(), "beats-1/N share out of [0,1]"
+    # 1/N against itself is undefined, not 100%
+    assert expo.set_index("portfolio")[roll].isna()["1/N"]
+
+
+def test_walkforward_drop_region():
+    if not (C.LEVELS_WIDE.exists() and C.MACRO_STATE_MONTHLY.exists()):
+        return
+    from portfolio_lab.portfolio import optimizer as opt
+    from portfolio_lab.portfolio.validation import _drop_region, walk_forward
+    full = opt.load_returns()
+    try:
+        _drop_region(full, "Atlantis")
+        assert False, "unknown region should raise"
+    except ValueError:
+        pass
+    n_em = sum(c.split(" | ")[0] == "EM" for c in full.columns)
+    assert n_em > 0
+    summary, meta, _ = walk_forward(n_starts=2, drop_region="EM")
+    assert meta["dropped_region"] == "EM"
+    assert meta["n_series"] == full.shape[1] - n_em
+    assert len(summary) > 0 and summary.oos_sharpe_rf0.notna().all()
+
+
 def test_walkforward_reports_gross_and_net_and_rules():
     if not (C.LEVELS_WIDE.exists() and C.MACRO_STATE_MONTHLY.exists()):
         return

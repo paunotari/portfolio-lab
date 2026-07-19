@@ -168,3 +168,24 @@ one-liner; promotion to a standing report section is a TODO (sub-period + leave-
 **Data:** cached walk-forward OOS returns (2009-01..2026-06, net of costs).
 **Status:** descriptive decomposition of OOS results; not yet a significance test (that is
 paper-track item 1).
+
+## M13 — LORO verdict: the podium is method, not region — and EM was a net DRAG on maximin
+**Claim:** the leave-one-region-out walk-forward (9 full re-runs, one per dropped region)
+shows the top ranks survive every drop: min-variance is #1 in 8/9 menus (#2 only without EM,
+at an unchanged 1.03), the all-weather flagship never leaves the podium, HRP/ERC stay
+mid-table above 1/N in every menu, and no overlay/momentum contestant beats 1/N anywhere.
+**The correction to M12's narrative:** dropping EM does not hurt the maximin family — it
+IMPROVES every variant (all-weather 0.93→**1.18, taking #1**; equity maximin 0.84→0.94;
+worst-quadrant 0.71→1.00). EM exposure was a net OOS drag 2009–2026 (2009-23 losses larger
+than the 2024+ rally gains); the maximin objective's flaw is that modern per-quadrant means
+systematically ATTRACT it into EM corners. M12 (period effect on the full-period Sharpe)
+stands; "it rode EM to a good number" does not — it paid for EM, then the rally repaid part.
+**Estimator gap exposed (paper-relevant):** the M10 long-history anchor disciplines FACTOR
+cells via Fama-French β-mapping, but REGIONAL means (EM's premium) have no anchor — the
+undisciplined cell is exactly where the objective got hurt. Candidate refinement recorded in
+TODO (paper track).
+**See:** `REPORT_exposure_robustness.md` (full 11×9 Sharpe/rank matrix) · `optimizer_loro.csv`.
+**Code:** `portfolio/validation.py::leave_one_region_out` (CLI `--loro`), `_drop_region`,
+`exposure_diagnostics` (standing report section + `optimizer_exposure.csv`).
+**Data:** MSCI 28-sleeve menu + proxies, net of 10 bps. **Status:** OOS modern (walk-forward
+protocol, training-only estimation, same warmup/refit/costs as the honesty table).

@@ -23,9 +23,20 @@ Honesty caveats, stated not hidden:
 - The all-weather contestant's data tail can be 1-2 months shorter than the equity menu's
   (proxy sources lag) — its stats cover its own months.
 
-Run:  python -m portfolio_lab.portfolio.validation
+Exposure robustness (MILESTONES M12 — "a method only gets credit if its edge survives
+removing its favorite region"): `exposure_diagnostics()` decomposes each contestant's OOS
+record (half-sample Sharpe split, rolling beats-1/N share, correlation with each region's
+Reference) and runs on every pipeline build; `leave_one_region_out()` re-runs the whole
+walk-forward dropping one region's sleeves at a time (expensive — CLI only, like A2's
+`--dispersion`).
+
+Run:  python -m portfolio_lab.portfolio.validation            # the walk-forward table
+      python -m portfolio_lab.portfolio.validation --loro     # leave-one-region-out sweep
+      python -m portfolio_lab.portfolio.validation --loro EM USA   # only these regions
 """
 from __future__ import annotations
+import argparse
+
 import numpy as np
 import pandas as pd
 
@@ -57,17 +68,30 @@ def _contestants(inp: dict, n_starts: int, seed: int) -> dict:
     return out
 
 
+def _drop_region(rets: pd.DataFrame, region: str) -> pd.DataFrame:
+    """Remove every sleeve of one region (column labels are '<region> | <factor>')."""
+    keep = [c for c in rets.columns if c.split(" | ")[0] != region]
+    if len(keep) == len(rets.columns):
+        raise ValueError(f"no sleeves matched region {region!r} "
+                         f"(have: {sorted({c.split(' | ')[0] for c in rets.columns})})")
+    return rets[keep]
+
+
 def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
-                 seed: int = None) -> tuple[pd.DataFrame, dict, pd.DataFrame]:
+                 seed: int = None, drop_region: str = None
+                 ) -> tuple[pd.DataFrame, dict, pd.DataFrame]:
     """Expanding-window backtest. Returns (summary DataFrame, meta dict, monthly OOS returns
     DataFrame — one column per contestant, used by portfolio/visualize.py for the cumulative
-    comparison curves)."""
+    comparison curves). drop_region: run on the menu WITHOUT that region's sleeves (the
+    leave-one-region-out probe — M12)."""
     warmup = warmup or C.OPTIMIZER_WF_WARMUP_MONTHS
     refit = refit or C.OPTIMIZER_WF_REFIT_MONTHS
     n_starts = n_starts or C.OPTIMIZER_WF_N_STARTS
     seed = C.OPTIMIZER_SEED if seed is None else seed
 
     rets = opt.load_returns()
+    if drop_region is not None:
+        rets = _drop_region(rets, drop_region)
     T = len(rets)
     if T <= warmup + refit:
         raise ValueError(f"not enough history for walk-forward (T={T}, warmup={warmup})")
@@ -79,6 +103,8 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
     rets_aw = None
     if C.ASSET_CLASS_MONTHLY.exists():
         aw = opt.load_returns(include_asset_classes=True)
+        if drop_region is not None:
+            aw = _drop_region(aw, drop_region)
         if aw.shape[1] > rets.shape[1]:                     # proxies actually joined
             rets_aw = aw
 
@@ -147,8 +173,109 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
     summary = pd.DataFrame(rows).sort_values("oos_sharpe_rf0", ascending=False)
     meta = dict(warmup_months=warmup, refit_months=refit, n_refits=len(refit_dates),
                 oos_start=str(oos_index[0].date()), oos_end=str(oos_index[-1].date()),
-                oos_months=len(oos_index), tc_bps=C.OPTIMIZER_TC_BPS)
+                oos_months=len(oos_index), tc_bps=C.OPTIMIZER_TC_BPS,
+                n_series=rets.shape[1], dropped_region=drop_region)
     return summary, meta, pd.DataFrame(monthly)
+
+
+# ------------------------------------------------- exposure robustness (MILESTONES M12)
+
+def _ann_sharpe(x: pd.Series) -> float:
+    x = x.dropna()
+    return float(x.mean() / x.std() * np.sqrt(12)) if len(x) > 1 and x.std() > 0 else np.nan
+
+
+def exposure_diagnostics(monthly: pd.DataFrame, roll: int = 36) -> pd.DataFrame:
+    """Where does each contestant's OOS record come from? Three cheap reads per contestant:
+
+    - sharpe_h1 / sharpe_h2: OOS Sharpe in the first vs second half of the OOS period. An
+      edge that only exists in one half is a period effect, not a property of the method
+      (M12: the equity maximin was 1/N-like pre-2024 and got lifted by the EM rally).
+    - beats_1N_roll{roll}: share of rolling windows where the contestant's Sharpe beats
+      1/N's on the SAME months — the A2 window-robustness metric, applied to OOS returns.
+    - corr_<region>: correlation with each region Reference's returns. A high number says
+      the record is that market's beta wearing a method's name; the CSV keeps every region,
+      the report shows the largest.
+    """
+    lv = pd.read_csv(C.LEVELS_WIDE, index_col=0, parse_dates=True).sort_index()
+    refs = {c.split(" | ")[0]: lv[c].pct_change()
+            for c in lv.columns if c.split(" | ")[1] == "Reference"}
+    rows = []
+    for name in monthly.columns:
+        x = monthly[name].dropna()
+        half = len(x) // 2
+        row = dict(portfolio=name,
+                   sharpe_h1=_ann_sharpe(x.iloc[:half]), sharpe_h2=_ann_sharpe(x.iloc[half:]))
+        if "1/N" in monthly.columns and name != "1/N":
+            both = pd.concat([x, monthly["1/N"]], axis=1, join="inner").dropna()
+            rs = both.rolling(roll).apply(lambda w: w.mean() / w.std() if w.std() > 0 else np.nan)
+            valid = rs.dropna()
+            row[f"beats_1N_roll{roll}"] = (float((valid.iloc[:, 0] > valid.iloc[:, 1]).mean())
+                                           if len(valid) else np.nan)
+        else:
+            row[f"beats_1N_roll{roll}"] = np.nan
+        for region, ref in refs.items():
+            row[f"corr_{region}"] = float(x.corr(ref.reindex(x.index)))
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
+def leave_one_region_out(regions: list[str] = None, n_starts: int = None) -> pd.DataFrame:
+    """Re-run the walk-forward once per dropped region (default: every equity region on the
+    menu). A contestant only gets credit for its OOS rank if the rank survives losing its
+    favorite region — the direct answer to M12. Writes optimizer_loro.csv and
+    REPORT_exposure_robustness.md; expensive (one full walk-forward per region), so this is
+    a CLI mode, not a pipeline stage."""
+    C.ensure_dirs()
+    menu_regions = sorted({c.split(" | ")[0] for c in opt.load_returns().columns})
+    regions = regions or menu_regions
+    runs = {}
+    for reg in [None] + list(regions):
+        label = reg or "none"
+        print(f"[validation] leave-one-region-out: dropping {label} ...")
+        summary, meta, _ = walk_forward(n_starts=n_starts, drop_region=reg)
+        s = summary.reset_index(drop=True)
+        s["rank"] = s.index + 1
+        s["dropped_region"] = label
+        runs[label] = s
+    long = pd.concat(runs.values(), ignore_index=True)
+    long.to_csv(C.OPTIMIZER_LORO, index=False)
+    _write_loro_report(runs, regions)
+    print(f"[validation] wrote {C.OPTIMIZER_LORO} and {C.OPTIMIZER_LORO_REPORT}")
+    return long
+
+
+def _write_loro_report(runs: dict, regions: list[str]):
+    base = runs["none"].set_index("portfolio")
+    L = ["# Exposure robustness — leave-one-region-out walk-forward", "",
+         "Motivation (MILESTONES M12): the equity maximin's full-period OOS Sharpe was largely "
+         "its EM exposure meeting the 2024+ EM rally. This table re-runs the ENTIRE walk-forward "
+         "with each region's sleeves removed from the menu: a method whose rank collapses "
+         "without one region was riding that region, not adding skill. Same protocol as the "
+         "main honesty table (expanding window, training-only estimation, net of costs).", ""]
+    cols = ["none"] + list(regions)
+    L += ["| portfolio | " + " | ".join(f"drop {c}" if c != "none" else "full menu"
+                                        for c in cols) + " |",
+          "|" + "---|" * (len(cols) + 1)]
+    for p in base.index:
+        cells = []
+        for c in cols:
+            s = runs[c].set_index("portfolio")
+            cells.append(f"{s.loc[p, 'oos_sharpe_rf0']:.2f} (#{int(s.loc[p, 'rank'])})"
+                         if p in s.index else "—")
+        L.append(f"| {p} | " + " | ".join(cells) + " |")
+    L += ["", "Cells: net OOS Sharpe (rank in that run). '—': contestant not available on "
+          "that menu.", ""]
+    # verdict: worst rank slip per contestant across drops
+    L += ["## Verdict — worst rank slip per contestant", ""]
+    for p in base.index:
+        ranks = [int(runs[c].set_index("portfolio").loc[p, "rank"])
+                 for c in cols if p in runs[c].set_index("portfolio").index]
+        L.append(f"- **{p}**: rank #{ranks[0]} on the full menu, worst #{max(ranks)} across "
+                 f"drops (best #{min(ranks)}).")
+    L += ["", "_A rank that survives every drop is a property of the method; a rank that "
+          "collapses on one drop was that region's beta._", ""]
+    C.OPTIMIZER_LORO_REPORT.write_text("\n".join(L))
 
 
 def run():
@@ -156,6 +283,8 @@ def run():
     summary, meta, monthly = walk_forward()
     summary.to_csv(C.OPTIMIZER_WALKFORWARD, index=False)
     monthly.to_csv(C.OPTIMIZER_WALKFORWARD_RETURNS)
+    expo = exposure_diagnostics(monthly)
+    expo.to_csv(C.OPTIMIZER_EXPOSURE, index=False)
     print(f"[validation] walk-forward: {meta['n_refits']} refits, OOS "
           f"{meta['oos_start']} -> {meta['oos_end']} ({meta['oos_months']} months)")
     print(summary.to_string(index=False))
@@ -163,4 +292,11 @@ def run():
 
 
 if __name__ == "__main__":
-    run()
+    ap = argparse.ArgumentParser(description="Walk-forward OOS validation")
+    ap.add_argument("--loro", nargs="*", metavar="REGION", default=None,
+                    help="leave-one-region-out sweep (no args = every equity region)")
+    args = ap.parse_args()
+    if args.loro is not None:
+        leave_one_region_out(args.loro or None)
+    else:
+        run()

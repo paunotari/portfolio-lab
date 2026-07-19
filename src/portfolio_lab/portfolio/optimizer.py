@@ -746,17 +746,19 @@ def run():
             if uni_ext and set(full_w) <= set(uni_ext["series"]):
                 cones[name] = portfolio_cone(full_w, uni=uni_ext)
 
-    from portfolio_lab.portfolio.validation import walk_forward
+    from portfolio_lab.portfolio.validation import exposure_diagnostics, walk_forward
     wf_summary, wf_meta, wf_monthly = walk_forward()
     wf_summary.to_csv(C.OPTIMIZER_WALKFORWARD, index=False)
     wf_monthly.to_csv(C.OPTIMIZER_WALKFORWARD_RETURNS)   # cached for portfolio/visualize.py
+    wf_expo = exposure_diagnostics(wf_monthly)
+    wf_expo.to_csv(C.OPTIMIZER_EXPOSURE, index=False)
 
     profiles = run_profiles(inp)
 
     rows = [dict(portfolio=name, series=s, weight=w)
             for name, res in portfolios.items() for s, w in res["weights"].items()]
     pd.DataFrame(rows).to_csv(C.OPTIMIZER_PORTFOLIOS, index=False)
-    _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta, profiles)
+    _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta, profiles, wf_expo)
     print(f"[optimizer] wrote {C.OPTIMIZER_REPORT} and {C.OPTIMIZER_PORTFOLIOS}")
 
 
@@ -768,7 +770,8 @@ def _md_table(df: pd.DataFrame, fmts: dict) -> list[str]:
     return lines
 
 
-def _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta, profiles=None):
+def _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta, profiles=None,
+                  wf_expo=None):
     rets = inp["rets"]
     L = ["# Portfolio optimizer — default report", ""]
     L += [f"Common window **{rets.index[0].date()} → {rets.index[-1].date()}** "
@@ -851,6 +854,25 @@ def _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta, profiles=N
                                 "oos_sharpe_rf0": "{:.2f}", "oos_max_drawdown": "{:.1%}",
                                 "oos_sharpe_gross": "{:.2f}",
                                 "mean_turnover_per_refit": "{:.1%}"})
+    if wf_expo is not None and len(wf_expo):
+        corr_cols = [c for c in wf_expo.columns if c.startswith("corr_")]
+        roll_col = next(c for c in wf_expo.columns if c.startswith("beats_1N_roll"))
+        show = wf_expo[["portfolio", "sharpe_h1", "sharpe_h2"]].copy()
+        show[roll_col] = ["—" if pd.isna(v) else f"{v:.0%}" for v in wf_expo[roll_col]]
+        top = wf_expo[corr_cols].astype(float)
+        show["highest ref corr"] = [
+            f"{row.idxmax().removeprefix('corr_')} {row.max():.2f}"
+            for _, row in top.iterrows()]
+        L += ["", "### Where the OOS record comes from (exposure diagnostics — MILESTONES M12)", ""]
+        L += ["A full-period OOS Sharpe can hide a period effect: the equity maximin was "
+              "1/N-like before 2024 and got lifted by the EM rally its caps happened to hold. "
+              "Per contestant: Sharpe in each OOS half, share of rolling 36m windows beating "
+              "1/N on the same months, and the region Reference its returns track most "
+              "closely (full correlation matrix in `optimizer_exposure.csv`). An edge that "
+              "lives in one half or one region's beta is not method skill. Deeper probe: "
+              "`python -m portfolio_lab.portfolio.validation --loro` re-runs this table with "
+              "each region removed (`REPORT_exposure_robustness.md`).", ""]
+        L += _md_table(show, {"sharpe_h1": "{:.2f}", "sharpe_h2": "{:.2f}"})
     best = wf_summary.iloc[0].portfolio
     L += ["", f"Out of sample and net of costs, **{best}** had the best risk-adjusted result. "
           "As of the 2026-07 rule test, no momentum or volatility-targeting overlay beat it — "
