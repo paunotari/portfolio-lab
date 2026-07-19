@@ -222,6 +222,24 @@ FF_PORTFOLIO_RENAME = {
     "SMALL HiBM": "Proxy | Small Value", "BIG LoBM": "Proxy | Big Growth",
     "ME2 BM2": "Proxy | Big Neutral", "BIG HiBM": "Proxy | Big Value",
 }
+# FF INTERNATIONAL portfolios (ingest/ff_international.py + portfolio/ff_intl_test.py): the
+# VIRGIN CONFIRMATORY UNIVERSE for the frozen estimator (paper track item 2, MILESTONES M16).
+# Never downloaded or inspected during estimator development. 3 developed regions x
+# (market Reference + long-only Value + long-only Momentum sleeves), USD, monthly, 1990-07+.
+FF_INTL_BASE = "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/{}_CSV.zip"
+FF_INTL_REGIONS = {          # display region -> Ken French file prefix
+    "FF Europe": "Europe", "FF Japan": "Japan", "FF Asia-Pacific": "Asia_Pacific_ex_Japan",
+}
+FF_INTL_MONTHLY = PROCESSED_DIR / "ff_intl_monthly.csv"
+FF_INTL_DIR = ANALYTICS_DIR / "ff_intl"
+FF_INTL_REPORT = FF_INTL_DIR / "REPORT_ff_intl.md"
+FF_INTL_AB = FF_INTL_DIR / "ff_intl_ab.csv"
+FF_INTL_INFERENCE = FF_INTL_DIR / "ff_intl_inference.csv"
+
+# A/B instrument for the confirmatory test ONLY: False disables ALL long-history anchoring
+# (views + objectives) so "estimator off" is measurable. Product default stays True.
+OPTIMIZER_ANCHOR_LONG = True
+
 LONG_HISTORY_DIR = ANALYTICS_DIR / "long_history"
 LONG_HISTORY_CSV = LONG_HISTORY_DIR / "long_history_factor_states.csv"
 LONG_HISTORY_REPORT = LONG_HISTORY_DIR / "REPORT_long_history.md"
@@ -290,7 +308,7 @@ def ensure_dirs() -> None:
     """Create all writable output directories if missing (idempotent)."""
     for d in (PROCESSED_DIR, ANALYTICS_DIR, CORR_REGIME_DIR, DIVERSIFICATION_DIR,
               MACRO_ANALYTICS_DIR, MACRO_CORR_BY_REGIME_DIR, MACRO_STATE_DIR, SCENARIO_DIR,
-              OPTIMIZER_DIR, LONG_HISTORY_DIR, PROXY_BACKTEST_DIR, STRESS_DIR):
+              OPTIMIZER_DIR, LONG_HISTORY_DIR, PROXY_BACKTEST_DIR, STRESS_DIR, FF_INTL_DIR):
         d.mkdir(parents=True, exist_ok=True)
 
 

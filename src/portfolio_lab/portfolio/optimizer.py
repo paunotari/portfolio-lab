@@ -169,10 +169,20 @@ def _factor_matrix(series: list[str]) -> tuple[np.ndarray, list[str]]:
 
 
 def _load_states(index: pd.DatetimeIndex = None) -> pd.DataFrame | None:
-    """Monthly macro-state labels + soft probabilities, or None when macro outputs are absent."""
+    """Monthly macro-state labels + soft probabilities, or None when macro outputs are absent.
+
+    The pipeline CSV is clipped to the MSCI return history (1997+, caveat #13). A universe
+    whose months start earlier (the FF-international confirmatory test, 1990+) gets the SAME
+    classifier over its longer classifiable window (identical labels on the overlap)."""
     if not C.MACRO_STATE_MONTHLY.exists():
         return None
     states = pd.read_csv(C.MACRO_STATE_MONTHLY, index_col=0, parse_dates=True).sort_index()
+    if index is not None and len(index) and index.min() < states.index.min():
+        try:
+            from portfolio_lab.analytics.macro_state import classify_states
+            states = classify_states(start="1926-01-01")
+        except Exception as e:
+            print(f"[optimizer] WARN long-window states unavailable ({e}) — using the CSV")
     return states.reindex(index).dropna(subset=["state"]) if index is not None else states
 
 
@@ -274,7 +284,9 @@ def build_inputs(rets: pd.DataFrame = None, include_asset_classes: bool = False)
         outlook = quadrant_outlook(states, trans)
         try:                                    # 66y FF prior for the views (optional, clipped
             from portfolio_lab.analytics.long_history import msci_factor_prior   # to rets end)
-            long_prior = msci_factor_prior(rets)
+            # OPTIMIZER_ANCHOR_LONG=False is the A/B instrument for the confirmatory test
+            # (M16): the whole estimator (views + objective anchoring) off, modern-only inputs
+            long_prior = msci_factor_prior(rets) if C.OPTIMIZER_ANCHOR_LONG else None
         except Exception as e:
             print(f"[optimizer] WARN long-history prior unavailable ({e}) — modern-only views")
             long_prior = None
@@ -288,7 +300,7 @@ def build_inputs(rets: pd.DataFrame = None, include_asset_classes: bool = False)
         mu_q_obj = mu_q
         try:
             asset_prior = None
-            if any(c.startswith("Asset | ") for c in series):
+            if C.OPTIMIZER_ANCHOR_LONG and any(c.startswith("Asset | ") for c in series):
                 from portfolio_lab.analytics.long_history import asset_class_prior
                 asset_prior = asset_class_prior(rets)
             mkt_prior = None

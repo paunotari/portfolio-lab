@@ -78,18 +78,22 @@ def _drop_region(rets: pd.DataFrame, region: str) -> pd.DataFrame:
 
 
 def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
-                 seed: int = None, drop_region: str = None
+                 seed: int = None, drop_region: str = None, rets: pd.DataFrame = None
                  ) -> tuple[pd.DataFrame, dict, pd.DataFrame]:
-    """Expanding-window backtest. Returns (summary DataFrame, meta dict, monthly OOS returns
+    """Expanding-window backtest. Returns (summary DataFrame, dict, monthly OOS returns
     DataFrame — one column per contestant, used by portfolio/visualize.py for the cumulative
     comparison curves). drop_region: run on the menu WITHOUT that region's sleeves (the
-    leave-one-region-out probe — M12)."""
+    leave-one-region-out probe — M12). rets: run on a CUSTOM returns universe instead of the
+    MSCI menu (the FF-international confirmatory test — M16); the all-weather contestant is
+    skipped there, its extended universe being MSCI-specific."""
     warmup = warmup or C.OPTIMIZER_WF_WARMUP_MONTHS
     refit = refit or C.OPTIMIZER_WF_REFIT_MONTHS
     n_starts = n_starts or C.OPTIMIZER_WF_N_STARTS
     seed = C.OPTIMIZER_SEED if seed is None else seed
 
-    rets = opt.load_returns()
+    custom_universe = rets is not None
+    if not custom_universe:
+        rets = opt.load_returns()
     if drop_region is not None:
         rets = _drop_region(rets, drop_region)
     T = len(rets)
@@ -101,7 +105,7 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
                   geo_cap=C.OPTIMIZER_GEO_CAP_PCT / 100.0,
                   factor_cap=C.OPTIMIZER_FACTOR_CAP_PCT / 100.0)
     rets_aw = None
-    if C.ASSET_CLASS_MONTHLY.exists():
+    if not custom_universe and C.ASSET_CLASS_MONTHLY.exists():
         aw = opt.load_returns(include_asset_classes=True)
         if drop_region is not None:
             aw = _drop_region(aw, drop_region)
