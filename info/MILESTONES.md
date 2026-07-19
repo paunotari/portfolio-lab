@@ -210,3 +210,25 @@ anchor instead of trusting estimated edges.
 same-Sharpe/different-Sharpe cases, scale-invariance and antisymmetry). **Data:** walk-forward
 net OOS monthly returns (2009-01..2026-06). **Status:** the test itself is the validation
 layer; remaining paper items: PBO (CSCV) and block-size sensitivity.
+
+## M15 — The regional anchor CANNOT bite, by the estimator's own rule (measured no-op)
+**Claim:** extending the M10 long-history anchor to REGIONAL per-quadrant means (each region
+Reference blended toward β_region · the FF market's 66y quadrant mean, same agree gate,
+month-weighted, factor excesses riding the anchored base) is a measured NO-OP for the equity
+maximin and slightly NEGATIVE for the all-weather: equity walk-forward results are IDENTICAL
+to 4 decimals (weights unchanged, floor quadrant unchanged), all-weather OOS Sharpe
+0.933→0.898 (vol 8.7→8.3%, maxDD −17.9→−19.8%). The mechanism works (cells move by up to
+0.8%/mo where the gate opens) — but the equity maximin's binding quadrant is Stagflation,
+**the market's one era-flipped cell (M4), so the agree gate correctly refuses the transfer
+exactly where discipline was wanted.** The estimator is self-limiting by design: where the
+eras disagree there is nothing transferable, and no anchoring variant can fix EM's corner
+attraction without breaking the gate principle. The EM problem's real mitigations remain the
+caps + the M12/M13 standing diagnostics. Default `OPTIMIZER_ANCHOR_REGIONAL = False`; the
+mechanism stays in the codebase behind the flag for reproducibility.
+**See:** A/B table in the 2026-07-19 session (reproducible: toggle the flag, re-run
+`walk_forward()`); scratch CSV regenerable in one command. **Code:**
+`analytics/long_history.py::market_prior` + `portfolio/optimizer.py::_anchor_mu_q` (two-pass)
++ `config.OPTIMIZER_ANCHOR_REGIONAL`; unit test `test_regional_anchor_mechanics`.
+**Data:** FF market total return 1960+ × macro states × MSCI menu. **Status:** OOS modern
+(walk-forward A/B, net of costs); negative result recorded per the honesty principle — for
+the paper this is the "we tried the obvious refinement and show why it cannot work" section.

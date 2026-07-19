@@ -192,15 +192,38 @@ def _state_mean_returns(rets: pd.DataFrame, states: pd.DataFrame,
 
 
 def _anchor_mu_q(mu_q: pd.DataFrame, long_prior: dict, asset_prior: dict,
-                 n_by_state: dict) -> pd.DataFrame:
+                 n_by_state: dict, mkt_prior: dict = None) -> pd.DataFrame:
     """Sleeve-level long-anchored per-quadrant means for the OBJECTIVES (mu_q_obj).
 
-    Same rule the BL views use (agree-only, month-weighted), now applied to the maximin /
-    regime-row input itself: factor sleeves blend their modern EXCESS over their region's
-    Reference toward beta*f_long; proxy sleeves blend their own mean toward their 1962+
-    per-quadrant mean. Reference/Quality sleeves and disagreeing cells stay modern — shrink
-    toward a century of evidence, never replace it blindly."""
+    Same rule the BL views use (agree-only, month-weighted), applied in TWO passes:
+
+    Pass 1 — REGIONAL base (M13 follow-up): each region Reference's per-quadrant mean is
+    blended toward beta_region * the FF market's 66y quadrant mean, where the market's own
+    eras agree on the sign. LORO showed the undisciplined regional cells (EM's corners) are
+    exactly where the maximin got hurt; this is the discipline. The correction is remembered
+    per (state, region) so every equity sleeve of the region shares its regional base.
+
+    Pass 2 — sleeves: factor sleeves with an agreeing FF prior take the ANCHORED reference
+    plus their blended excess (beta*f_long rule, as before); factor sleeves without a prior
+    (Quality) or with disagreeing cells keep their MODERN excess on top of the anchored
+    regional base; proxy sleeves blend toward their own 1962+ means (cash excluded on
+    principle). Shrink toward a century of evidence, never replace it blindly."""
     mu = mu_q.copy()
+    reg_delta = {}                       # (state, region) -> anchored_ref - modern_ref
+    if mkt_prior:
+        for state in mu.index:
+            n_mod = int(n_by_state.get(state, 0))
+            for col in mu.columns:
+                region, label = col.split(" | ", 1)
+                if label != "Reference" or region not in mkt_prior:
+                    continue
+                st = mkt_prior[region]["states"].get(state)
+                if st and st["agree"]:
+                    anchored = ((n_mod * mu_q.loc[state, col]
+                                 + st["n_long"] * st["long_mean"])
+                                / (n_mod + st["n_long"]))
+                    reg_delta[(state, region)] = float(anchored - mu_q.loc[state, col])
+                    mu.loc[state, col] = anchored
     for state in mu.index:
         n_mod = int(n_by_state.get(state, 0))
         for col in mu.columns:
@@ -211,16 +234,18 @@ def _anchor_mu_q(mu_q: pd.DataFrame, long_prior: dict, asset_prior: dict,
                     mu.loc[state, col] = ((n_mod * mu_q.loc[state, col]
                                            + st["n_long"] * st["long_mean"])
                                           / (n_mod + st["n_long"]))
-            elif long_prior and label in long_prior:
+            elif label != "Reference" and region != "Asset":
                 ref = f"{region} | Reference"
-                if ref not in mu.columns:
-                    continue
-                st = long_prior[label]["states"].get(state)
-                if st and st["agree"]:
+                st = (long_prior.get(label) or {}).get("states", {}).get(state) \
+                    if long_prior else None
+                if st and st["agree"] and ref in mu.columns:
                     e_mod = float(mu_q.loc[state, col] - mu_q.loc[state, ref])
                     e = ((n_mod * e_mod + st["n_long"] * st["long_diff"])
                          / (n_mod + st["n_long"]))
-                    mu.loc[state, col] = float(mu_q.loc[state, ref]) + e
+                    mu.loc[state, col] = float(mu.loc[state, ref]) + e
+                else:                    # modern excess on the anchored regional base
+                    mu.loc[state, col] = (float(mu_q.loc[state, col])
+                                          + reg_delta.get((state, region), 0.0))
     return mu
 
 
@@ -266,9 +291,14 @@ def build_inputs(rets: pd.DataFrame = None, include_asset_classes: bool = False)
             if any(c.startswith("Asset | ") for c in series):
                 from portfolio_lab.analytics.long_history import asset_class_prior
                 asset_prior = asset_class_prior(rets)
-            if long_prior or asset_prior:
+            mkt_prior = None
+            if C.OPTIMIZER_ANCHOR_REGIONAL:            # M13 follow-up: regional base anchor
+                from portfolio_lab.analytics.long_history import market_prior
+                mkt_prior = market_prior(rets)
+            if long_prior or asset_prior or mkt_prior:
                 n_by_state = perf_long.groupby("state").n_months.first().to_dict()
-                mu_q_obj = _anchor_mu_q(mu_q, long_prior or {}, asset_prior, n_by_state)
+                mu_q_obj = _anchor_mu_q(mu_q, long_prior or {}, asset_prior, n_by_state,
+                                        mkt_prior)
         except Exception as e:
             print(f"[optimizer] WARN mu_q anchoring unavailable ({e}) — modern-only objective")
     Z, zones = _geo_matrix(series)

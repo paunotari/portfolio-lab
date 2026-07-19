@@ -393,6 +393,27 @@ def test_vol_managed_is_causal_and_derisks():
     assert (extra >= 0).all(), "turnover is non-negative"
 
 
+def test_regional_anchor_mechanics():
+    """Pass 1 of _anchor_mu_q: agree-gated regional base anchoring (M13 follow-up / M15)."""
+    import pandas as pd
+    from portfolio_lab.portfolio.optimizer import _anchor_mu_q
+    mu_q = pd.DataFrame({"R | Reference": [0.02, 0.01], "R | Momentum": [0.03, 0.02]},
+                        index=["A", "B"])
+    mkt = {"R": {"beta": 1.0, "states": {
+        "A": dict(agree=True, long_mean=0.005, n_long=300),
+        "B": dict(agree=False, long_mean=0.005, n_long=300)}}}
+    out = _anchor_mu_q(mu_q, {}, None, {"A": 100, "B": 100}, mkt_prior=mkt)
+    exp_ref_a = (100 * 0.02 + 300 * 0.005) / 400          # blended toward the long mean
+    assert abs(out.loc["A", "R | Reference"] - exp_ref_a) < 1e-12
+    assert out.loc["B", "R | Reference"] == 0.01, "disagreeing cell must stay modern"
+    # sleeve without a factor prior: modern excess rides the anchored regional base
+    assert abs(out.loc["A", "R | Momentum"] - (0.03 + (exp_ref_a - 0.02))) < 1e-12
+    assert out.loc["B", "R | Momentum"] == 0.02
+    # flag path off: no mkt_prior -> everything stays modern
+    same = _anchor_mu_q(mu_q, {}, None, {"A": 100, "B": 100}, mkt_prior=None)
+    assert (same == mu_q).all().all()
+
+
 def test_sharpe_test_same_sharpe_not_rejected():
     from portfolio_lab.portfolio.inference import sharpe_diff_test
     rng = np.random.default_rng(11)

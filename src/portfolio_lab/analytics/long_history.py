@@ -151,6 +151,57 @@ def msci_factor_prior(rets: pd.DataFrame) -> dict | None:
     return out or None
 
 
+def market_prior(rets: pd.DataFrame) -> dict | None:
+    """Long-history prior for the equity REFERENCE sleeves' per-quadrant means (M13 follow-up).
+
+    LORO (MILESTONES M13) showed the maximin's undisciplined cells are the REGIONAL
+    per-quadrant means — modern-sample regional premia (EM's corners) with no long anchor.
+    The transferable 66y signal is how THE EQUITY MARKET behaves per quadrant: FF market
+    total return (mkt_rf + rf), classifiable from 1960. Per region with a Reference sleeve:
+      - beta: OLS slope of the region Reference's modern monthly return on the FF market
+        total return — each region's amplitude vs the (US-centric) market factor
+      - long_mean = beta * FF market per-quadrant mean over the LONG sample
+      - agree: era sign-agreement of the MARKET's own quadrant mean (long vs modern window)
+        — the M4 study found Stagflation is the market's one era-flipped cell, so that cell
+        stays modern by construction
+    Clipped to rets.index.max() (walk-forward honesty). Returns None without the FF file."""
+    if not C.FF_FACTORS_MONTHLY.exists():
+        return None
+    end = rets.index.max()
+    ff = pd.read_csv(C.FF_FACTORS_MONTHLY, index_col=0, parse_dates=True).sort_index().loc[:end]
+    if "rf" not in ff.columns:
+        return None
+    mkt = (ff["mkt_rf"] + ff["rf"]).rename("mkt")
+    states_long = classify_states(start="1926-01-01")
+    joined = pd.concat([mkt, states_long["state"]], axis=1, join="inner").dropna()
+    modern_start = rets.index.min()
+
+    per_state = {}
+    for state, g in joined.groupby("state"):
+        f_long = g["mkt"].dropna()
+        f_mod = g.loc[modern_start:, "mkt"].dropna()
+        if len(f_long) < 24 or len(f_mod) < 6:
+            continue
+        per_state[state] = dict(
+            agree=bool(np.sign(f_long.mean()) == np.sign(f_mod.mean())),
+            long_mean=float(f_long.mean()), n_long=int(len(f_long)))
+    if not per_state:
+        return None
+
+    out = {}
+    for col in [c for c in rets.columns if c.split(" | ")[1] == "Reference"]:
+        both = pd.concat([rets[col], mkt], axis=1, join="inner").dropna()
+        if len(both) < C.MACRO_MIN_OVERLAP_MONTHS:
+            continue
+        x, y = both.iloc[:, 1], both.iloc[:, 0]
+        beta = float(((x - x.mean()) * (y - y.mean())).sum() / ((x - x.mean()) ** 2).sum())
+        region = col.split(" | ")[0]
+        out[region] = dict(beta=beta, states={
+            s: dict(agree=st["agree"], long_mean=beta * st["long_mean"], n_long=st["n_long"])
+            for s, st in per_state.items()})
+    return out or None
+
+
 def asset_class_prior(rets: pd.DataFrame) -> dict | None:
     """Long-history prior for the NON-EQUITY proxy sleeves' per-quadrant means.
 

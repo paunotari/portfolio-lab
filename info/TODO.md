@@ -122,13 +122,14 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       rolling windows beat 1/N; equity maximin 33%, momentum 36%.
   - [ ] (d) OOS return attribution by sleeve — needs storing per-refit weights in the
         walk-forward; deferred.
-  - [ ] **Anchor REGIONAL per-quadrant means** (M13 follow-up, paper-relevant): the M10
-        long-history anchor disciplines factor cells (FF β-mapping) but not regional premia —
-        LORO showed the undisciplined EM cells are exactly where the maximin got hurt
-        (dropping EM improved every variant; all-weather 0.93→1.18). Candidate: shrink each
-        region's Reference per-quadrant mean toward the long-history MARKET factor's quadrant
-        mean (same agree-gate, months-weighted), or toward the cross-region pooled mean.
-        Measure like M10: every maximin variant, net OOS Sharpe, before/after.
+  - [x] **Anchor REGIONAL per-quadrant means — MEASURED 2026-07-19, verdict: cannot bite
+        (M15).** Built (`long_history.market_prior` + `_anchor_mu_q` pass 1, behind
+        `OPTIMIZER_ANCHOR_REGIONAL`) and A/B'd: equity maximin walk-forward IDENTICAL (its
+        binding quadrant is Stagflation — the market's one era-flipped cell, so the agree
+        gate correctly refuses the transfer); all-weather slightly WORSE (0.933→0.898).
+        Default OFF. The estimator is self-limiting where eras disagree — a feature, and a
+        paper section ("the obvious refinement, and why it cannot work"). EM's mitigations
+        remain the caps + the M12/M13 diagnostics.
 - [ ] **A third universe** (international FF portfolios from the same Ken French library —
       Europe/Japan/Asia-Pacific factor portfolios, free) so the estimator's OOS gain is shown
       on data it never touched during development.

@@ -143,6 +143,14 @@ OPTIMIZER_INFERENCE = OPTIMIZER_DIR / "optimizer_inference.csv"        # Sharpe 
 # info/literature/sharpe-inference.md). Block=None -> auto T^(1/3).
 OPTIMIZER_INFER_B = 4999
 OPTIMIZER_INFER_BLOCK = None
+
+# M13 follow-up: anchor the REGIONAL per-quadrant means (each region Reference blended
+# toward beta_region * the FF market's 66y quadrant mean, agree-gated). MEASURED 2026-07
+# (MILESTONES M15): a NO-OP for the equity maximin — its binding quadrant (Stagflation) is
+# the market's one era-flipped cell, so the agree gate correctly blocks the transfer; on the
+# all-weather universe it slightly HURT OOS (Sharpe 0.933->0.898). Default OFF; the
+# mechanism stays for reproducibility (long_history.market_prior + _anchor_mu_q pass 1).
+OPTIMIZER_ANCHOR_REGIONAL = False
 OPTIMIZER_VIZ = OPTIMIZER_DIR / "optimizer_viz.html"
 OPTIMIZER_MAX_SLEEVE_PCT = 40.0     # default per-sleeve cap (Tier-2 overridable)
 OPTIMIZER_MIN_SLEEVES = 3           # implied by the 40% cap; kept explicit for overrides
