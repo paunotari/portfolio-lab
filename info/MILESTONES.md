@@ -135,3 +135,19 @@ walk-forward, never assets by their current trailing numbers.
 trailing 36m windows on `levels_wide.csv`). **Code:** one-liner on `levels_wide.csv`; the
 protocol answer is `portfolio/validation.py`. **Status:** descriptive fact + literature
 (Jegadeesh-Titman 1993; De Bondt-Thaler 1985).
+
+## M11 — Japan is a full region; the mixed-window trap dodged by manual export
+**Claim:** the 4 owner-exported xlsx (2026-07-19) complete the menu 24 → **28 sleeves** with
+the 330-month common window INTACT: Japan Reference's manual web export starts 1998-12-31 —
+exactly the window start — where the graph-service copy (rejected earlier) only had 2000-12+.
+Japan is now a full 4-factor region and AC Asia ex Japan is complete. First measurement:
+Japan factor excess over Reference 1998-12→2026-06 — **Enhanced Value +3.6%/yr** (the
+deflation-decades Value market delivers), Quality +0.3, Momentum +0.03. Walk-forward
+re-run on 28 sleeves: rankings unchanged (min-variance 1.03 net OOS Sharpe leads; all-weather
+diversified maximin 0.93, lowest vol/maxDD in the table).
+**See:** `outputs/analytics/factor_vs_reference.csv` (Japan rows) · `REPORT_optimizer.md`
+walk-forward table. **Code:** `ingest/returns.py` (`msci_local`, empty `weights_file` =
+returns-only) + registry rows 145817/145829/706026/939200. **Data:** owner MSCI web exports
+in `data/raw/msci_indexes/Japan/` + `AC_Asia_ex_Japan/` (NETR USD monthly, verified in-file).
+**Status:** full-sample descriptive (excesses); walk-forward net-of-costs OOS (rankings).
+Look-through for all 7 factsheet-less sleeves stays approximated (caveat #18).

@@ -69,11 +69,15 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       Look-through for api sleeves approximated by borrowing the region Reference factsheet
       (caveat #18). **Japan Reference fetched and REJECTED:** NETR history starts 2000-12 —
       would shrink the common window 330→307 months (the mixed-window trap).
-  - [ ] Owner option: manually export MSCI Japan (NETR USD, monthly) from the msci.com
-        end-of-day tool — if the UI serves pre-2001 net history, Japan becomes a full region.
-  - [ ] Not found in probed code ranges: AC Asia ex Japan Quality, Japan Quality, Japan
-        Enhanced Value (probed 702780-702815, 705960-705995, 707695-707705). Extend probes or
-        find codes on the MSCI index pages someday.
+  - [x] **DONE 2026-07-19 — owner manually exported the 4 missing xlsx** (the web UI serves
+        longer NETR history than the graph service): Japan Reference (939200, from
+        **1998-12-31 — exactly the common-window start, no shrink**; the api copy only had
+        2000-12+), Japan Enhanced Value (706026, 1997-11+), Japan Quality (145817, 1997-01+),
+        AC Asia ex Japan Quality (145829, 1997-01+). Menu 24 → **28 sleeves**; Japan is now a
+        full 4-factor region; AC Asia ex Japan is complete. Ingested as `msci_local` with no
+        `weights_file` (returns-only — look-through stays approximated, caveat #18).
+  - [ ] Factsheet PDFs for the 7 sleeves without one (3 api + 4 new Japan/Asia xlsx) would
+        make their look-through exact instead of approximated.
       **Explicitly NOT needed for research: S&P 500** (≈0.99 correlated with MSCI USA — pure
       redundancy). May still enter the ETF catalog later for mapping convenience.
 - [ ] **B1b — broad commodities (energy-weighted)** as the next asset class: gold alone

@@ -20,6 +20,10 @@ index_id,display_name,region,factor_type,source,returns_file,weights_file
 899800,MSCI AC Asia ex Japan Index,AC_Asia_ex_Japan,Reference,msci_local,899800 - MSCI AC Asia ex Japan Index  - FULL - 1998-12-31 - 2026-07-03  - Monthly.xlsx,msci-ac-asia-ex-japan-index-usd-net.pdf
 703774,MSCI AC Asia ex Japan Momentum Index,AC_Asia_ex_Japan,Momentum,msci_local_webweights,703774 - MSCI AC Asia ex Japan Momentum Index  - FULL - 1997-01-31 - 2026-07-03  - Monthly.xlsx,
 707700,MSCI AC Asia ex Japan Enhanced Value Index,AC_Asia_ex_Japan,Enhanced Value,msci_local_webweights,707700 - MSCI AC Asia ex Japan Enhanced Value Index  - FULL - 1997-11-28 - 2026-07-03  - Monthly.xlsx,
-705973,MSCI USA Enhanced Value Index,USA,Enhanced Value,msci_api,705973,
+145829,MSCI AC Asia ex Japan Quality Index,AC_Asia_ex_Japan,Quality,msci_local,145829 - MSCI AC Asia ex Japan Quality Index  - FULL - 1997-01-01 - 2026-07-17  - Monthly.xlsx,
+939200,MSCI Japan Index,Japan,Reference,msci_local,939200 - MSCI Japan Index  - FULL - 1998-12-31 - 2026-07-17  - Monthly.xlsx,
 703763,MSCI Japan Momentum Index,Japan,Momentum,msci_api,703763,
+706026,MSCI Japan Enhanced Value Index,Japan,Enhanced Value,msci_local,706026 - MSCI Japan Enhanced Value Index  - FULL - 1997-11-28 - 2026-07-17  - Monthly.xlsx,
+145817,MSCI Japan Quality Index,Japan,Quality,msci_local,145817 - MSCI Japan Quality Index  - FULL - 1997-01-01 - 2026-07-17  - Monthly.xlsx,
+705973,MSCI USA Enhanced Value Index,USA,Enhanced Value,msci_api,705973,
 702788,MSCI EM (Emerging Markets) Quality Index,EM,Quality,msci_api,702788,

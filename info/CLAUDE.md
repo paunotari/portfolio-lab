@@ -20,7 +20,7 @@ optimizer and the regime forecasting (with adopt/adapt verdicts), see
 ## 1. What this is (today)
 
 A reproducible pipeline + analytics toolkit + dashboard for studying **MSCI factor indices across
-7 regions** (Reference, Momentum, Enhanced Value, Quality) over ~28 years of monthly data, with a
+8 regions** (Reference, Momentum, Enhanced Value, Quality) over ~28 years of monthly data, with a
 focus on: factor-vs-reference performance, macro-regime behaviour, cross-index correlations,
 **index↔macro-indicator correlations** (16 FRED indicators, level + change bases, lead/lag), and
 **look-through concentration** (real sector / country / single-stock exposure of a portfolio).
@@ -89,8 +89,8 @@ python -m portfolio_lab.dashboard.build
 | `portfolio/stress.py` | **Named-episode stress library** (roadmap A3, pipeline stage 13): constant-mix replay of hand-dated episodes (`config.STRESS_EPISODES_*`). Modern table = today's flagships+anchors through dot-com/GFC/COVID/2022 (e.g. 2022: all-weather −17% vs −27% equity portfolios). Historic table = static archetypes (pure equity / 60-40 / all-weather static) through a century of storms on the proxy universe — OPEC stagflation: **all-weather +9.8% vs pure equity −44.6%**. Outputs `outputs/analytics/stress/`. |
 | `analytics/regimes.py` | `REGIMES`: 10 hand-dated historical eras with analyst annotations (macro/factors/regions/shift) — event-driven narrative labels ("GFC," "dot-com bust"). Data only. Distinct from the systematic classifier below. |
 | `analytics/engine.py` | Performance summary (CAGR/vol/Sharpe/maxDD, one number per series over the common window — no more "cw_"/"full_" split), factor-vs-reference, per-regime performance, correlation matrices (full + per regime), 36m rolling correlation, and `REPORT.md`. |
-| `analytics/macro_link.py` | **Index↔macro correlation engine.** For each of the 21 return series × 16 indicators: contemporaneous + lagged (0/1/3/6/12m, macro leads) correlations on **two bases** — `chg` (Δ month-over-month, the sound basis) and `level` (regime context only) — plus univariate OLS betas. 36-month min-overlap guard flags short pairs as insufficient. Also computes **per-(named)-regime** correlation matrices (chg basis, lag 0; lower 6-month overlap floor since regimes run as short as ~15 months — `regime_correlations()`). Outputs to `outputs/analytics/macro/` (long CSV, two wide 21×16 matrices, betas, `correlation_by_regime/*.csv`, `REPORT_macro.md`). |
-| `analytics/macro_state.py` | **4-quadrant macro-state classifier (v2, composite)** — systematic, month-by-month (growth trend × inflation trend → Goldilocks/Reflation/Deflationary-bust/Stagflation). Growth and inflation are each a **composite of several indicators' z-scored, sign-adjusted trends** (`config.MACRO_STATE_GROWTH_COMPONENTS` / `_INFLATION_COMPONENTS`; primaries `indpro_yoy` / `core_pce_yoy` required, short-history components join when available). Produces **continuous scores + soft quadrant probabilities** (Φ of the scores, product across the two axes) alongside the hard label (= most probable quadrant = sign of the scores), plus an **empirical monthly Markov transition matrix** (`transition_matrix()`, persistence + expected durations) and a **short-horizon probabilistic outlook** (`quadrant_outlook()`: soft vector × P^3 — the best-calibrated method in the 2026-07 walk-forward backtest recorded in TODO.md). `classify_states()`/`transition_matrix()` are reused by `analytics/scenario.py`. Also computes per-state performance for all 21 series, **factor-level attribution**, and an NBER-recession overlap sanity check in the report. Outputs to `outputs/analytics/macro_state/` (`macro_state_monthly.csv`, `macro_state_transitions.csv`, `macro_state_performance.csv`, `macro_state_factor_attribution.csv`, `REPORT_macro_state.md`). See caveats §7 (#14 NaN pitfall, #17 v2 simplifications). |
+| `analytics/macro_link.py` | **Index↔macro correlation engine.** For each of the 28 return series × 16 indicators: contemporaneous + lagged (0/1/3/6/12m, macro leads) correlations on **two bases** — `chg` (Δ month-over-month, the sound basis) and `level` (regime context only) — plus univariate OLS betas. 36-month min-overlap guard flags short pairs as insufficient. Also computes **per-(named)-regime** correlation matrices (chg basis, lag 0; lower 6-month overlap floor since regimes run as short as ~15 months — `regime_correlations()`). Outputs to `outputs/analytics/macro/` (long CSV, two wide 28×16 matrices, betas, `correlation_by_regime/*.csv`, `REPORT_macro.md`). |
+| `analytics/macro_state.py` | **4-quadrant macro-state classifier (v2, composite)** — systematic, month-by-month (growth trend × inflation trend → Goldilocks/Reflation/Deflationary-bust/Stagflation). Growth and inflation are each a **composite of several indicators' z-scored, sign-adjusted trends** (`config.MACRO_STATE_GROWTH_COMPONENTS` / `_INFLATION_COMPONENTS`; primaries `indpro_yoy` / `core_pce_yoy` required, short-history components join when available). Produces **continuous scores + soft quadrant probabilities** (Φ of the scores, product across the two axes) alongside the hard label (= most probable quadrant = sign of the scores), plus an **empirical monthly Markov transition matrix** (`transition_matrix()`, persistence + expected durations) and a **short-horizon probabilistic outlook** (`quadrant_outlook()`: soft vector × P^3 — the best-calibrated method in the 2026-07 walk-forward backtest recorded in TODO.md). `classify_states()`/`transition_matrix()` are reused by `analytics/scenario.py`. Also computes per-state performance for all 28 series, **factor-level attribution**, and an NBER-recession overlap sanity check in the report. Outputs to `outputs/analytics/macro_state/` (`macro_state_monthly.csv`, `macro_state_transitions.csv`, `macro_state_performance.csv`, `macro_state_factor_attribution.csv`, `REPORT_macro_state.md`). See caveats §7 (#14 NaN pitfall, #17 v2 simplifications). |
 | `analytics/scenario.py` | **Regime-persistent bootstrap scenario simulation (v2)**. Monte Carlo in **regime spells**, not i.i.d. months: spell durations are geometric from the transition matrix's continuation probabilities (realistic regime persistence), and months within a spell are **contiguous blocks** of real history (partial within-regime serial correlation), always whole cross-sections (preserving cross-series correlation). Three built-in scenarios: `current_conditions` (**starts from today's actual quadrant**, spells then follow historical transition probabilities — `simulate_from_current()`), `historical_frequency`, `even_25_25_25_25` (weights mode: long-run month shares converge to the target weights via q ∝ w·(1−p_stay); `simulate_scenario(weights, ...)` keeps the custom-weights API). **`portfolio_cone(weights_by_series)`** runs a weighted blend through the `current_conditions` simulation and returns the portfolio-level CAGR cone + P(loss) — the optimizer's validator. Outputs simulated CAGR/maxDD percentiles + probability of cumulative loss per series, to `outputs/analytics/scenario/` (`scenario_summary.csv`, `REPORT_scenario.md`). Explicitly non-ML (resampling + empirical transition counts) — see caveat §11; the method is a state-conditioned **stationary bootstrap (Politis-Romano 1994)**, cited in the docstring. |
 | `portfolio/diversification.py` | `analyze_portfolio({index: weight})` → look-through sector/country/stock exposure, HHI, threshold flags, **plus blended portfolio performance** (`portfolio_performance()`: constant-mix CAGR/vol/Sharpe/maxDD over the sleeves' overlapping history, via `analytics.engine._perf_stats`). **Weights must sum to 100%** (`config.PORTFOLIO_WEIGHT_TOLERANCE_PCT`) — raises `ValueError` rather than silently rescaling (e.g. a 340%-summing input is rejected, not renormalized). Reusable API + CLI. |
 | `portfolio/shrinkage.py` | **Ledoit-Wolf covariance shrinkage** — constant-correlation target (default, "Honey, I Shrunk…") + scaled-identity variant (sklearn-equivalent test oracle). Closed-form, returns `(Sigma, delta*)`; δ* is reported in optimizer output as an input-quality number. |
@@ -135,7 +135,7 @@ explicit, not implied by which folders happen to exist. Columns:
 | `region`, `factor_type` | the series key — **unique together** |
 | `source` | how ingest loads it: `msci_local` (xlsx + factsheet pdf) · `msci_local_webweights` (xlsx local, weights via `ingest/asia_images.py`) · **`msci_api`** (MSCI's end-of-day data service, same source as the xlsx — verified to 9 significant figures; `returns_file` holds the numeric index code; responses cached to `data/raw/msci_api/<code>.json`, committed, so offline runs work) |
 | `returns_file` | xlsx basename inside `data/raw/msci_indexes/<region>/` |
-| `weights_file` | factsheet pdf basename, or empty (webweights / none) |
+| `weights_file` | factsheet pdf basename, or empty (webweights / none). An `msci_local` row with an empty `weights_file` is a **returns-only** sleeve (owner-exported xlsx, no factsheet — look-through approximated per caveat #18) |
 
 **To add a new MSCI index (manual):** drop its xlsx (and factsheet pdf) into
 `data/raw/msci_indexes/<region>/`, append one row to `index_registry.csv`, and rerun
@@ -153,9 +153,9 @@ is 14 steps; see
 
 ## 6. Data model / conventions
 
-- **Series key:** a series is identified by `region` + `factor_type` (7 × up to 4). In
+- **Series key:** a series is identified by `region` + `factor_type` (8 × up to 4). In
   `levels_wide.csv` the column label is `"<region> | <factor_type>"`.
-- **Regions (7):** `ACWI, World, World_ex_USA, USA, EM, Europe, AC_Asia_ex_Japan`.
+- **Regions (8):** `ACWI, World, World_ex_USA, USA, EM, Europe, AC_Asia_ex_Japan, Japan`.
 - **Factor types (4):** `Reference, Momentum, Enhanced Value, Quality` (coverage is uneven — see §7).
 - **Levels** are month-end, net return, USD, rebased to 100. **Returns** are simple monthly % change.
 - **Weights** (`weight_pct`) are percentages 0–100; `source` ∈ {`factsheet_pdf`, `msci_web_image`}.
@@ -169,8 +169,9 @@ is 14 steps; see
 2. **USA has no country chart.** USA indices are single-country → no `country_weights` rows.
    The diversification tool injects 100% United States for them.
 3. **Uneven factor coverage.** Not every region has all 3 factors (e.g. World_ex_USA has only
-   Enhanced Value; USA has Momentum + Quality but no Enhanced Value). Cross-region factor
-   comparisons are not always apples-to-apples.
+   Enhanced Value; World has no Enhanced Value; Europe has no Quality). USA, EM,
+   AC_Asia_ex_Japan and Japan are complete since the 2026-07 additions. Cross-region factor
+   comparisons are still not always apples-to-apples.
 4. **Stock look-through is a lower bound** — only each index's top-10 holdings are known.
 5. **Asia factor weights are 1-decimal** (from screenshots) → sector sums round to ~99.5%.
 6. **Common analysis window is 1998-12-31 → 2026-06-30** (330 months) because Reference indices
@@ -246,17 +247,20 @@ is 14 steps; see
     Changing any classifier constant reshuffles the
     hard labels and therefore per-state performance, attribution AND scenario outputs — they
     all share `classify_states()`.
-18. **`msci_api` sleeves have no factsheet — their look-through is APPROXIMATED.** The 2026-07
-    additions (USA Enhanced Value 705973, Japan Momentum 703763, EM Quality 702788) borrow
-    their REGION's Reference factsheet weights for sector/country/stock look-through and geo
-    caps (a factor subset of the parent universe — right ballpark, not exact); Japan, having
-    no Reference sleeve, is statically mapped to Japan/Asia-Pacific for geo and is its own
-    category in the diversification HHIs. **Japan | Reference was fetched and REMOVED**: its
-    net-return history via the service starts 2000-12, which would shrink the common window
-    330→307 months (the mixed-window trap) — revisit only via a manual MSCI export with longer
-    NETR history. Codes were discovered by probing the service (names embedded in the XLS
-    responses); AC Asia Quality / Japan Quality / Japan Enhanced Value were not found in the
-    probed ranges.
+18. **Sleeves without a factsheet have APPROXIMATED look-through** — the 3 `msci_api` rows
+    (USA Enhanced Value 705973, Japan Momentum 703763, EM Quality 702788) and the 4
+    returns-only `msci_local` rows added 2026-07-19 from owner manual exports (Japan
+    Reference 939200, Japan Enhanced Value 706026, Japan Quality 145817, AC Asia ex Japan
+    Quality 145829). Where the region's Reference HAS a factsheet (USA, EM, Asia), those
+    weights are borrowed for sector/country/stock look-through and geo caps (a factor subset
+    of the parent universe — right ballpark, not exact). Japan's Reference is itself
+    factsheet-less, so ALL Japan sleeves are statically mapped to Japan/Asia-Pacific for geo
+    caps and each is its own category in the diversification HHIs (overstates their mutual
+    independence). They also can't be selected in `portfolio/diversification.py`'s what-if
+    (it validates against factsheet weights). The api-fetched Japan Reference had been
+    REJECTED (NETR only from 2000-12 — the mixed-window trap); the manual web export starts
+    **1998-12-31, exactly the common-window start**, so Japan is a full 4-factor region with
+    the 330-month window intact.
 19. **The optimizer never sees raw historical mean returns.** The only expected-return vector any
     objective consumes is the Black-Litterman posterior μ_BL (`portfolio/views.py`) — anchored on
     ERC-implied returns and tilted only by confidence-weighted regime views. Per-quadrant means
