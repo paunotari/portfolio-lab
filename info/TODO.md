@@ -177,8 +177,11 @@ Check items off as completed. Add new ones as they come up; keep entries short a
 
 ### Phase C — targeted literature (specific gaps, not more canon)
 
-- [ ] **C1 — rebalancing**: frequency/bands, the "rebalancing premium" literature — we
-      rebalance monthly by assumption, never tested.
+- [x] **C1 — rebalancing — DEEP DIVE + MEASURED 2026-07-19 (M22)**:
+      `literature/rebalancing.md` + `portfolio/rebalancing.py`. Constant-mix vs fully-costed
+      vs buy-and-hold on identical weight schedules: <=0.002 Sharpe difference, ranking
+      identical — the assumption is not load-bearing. Band rules noted as a product-level
+      refinement, not research.
 - [ ] **C2 — currency hedging**: Campbell, Serfaty-de Medeiros & Viceira (2010) — pairs
       with B3.
 - [ ] **C3 — factor valuation/timing**: the Asness-vs-Arnott debate (can you time factors on

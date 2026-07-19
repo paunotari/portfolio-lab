@@ -297,8 +297,10 @@ The modern OOS window contains no prolonged bear; the proxy race and the virgin 
 carries a mild full-sample z-normalization (scale, never direction; bounded by the
 real-time lag test) and uses revised rather than vintage FRED values — an ALFRED-vintage
 replay is future work. MSCI factor indices carry pre-launch backfill (mitigated in §6.2).
-Costs are flat 10 bps on refit turnover; within-interval drift turnover, taxes, spreads and
-tracking error are uncharged. The deflated-Sharpe trial count includes fielded contestants,
+Costs are flat 10 bps on refit turnover; within-interval drift turnover is uncharged but
+measured immaterial (largest Sharpe overstatement 0.002; a buy-and-hold implementation of the
+same weight schedules preserves the ranking exactly); taxes, spreads and tracking error are
+not modeled. The deflated-Sharpe trial count includes fielded contestants,
 not every development-time variant — the pre-registered test is the stronger multiplicity
 defense. All results are USD. Equal weight is menu-relative and the menu is a design layer:
 our selection principle — span distinct risk sources, measured as effective bets — is

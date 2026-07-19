@@ -31,7 +31,8 @@ codeable without fetching the paper:
 | [stationary-bootstrap.md](literature/stationary-bootstrap.md) | Politis-Romano ↔ our scenario engine, exact correspondence |
 | [low-volatility-anomaly.md](literature/low-volatility-anomaly.md) | Haugen-Baker → Clarke-de Silva-Thorley → Blitz-van Vliet · BAB mechanism · why min-var wins our walk-forward |
 | [factor-canon.md](literature/factor-canon.md) | FF3/momentum/VME/QMJ math + per-quadrant predictions vs our measurements |
-| [sharpe-inference.md](literature/sharpe-inference.md) | JK/Memmel baseline · Ledoit-Wolf 2008 HAC + studentized circular block bootstrap · deflated Sharpe (Bailey-LdP) · our pairwise protocol + pitfalls |
+| [sharpe-inference.md](literature/sharpe-inference.md) | JK/Memmel baseline · Ledoit-Wolf 2008 HAC + studentized circular block bootstrap · deflated Sharpe (Bailey-LdP) · CSCV PBO · our pairwise protocol + pitfalls |
+| [rebalancing.md](literature/rebalancing.md) | frequency/bands · diversification return (Booth-Fama, Willenbrock) · our M22 measurement: constant-mix vs buy-and-hold is not load-bearing |
 
 ---
 

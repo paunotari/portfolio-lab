@@ -342,3 +342,19 @@ sleeve 9%).
 `validation.sleeve_attribution` (+ per-refit weights in walk-forward meta).
 **Data:** walk-forward net OOS returns + per-refit weights. **Status:** OOS decomposition;
 closes the last two paper-track appendix items.
+
+## M22 — The constant-mix assumption is not load-bearing (rebalancing schemes measured)
+**Claim:** re-implementing every contestant's SAME per-refit weight schedule three ways —
+shipped constant-mix (drift trades free), constant-mix with all drift turnover costed at
+10 bps, and within-interval buy-and-hold (no monthly trades) — the free-drift Sharpe
+overstatement is **≤0.002** (mean drift turnover 0.55–1.21%/month ⇒ ~0.6–1.4 bps/month of
+uncharged cost) and the buy-and-hold ranking is IDENTICAL to the shipped one; the
+all-weather is actually slightly better under drift (0.933→0.957 — the buy-and-hold
+momentum tilt meeting the 2024+ trend). The "within-interval drift turnover is uncosted"
+limitation is quantified and immaterial; annual-refit buy-and-hold is the cheapest
+implementable scheme and loses nothing.
+**See:** `REPORT_rebalancing.md` + `optimizer_rebalancing.csv` · deep dive
+`info/literature/rebalancing.md` (C1). **Code:** `portfolio/rebalancing.py` (CLI; reuses
+the walk-forward's per-refit weights, no re-optimization). **Data:** walk-forward weights ×
+sleeve returns. **Status:** OOS re-implementation of identical decisions; closes C1's
+empirical half and the drift-turnover limitation.

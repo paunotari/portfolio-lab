@@ -168,8 +168,8 @@ full-sample z-normalization (scale only, direction never; the real-time lag test
 effect — M19) and uses revised rather than vintage FRED values (an ALFRED-vintage replay is
 future work). MSCI factor indices carry pre-launch backfill (mitigated by the live-era split
 and the FF replications, M20/M2/M16). Costs are modeled at a flat 10 bps on refit turnover;
-within-interval constant-mix drift turnover, taxes, spreads and tracking error are not
-charged. The deflated-Sharpe trial count includes fielded contestants, not every variant
+within-interval drift turnover is uncharged but measured immaterial (≤0.002 Sharpe;
+buy-and-hold ranking identical — M22); taxes, spreads and tracking error are not modeled. The deflated-Sharpe trial count includes fielded contestants, not every variant
 examined during development — the pre-registered confirmatory test is the stronger
 multiplicity defense. The bond series is an approximation (validated against known years).
 All results are USD. Equal weight is menu-relative, and the menu is a design layer: our
