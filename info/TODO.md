@@ -151,15 +151,12 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         (rf ~1.3%/yr avg) — rankings identical (only #8/#9 swap), min-var vs 1/N p_boot
         0.067 (vs 0.055 rf0): conclusions robust; paper tables will use the excess
         convention (standard).
-  - [ ] **Real-time discipline of the regime layer (the biggest one).** The maximin /
-        all-weather results depend on state labels that (a) carry the classifier's mild
-        full-sample z-normalization (caveat #17, stated never quantified), (b) assume
-        month-t macro is known at month t (INDPRO/PCE publish with 1-2m lag), and (c) use
-        revised, not vintage, FRED data. Decisive cheap test: re-run the walk-forward with
-        labels LAGGED 2 months (+ optionally expanding-window z-norm) — only the
-        regime-dependent contestants can change. If they hold, the results are
-        real-time-implementable; if they collapse, that's look-ahead leakage and must be
-        said. (Full ALFRED-vintage replay = heavy, appendix-later.)
+  - [x] **Real-time discipline — MEASURED 2026-07-19, verdict: NO look-ahead subsidy
+        (M19).** Labels lagged 2 months: every regime contestant improves or holds
+        (all-weather 0.933→1.114!); non-regime bit-identical. Shipped lag-0 labels are the
+        CONSERVATIVE spec; defaults unchanged (no tuning on the test), paper states both.
+        Remaining gap stated: revised-vs-vintage FRED values (ALFRED replay = future
+        appendix).
   - [ ] **MSCI backfill/selection bias (limitations paragraph + one cheap split).** The
         factor indices were launched ~2013-15 with backfilled pre-launch history — index
         providers launch what backtested well, so 1997-2013 factor-index history is a

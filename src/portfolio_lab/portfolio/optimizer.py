@@ -183,6 +183,8 @@ def _load_states(index: pd.DatetimeIndex = None) -> pd.DataFrame | None:
             states = classify_states(start="1926-01-01")
         except Exception as e:
             print(f"[optimizer] WARN long-window states unavailable ({e}) — using the CSV")
+    if C.OPTIMIZER_STATE_LAG_MONTHS:            # real-time discipline (M19): know t-k at t
+        states = states.shift(C.OPTIMIZER_STATE_LAG_MONTHS).dropna(subset=["state"])
     return states.reindex(index).dropna(subset=["state"]) if index is not None else states
 
 

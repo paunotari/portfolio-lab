@@ -292,3 +292,21 @@ risk budgets) and harmful for 1/N (silent double-counting).
 **Code:** ad-hoc on cached CSV. **Data:** 28-sleeve common window. **Status:** descriptive,
 full-sample; the actionable consequences (B1b commodities as the next distinct source) were
 already OOS/century-tested where they land (M6/M7).
+
+## M19 — Real-time discipline test: no look-ahead subsidy — lagged labels do BETTER
+**Claim:** re-running the walk-forward with state labels lagged 2 months (at month t you
+only know t−2's label — the realistic macro-publication constraint; instrument
+`config.OPTIMIZER_STATE_LAG_MONTHS`), every regime-dependent contestant improves or holds:
+all-weather 0.933→**1.114** (vol 8.7→6.6%, maxDD −17.9→−14.7%), worst-quadrant maximin
+0.713→0.885, diversified 0.837→0.849, balanced/BL 0.700→0.699; all non-regime contestants
+are bit-identical (the instrument touches only the regime layer — sanity check passed).
+Conclusion: the maximin/all-weather results carry NO look-ahead subsidy from knowing macro
+prints early — the shipped as-published labels are, if anything, the CONSERVATIVE
+specification, plausibly because boundary months (freshest, still-revising data) are the
+classifier's noisiest and lagging avoids trading on them (mechanism = hypothesis, not
+claim). Defaults deliberately stay lag-0: switching to the better post-hoc number would be
+tuning on the test; the paper states both. Remaining real-time gap (stated): FRED serves
+revised values — a full ALFRED-vintage replay is future appendix work.
+**See:** A/B table (reproducible: set the flag, re-run `walk_forward()`).
+**Code:** `optimizer._load_states` (shift) + `config.OPTIMIZER_STATE_LAG_MONTHS`.
+**Data:** MSCI walk-forward, net of costs. **Status:** OOS modern; closes pre-draft check 1.

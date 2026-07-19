@@ -242,6 +242,12 @@ FF_INTL_INFERENCE = FF_INTL_DIR / "ff_intl_inference.csv"
 # (views + objectives) so "estimator off" is measurable. Product default stays True.
 OPTIMIZER_ANCHOR_LONG = True
 
+# Real-time discipline instrument (M19): the walk-forward's regime layer sees the state
+# label of month t-k instead of t (macro publishes with a 1-2 month lag; labels also carry
+# caveat #17's mild z-norm look-ahead). 0 = as-published pipeline default; the M19 test
+# measures k=2. Only regime-dependent contestants (maximin family, BL views) can change.
+OPTIMIZER_STATE_LAG_MONTHS = 0
+
 LONG_HISTORY_DIR = ANALYTICS_DIR / "long_history"
 LONG_HISTORY_CSV = LONG_HISTORY_DIR / "long_history_factor_states.csv"
 LONG_HISTORY_REPORT = LONG_HISTORY_DIR / "REPORT_long_history.md"
