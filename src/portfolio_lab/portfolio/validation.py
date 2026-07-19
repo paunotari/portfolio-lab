@@ -116,12 +116,14 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
     gross_chunks: dict[str, list] = {}
     turn_chunks: dict[str, list] = {}
     prev_w: dict[str, np.ndarray] = {}
+    whist: dict[str, list] = {}                             # (oos_start, weights) per refit
     refit_dates = []
     for t in range(warmup, T, refit):
         inp = opt.build_inputs(rets.iloc[:t])
         refit_dates.append(str(rets.index[t - 1].date()))
         oos = rets.iloc[t:t + refit].values
-        entries = [(name, w, oos) for name, w in _contestants(inp, n_starts, seed).items()]
+        entries = [(name, w, oos, rets.columns)
+                   for name, w in _contestants(inp, n_starts, seed).items()]
         if rets_aw is not None:                             # flagship on its own universe
             train_aw = rets_aw.loc[:rets.index[t - 1]]
             oos_aw = rets_aw.loc[rets.index[t]:rets.index[min(t + refit, T) - 1]]
@@ -131,11 +133,12 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
                     if inp_aw["mu_q"] is not None:
                         w_aw = opt.optimize(maximin=True, inputs=inp_aw,
                                             n_starts=n_starts, seed=seed, **div_kw)["w"]
-                        entries.append((AW_NAME, w_aw, oos_aw.values))
+                        entries.append((AW_NAME, w_aw, oos_aw.values, rets_aw.columns))
                 except Exception as e:
                     print(f"[validation] WARN all-weather refit at {rets.index[t - 1].date()} "
                           f"skipped ({e})")
-        for name, w, oos_m in entries:
+        for name, w, oos_m, cols in entries:
+            whist.setdefault(name, []).append((rets.index[t], pd.Series(w, index=cols)))
             chunk = oos_m @ w
             tmonth = np.zeros(len(chunk))
             if name in prev_w:                              # trading happens on the first month
@@ -181,8 +184,43 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
                 n_series=rets.shape[1], dropped_region=drop_region,
                 # pre-cost pieces, so the sensitivity grid can re-net at any cost level
                 # without re-running the optimization (weights never depend on costs)
-                _gross=pd.DataFrame(gross), _turnover=pd.DataFrame(turn))
+                _gross=pd.DataFrame(gross), _turnover=pd.DataFrame(turn),
+                # per-refit weights (overlays excluded — they scale a base), for attribution
+                _weights={n: pd.DataFrame({d: s for d, s in ws}).T for n, ws in whist.items()})
     return summary, meta, pd.DataFrame(monthly)
+
+
+def sleeve_attribution(meta: dict) -> pd.DataFrame:
+    """Which sleeves actually paid each contestant's OOS return? (M21)
+
+    Arithmetic Brinson-style decomposition: sleeve i's contribution to contestant P is
+    sum_t w_i(t) * r_i(t) over every OOS month (weights constant within each refit
+    interval); `share` normalizes by the contestant's total. Ignores compounding — shares
+    are approximate but the ordering is what the question needs (e.g. does min-variance
+    live off the Quality sleeves, as M2/low-vol suggests?)."""
+    rets = opt.load_returns()
+    rets_aw = (opt.load_returns(include_asset_classes=True)
+               if C.ASSET_CLASS_MONTHLY.exists() else None)
+    rows = []
+    for name, wdf in meta["_weights"].items():
+        uni = rets if list(wdf.columns) == list(rets.columns) else rets_aw
+        if uni is None:
+            continue
+        contrib = pd.Series(0.0, index=wdf.columns)
+        for i, start in enumerate(wdf.index):
+            if i + 1 < len(wdf.index):                      # up to, excluding, the next refit
+                chunk = uni.loc[start:wdf.index[i + 1]]
+                if len(chunk) and chunk.index[-1] == wdf.index[i + 1]:
+                    chunk = chunk.iloc[:-1]
+            else:
+                chunk = uni.loc[start:]
+            contrib += chunk.mul(wdf.iloc[i], axis=1).sum()
+        total = contrib.sum()
+        for sleeve, v in contrib.items():
+            if abs(v) > 1e-12:
+                rows.append(dict(portfolio=name, sleeve=sleeve, contribution=float(v),
+                                 share=float(v / total) if total else np.nan))
+    return pd.DataFrame(rows).sort_values(["portfolio", "share"], ascending=[True, False])
 
 
 # ------------------------------------------------- exposure robustness (MILESTONES M12)
@@ -292,8 +330,12 @@ def run():
     monthly.to_csv(C.OPTIMIZER_WALKFORWARD_RETURNS)
     expo = exposure_diagnostics(monthly)
     expo.to_csv(C.OPTIMIZER_EXPOSURE, index=False)
-    from portfolio_lab.portfolio.inference import inference_table
+    from portfolio_lab.portfolio.inference import inference_table, pbo_cscv
     inference_table(monthly).to_csv(C.OPTIMIZER_INFERENCE, index=False)
+    sleeve_attribution(meta).to_csv(C.OPTIMIZER_ATTRIBUTION, index=False)
+    pbo = pbo_cscv(monthly)
+    print(f"[validation] PBO (CSCV S={pbo['S']}): {pbo['pbo']:.0%}" if pbo["n_combos"]
+          else "[validation] PBO skipped (short sample)")
     print(f"[validation] walk-forward: {meta['n_refits']} refits, OOS "
           f"{meta['oos_start']} -> {meta['oos_end']} ({meta['oos_months']} months)")
     print(summary.to_string(index=False))

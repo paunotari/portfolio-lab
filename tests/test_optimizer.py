@@ -393,6 +393,21 @@ def test_vol_managed_is_causal_and_derisks():
     assert (extra >= 0).all(), "turnover is non-negative"
 
 
+def test_pbo_cscv_null_vs_skill():
+    import pandas as pd
+    from portfolio_lab.portfolio.inference import pbo_cscv
+    rng = np.random.default_rng(7)
+    T = 240
+    null = pd.DataFrame(rng.normal(0.005, 0.04, (T, 8)))          # 8 equal-skill trials
+    p_null = pbo_cscv(null, S=16)["pbo"]
+    assert 0.25 <= p_null <= 0.75, f"null PBO should hover near 0.5, got {p_null}"
+    skilled = null.copy()
+    skilled[0] = rng.normal(0.02, 0.04, T)                        # one dominant trial
+    p_skill = pbo_cscv(skilled, S=16)["pbo"]
+    assert p_skill < 0.15, f"dominant trial should drive PBO low, got {p_skill}"
+    assert pbo_cscv(null.iloc[:20], S=16)["n_combos"] == 0        # too short -> skip
+
+
 def test_sensitivity_cost_regrid_mechanics():
     """Re-netting from gross+turnover must reproduce walk_forward's own net Sharpe."""
     import pandas as pd

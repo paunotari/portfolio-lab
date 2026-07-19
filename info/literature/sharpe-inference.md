@@ -95,7 +95,14 @@ usual bar. Our N = the walk-forward roster (honest count: every contestant we fi
 3. **p_boot needs the +1/(B+1) finite-sample correction** — a p of exactly 0 is impossible.
 4. **Degenerate windows**: constant series (σ→0) or near-duplicate contestants (Δ≈0, s.e.→0) —
    guard and return NaN rather than ±∞.
-5. **PBO (Bailey-Borwein-LdP-Zhu CSCV) is NOT implemented yet** — it needs the full per-refit
-   trial matrix, recorded as the remaining paper-track sub-item next to per-sleeve attribution.
+5. **PBO (Bailey, Borwein, López de Prado & Zhu 2017, CSCV) — implemented** (`pbo_cscv`):
+   drop NaN rows, split the T×N net-return matrix into S=16 contiguous blocks; for each of
+   C(16,8)=12,870 half-splits, select the in-sample-best trial and compute its OUT-sample
+   relative rank ω ∈ [0,1]; **PBO = P(ω ≤ ½)** — the probability that the trial you would
+   have picked in-sample is no better than the median out of sample. PBO ≈ 0.5 ⇒ picking
+   the in-sample winner is a coin flip; low PBO ⇒ the ranking carries real OOS information.
+   Sharpes per split come from cached per-block sums (exact, fast). Pitfall: contiguous
+   blocks preserve within-block autocorrelation but half-splits still mix eras — read PBO
+   next to the sub-period diagnostics (M12), not instead of them.
 6. Failing to reject is NOT "the methods are equal" — with ~210 months the power is modest;
    report the confidence interval alongside (Δ̂ ± 1.96·s.e.).

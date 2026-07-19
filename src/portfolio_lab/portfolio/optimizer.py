@@ -799,6 +799,11 @@ def run():
     wf_expo.to_csv(C.OPTIMIZER_EXPOSURE, index=False)
     wf_infer = inference_table(wf_monthly)
     wf_infer.to_csv(C.OPTIMIZER_INFERENCE, index=False)
+    from portfolio_lab.portfolio.inference import pbo_cscv
+    from portfolio_lab.portfolio.validation import sleeve_attribution
+    wf_pbo = pbo_cscv(wf_monthly)
+    wf_attr = sleeve_attribution(wf_meta)
+    wf_attr.to_csv(C.OPTIMIZER_ATTRIBUTION, index=False)
 
     profiles = run_profiles(inp)
 
@@ -806,7 +811,7 @@ def run():
             for name, res in portfolios.items() for s, w in res["weights"].items()]
     pd.DataFrame(rows).to_csv(C.OPTIMIZER_PORTFOLIOS, index=False)
     _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta, profiles, wf_expo,
-                  wf_infer)
+                  wf_infer, wf_pbo, wf_attr)
     print(f"[optimizer] wrote {C.OPTIMIZER_REPORT} and {C.OPTIMIZER_PORTFOLIOS}")
 
 
@@ -819,7 +824,7 @@ def _md_table(df: pd.DataFrame, fmts: dict) -> list[str]:
 
 
 def _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta, profiles=None,
-                  wf_expo=None, wf_infer=None):
+                  wf_expo=None, wf_infer=None, wf_pbo=None, wf_attr=None):
     rets = inp["rets"]
     L = ["# Portfolio optimizer — default report", ""]
     L += [f"Common window **{rets.index[0].date()} → {rets.index[-1].date()}** "
@@ -948,6 +953,22 @@ def _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta, profiles=N
                       "**none** — the DeMiguel verdict, now with a p-value") + ".")]
         if worse:
             L += [f"Significantly BELOW 1/N: {', '.join(worse)}."]
+        if wf_pbo and np.isfinite(wf_pbo.get("pbo", np.nan)):
+            L += ["", f"**Probability of backtest overfitting (CSCV, Bailey et al. 2017, "
+                  f"S={wf_pbo['S']}, {wf_pbo['n_combos']} splits): "
+                  f"{wf_pbo['pbo']:.0%}** — the chance that the contestant you would pick "
+                  "in-sample is no better than the median out of sample."]
+    if wf_attr is not None and len(wf_attr):
+        L += ["", "### Where each record actually came from (per-sleeve attribution)", ""]
+        L += ["Arithmetic contribution shares over all OOS months (weights per refit × "
+              "sleeve returns; full table in `optimizer_attribution.csv`). This answers "
+              "M2's hypothesis directly — what does min-variance actually live off?", ""]
+        for p in ["Min-variance", "Maximin (diversified)", "Maximin (all-weather div)"]:
+            top = wf_attr[wf_attr.portfolio == p].nlargest(3, "share")
+            if len(top):
+                L += [f"- **{p}**: " + " · ".join(
+                    f"{r.sleeve.replace(' | ', ' ')} {r.share:.0%}"
+                    for r in top.itertuples())]
     best = wf_summary.iloc[0].portfolio
     L += ["", f"Out of sample and net of costs, **{best}** had the best risk-adjusted result. "
           "As of the 2026-07 rule test, no momentum or volatility-targeting overlay beat it — "

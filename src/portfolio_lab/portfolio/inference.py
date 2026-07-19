@@ -147,6 +147,47 @@ def deflated_sharpe(x, sharpes_across_trials) -> dict:
     return dict(sr0_star=float(sr0), dsr=psr(x, sr0))
 
 
+# --------------------------------------------- PBO (Bailey-Borwein-LdP-Zhu 2017, CSCV)
+
+def pbo_cscv(monthly: pd.DataFrame, S: int = None) -> dict:
+    """Probability of Backtest Overfitting via combinatorially symmetric cross-validation.
+
+    Rows with any NaN are dropped (all trials aligned). The T×N return matrix is split into
+    S contiguous blocks; for each of C(S, S/2) block-combinations used as 'in-sample', the
+    IS-best trial's OUT-of-sample relative rank ω is computed. PBO = P(ω ≤ median), i.e. the
+    probability that the trial you would have selected is no better than the median trial
+    out of sample. Selection-skill exists when PBO is low; PBO ≈ 0.5 means picking the
+    IS winner is a coin flip."""
+    from itertools import combinations
+    S = S or C.OPTIMIZER_PBO_S
+    M = monthly.dropna().to_numpy(float)
+    T, N = M.shape
+    if T < 2 * S or N < 2:
+        return dict(pbo=np.nan, S=S, n_trials=N, n_combos=0)
+    blocks = np.array_split(np.arange(T), S)
+    s1 = np.array([M[b].sum(axis=0) for b in blocks])            # S x N block sums
+    s2 = np.array([(M[b] ** 2).sum(axis=0) for b in blocks])
+    nb = np.array([len(b) for b in blocks], float)
+
+    def sharpes(mask: np.ndarray) -> np.ndarray:
+        n = nb[mask].sum()
+        mu = s1[mask].sum(axis=0) / n
+        var = (s2[mask].sum(axis=0) - n * mu ** 2) / (n - 1)
+        return mu / np.sqrt(var)
+
+    below = 0
+    combos = list(combinations(range(S), S // 2))
+    for c in combos:
+        mask = np.zeros(S, bool)
+        mask[list(c)] = True
+        star = int(np.argmax(sharpes(mask)))
+        oos = sharpes(~mask)
+        omega = (oos < oos[star]).sum() / (N - 1) if N > 1 else np.nan   # OOS rank in [0,1]
+        if omega <= 0.5:
+            below += 1
+    return dict(pbo=float(below / len(combos)), S=S, n_trials=N, n_combos=len(combos))
+
+
 # ----------------------------------------------------------------- the standing table
 
 BENCHMARKS = ("1/N", "Min-variance")

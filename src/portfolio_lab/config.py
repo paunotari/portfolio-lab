@@ -140,6 +140,8 @@ OPTIMIZER_LORO_REPORT = OPTIMIZER_DIR / "REPORT_exposure_robustness.md"
 OPTIMIZER_INFERENCE = OPTIMIZER_DIR / "optimizer_inference.csv"        # Sharpe inference
 OPTIMIZER_SENSITIVITY = OPTIMIZER_DIR / "optimizer_sensitivity.csv"    # M17 grids
 OPTIMIZER_SENSITIVITY_REPORT = OPTIMIZER_DIR / "REPORT_sensitivity.md"
+OPTIMIZER_ATTRIBUTION = OPTIMIZER_DIR / "optimizer_attribution.csv"    # M21 per-sleeve
+OPTIMIZER_PBO_S = 16                       # CSCV blocks (Bailey et al. 2017); C(16,8)=12870
 
 # Sharpe inference (Ledoit-Wolf 2008 studentized circular block bootstrap — see
 # info/literature/sharpe-inference.md). Block=None -> auto T^(1/3).

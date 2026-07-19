@@ -110,9 +110,8 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       standing section of `REPORT_optimizer.md` on every build. **Verdict (M14): NOTHING
       beats 1/N at 5%** — min-variance's +0.20 ann. Sharpe edge is p_boot 0.055 — and
       1/N+vol-target / balanced sliders are significantly WORSE than 1/N vs Min-var.
-  - [ ] Remaining for the paper: PBO (CSCV — needs the per-refit trial matrix, pairs with
-        the per-sleeve attribution item) and the block-size sensitivity b ∈ {3, 6, 10}
-        (belongs in the sensitivity grids below).
+  - [x] PBO — **BUILT+MEASURED 2026-07-19 (M21): 33.2%** (CSCV S=16; `inference.pbo_cscv`,
+        standing in the report). Block-size sensitivity: done in M17's grid.
 - [x] **Exposure-robustness of the walk-forward verdicts — BUILT 2026-07-19** (motivated by
       M12). (a) half-sample Sharpe split + (b) rolling-36m beats-1/N share + per-region
       Reference correlations are now a standing section of `REPORT_optimizer.md`
@@ -120,8 +119,10 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       walk-forward via `python -m portfolio_lab.portfolio.validation --loro`
       (`REPORT_exposure_robustness.md`). First read: min-var 100% / ERC 99% / HRP 98% of
       rolling windows beat 1/N; equity maximin 33%, momentum 36%.
-  - [ ] (d) OOS return attribution by sleeve — needs storing per-refit weights in the
-        walk-forward; deferred.
+  - [x] (d) OOS return attribution by sleeve — **BUILT+MEASURED 2026-07-19 (M21)**:
+        per-refit weights now stored in walk-forward meta; `validation.sleeve_attribution`
+        → `optimizer_attribution.csv` + report section. Headline: min-variance = 82%
+        Quality; the all-weather's gold sleeve = 33% of its OOS return.
   - [x] **Anchor REGIONAL per-quadrant means — MEASURED 2026-07-19, verdict: cannot bite
         (M15).** Built (`long_history.market_prior` + `_anchor_mu_q` pass 1, behind
         `OPTIMIZER_ANCHOR_REGIONAL`) and A/B'd: equity maximin walk-forward IDENTICAL (its

@@ -323,3 +323,22 @@ launch-selection bias), the backfill critique is answered with measurements, not
 **See:** split table (reproducible one-liner on `optimizer_walkforward_returns.csv`).
 **Code:** ad-hoc on cached CSV. **Data:** walk-forward net OOS returns. **Status:**
 descriptive sub-period read; closes pre-draft check 2.
+
+## M21 — PBO 33%, and min-variance is measured to be a Quality bet in disguise
+**Claim:** (a) the probability of backtest overfitting for our contestant selection (CSCV,
+Bailey et al. 2017; S=16, 12,870 half-splits, 11 trials on the walk-forward net OOS matrix)
+is **33.2%** — the in-sample winner carries real OOS information (well below the 50%
+coin-flip), but one split in three would have crowned a below-median contestant: moderate
+selection risk, coherent with M14's borderline significance. (b) Per-sleeve attribution
+(arithmetic Brinson shares, weights per refit × sleeve returns): **min-variance earns 82%
+of its OOS return from the Quality sleeves** (USA Quality 52%, World Quality 30%) — the
+M2/low-vol hypothesis is now a measurement: min-variance is a defensive-Quality factor bet
+wearing an optimizer's name, and the paper/product must describe it as such. The
+all-weather flagship's gold sleeve is structural, not decorative (33% of its OOS return,
+plus EM Enhanced Value 32%, bonds 6%); HRP is the only rule that actually spreads (top
+sleeve 9%).
+**See:** `REPORT_optimizer.md` PBO line + attribution section · `optimizer_attribution.csv`.
+**Code:** `inference.pbo_cscv` (unit-tested null≈0.5 / dominant-trial→low),
+`validation.sleeve_attribution` (+ per-refit weights in walk-forward meta).
+**Data:** walk-forward net OOS returns + per-refit weights. **Status:** OOS decomposition;
+closes the last two paper-track appendix items.

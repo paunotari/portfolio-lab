@@ -1,8 +1,9 @@
 # Robust Portfolio Construction at Retail Data Scale: Structure, Constraints, and Regime-Diverse Assets
 
 *A working paper of the portfolio_lab project. Every number below is traceable: the
-[MILESTONES.md](MILESTONES.md) ledger entry (M1–M10) names the producing module, the input
-data, and the validation status. Regenerate any figure by running the named module.*
+[MILESTONES.md](MILESTONES.md) ledger entry (M1–M21) names the producing module, the input
+data, and the validation status. Regenerate any figure by running the named module. The
+candidate methodological contribution is formalized in [estimator.md](estimator.md).*
 
 ---
 
@@ -24,27 +25,42 @@ noise — 15 of 16 factor×quadrant patterns hold from 1960 to today; and (5) a
 worst-macro-quadrant maximin portfolio over a menu extended with bonds, gold and cash — with
 its noisy per-quadrant inputs shrunk toward six decades of evidence — achieves the best
 risk-adjusted out-of-sample result of any construction we field that is not itself
-era-flagged: Sharpe 0.95 at 8.7% volatility and −16.7% maximum drawdown (2009–2026). The
-practical thesis: **at retail data scale, allocate by structure, diversify by constraint,
-extend the menu across regime-diverse asset classes, shrink every estimated input toward the
-longest defensible history — and keep the equal-weight benchmark on screen.**
+era-flagged: Sharpe 0.95 at 8.7% volatility and −16.7% maximum drawdown (2009–2026). We then
+subject every claim to the referee's checklist: (6) **no Sharpe edge over equal weight is
+statistically significant at 5%** (Ledoit-Wolf 2008 block bootstrap; the winner's edge is
+p≈0.055, and crosses 5% only under the least conservative block length) while several
+overlays are significantly *worse*; the probability of backtest overfitting in our contestant
+selection is 33% (CSCV); (7) the input-shrinkage estimator — pre-registered and frozen —
+**confirms on a virgin Ken French international universe** whose out-of-sample window
+contains two prolonged bears; and (8) results survive real-time label lags, the live-index
+era, leave-one-region-out menus, and cost/refit/cap grids. The practical thesis: **at retail
+data scale, allocate by structure, diversify by constraint, extend the menu across
+regime-diverse asset classes, shrink every estimated input toward the longest history whose
+sign agrees — and keep the equal-weight benchmark on screen, because your edge over it is
+probably not provable.**
 
 ## 1. The question
 
-Given ~330 monthly observations of 21 equity region/factor indices — the data a serious
+Given ~330 monthly observations of 28 equity region/factor indices — the data a serious
 individual investor can actually assemble — which portfolio-distribution rules deserve trust?
 The literature warns that this is an estimation-error regime: errors in expected returns cost
 ~11× errors in risk estimates (Chopra & Ziemba 1993), optimizers amplify exactly those errors
 (Michaud 1989), and sample-based mean-variance needs on the order of 3,000 months to reliably
-beat equal weight (DeMiguel, Garlappi & Uppal 2009). Our contribution is not a new estimator;
-it is a disciplined, fully reproducible adjudication — plus two menu/input extensions that
-measurably move the frontier at this data scale.
+beat equal weight (DeMiguel, Garlappi & Uppal 2009). Our contributions are (i) a disciplined,
+fully reproducible adjudication with the referee's full checklist applied — significance,
+overfitting probability, exposure decomposition, sensitivity grids; and (ii) a simple,
+transparent estimator for regime-conditioned inputs — **era-agreement-gated long-history
+shrinkage** ([estimator.md](estimator.md)) — validated on a pre-registered universe it never
+touched during development.
 
 ## 2. Data
 
-- **Modern menu:** 21 MSCI region×factor indices (7 regions × Reference/Momentum/Enhanced
-  Value/Quality where available), monthly net-USD total returns, common window 1999-01–2026-06
-  (330 months); look-through sector/country/top-10 weights from factsheets.
+- **Modern menu:** 28 MSCI region×factor indices (8 regions × Reference/Momentum/Enhanced
+  Value/Quality where available; Japan completed 2026-07 from owner exports with the window
+  intact), monthly net-USD total returns, common window 1999-01–2026-06 (330 months);
+  look-through sector/country/top-10 weights from factsheets. Measured redundancy: the menu
+  contains ≈2.8 effective bets (first PC 77% of variance) — equity selection is saturated,
+  and the marginal diversifier is an asset class, not another index (M18).
 - **Macro:** 16 FRED indicators feeding a 4-quadrant growth×inflation regime classifier
   (composite z-scored trends; counted Markov transitions — descriptive statistics, no fitting).
 - **Long-history proxies (free):** Ken French research factors (1926+) and 6 long-only
@@ -52,6 +68,10 @@ measurably move the frontier at this data scale.
   (Swinkels-2019 approximation, verified against known years: 2008 +21%, 2022 −16%); LBMA gold
   (1833+, floating from 1971); T-bill returns (1926+). Proxies are research constructs, never
   investable sleeves.
+- **The virgin confirmatory universe:** 9 Ken French international sleeves
+  (Europe/Japan/Asia-Pacific × market/value/momentum, USD, 1990-11+), never downloaded or
+  inspected during estimator development; protocol and thresholds committed to the repository
+  before the single run (M16); the data snapshot is frozen in-repo.
 
 ## 3. Protocol
 
@@ -109,15 +129,53 @@ And ranking assets by trailing returns points backwards at multi-year horizons (
 trailing: −4.4%/yr seen from 2020, +39.7%/yr seen from 2026) — which is *why* rules are judged
 walk-forward and assets are never judged by their recent tape.
 
+**R8 (M12, M13, M21). Records decompose — and exposures must not impersonate skill.** A
+full-period OOS Sharpe can hide a period effect: the equity maximin was 1/N-like before 2024
+and its record correlates 0.93 with EM. The leave-one-region-out re-race then *inverts* the
+naive reading: dropping EM improves every maximin variant (all-weather 0.93→1.18) — EM
+exposure was a net drag the objective was systematically attracted into, not a lucky ride.
+Attribution closes the loop on the modern winner: **minimum variance earns 82% of its OOS
+return in the Quality sleeves** — it is a defensive-Quality factor bet wearing an optimizer's
+name, and we describe it as such. These three diagnostics (sub-period split, region
+correlation/LORO, per-sleeve attribution) now run as standing sections of every build.
+
+**R9 (M14, M17, M21). With p-values attached, the honest headline is humility.** Under the
+Ledoit-Wolf (2008) studentized block bootstrap, **no contestant beats 1/N significantly at
+5%** — the winner's +0.20 annualized edge is p=0.055, crossing 5% only at the least
+conservative block length (0.042/0.055/0.066 for b=3/6/10) — while the downside *is*
+detectable (1/N+vol-target significantly worse, p=0.009; four contestants lose significantly
+to the winner). Deflated Sharpes ≥0.98 clear the multiplicity bar; the probability of
+backtest overfitting in selecting among our 11 contestants is 33% (CSCV) — real but moderate
+selection information. Across cost (0/10/25 bps), refit (6/12/24m) and cap grids, no ranking
+conclusion flips.
+
+**R10 (M16, M19, M20). The estimator survives pre-registration, real time, and the live
+era.** With protocol and thresholds committed before a single run, the frozen estimator
+improves both maximin variants on the virgin international universe (Δ+0.002/+0.016 over 307
+OOS months containing the dot-com bust and the GFC) — and there, too, nothing beats 1/N
+significantly. Lagging regime labels two months (the realistic publication constraint) does
+not degrade but *improves* every regime-dependent contestant (all-weather 0.93→1.11) — the
+shipped results carry no look-ahead subsidy and are, if anything, conservative. Restricting
+to the live-index era (2015+) preserves the hierarchy, answering the index-backfill critique
+with measurement.
+
 ## 5. Limitations
 
-The modern OOS window (2009–2026) contains no prolonged bear market — the proxy race is the
-longer-track complement, but proxies are frictionless research constructs. The regime
-classifier carries a mild full-sample z-normalization (scale only, direction never). Costs are
-modeled at a flat 10 bps; taxes, spreads and tracking error are not. The bond series is an
-approximation (validated against known years). All results are USD. Nothing here is fitted or
-machine-learned; the flip side is that nothing here exploits information beyond counting,
-shrinking and constraining.
+The modern OOS window (2009–2026) contains no prolonged bear market — the proxy race and the
+virgin universe (whose OOS spans the dot-com bust and the GFC) are the complements, but
+proxies are frictionless research constructs. The regime classifier carries a mild
+full-sample z-normalization (scale only, direction never; the real-time lag test bounds its
+effect — M19) and uses revised rather than vintage FRED values (an ALFRED-vintage replay is
+future work). MSCI factor indices carry pre-launch backfill (mitigated by the live-era split
+and the FF replications, M20/M2/M16). Costs are modeled at a flat 10 bps on refit turnover;
+within-interval constant-mix drift turnover, taxes, spreads and tracking error are not
+charged. The deflated-Sharpe trial count includes fielded contestants, not every variant
+examined during development — the pre-registered confirmatory test is the stronger
+multiplicity defense. The bond series is an approximation (validated against known years).
+All results are USD. Equal weight is menu-relative, and the menu is a design layer: our
+selection principle (span distinct risk sources; measured effective bets) is stated, not
+optimized. Nothing here is fitted or machine-learned; the flip side is that nothing here
+exploits information beyond counting, shrinking and constraining.
 
 ## 6. Conclusion
 
@@ -129,12 +187,18 @@ estimated input shrunk toward the longest history whose sign agrees; and a stand
 equal-weight benchmark that keeps the whole apparatus honest.** The resulting flagship — a
 capped worst-quadrant maximin over equities, Treasuries and gold with history-anchored inputs —
 is not the highest-returning portfolio in any single era; it is the construction that never
-needed to know which era it was in.
+needed to know which era it was in. And the apparatus's last word is a p-value: the edge of
+even the best construction over equal weight is not statistically demonstrable at this data
+scale — which is not a failure of the method but the central fact the method is built
+around.
 
 ## References
 
-Black & Litterman (1992) · Chopra & Ziemba (1993) · DeMiguel, Garlappi & Uppal (2009) ·
-Fama & French (1993) · Frazzini & Pedersen (2014) · Jagannathan & Ma (2003) · Jegadeesh &
-Titman (1993) · Ledoit & Wolf (2004) · López de Prado (2016) · Maillard, Roncalli & Teïletche
-(2010) · Markowitz (1952) · Michaud (1989) · Politis & Romano (1994) · Swinkels (2019) —
-full canon with verdicts and implementation-grade deep dives in [literature.md](literature.md).
+Ang & Bekaert (2002, 2004) · Bailey & López de Prado (2014) · Bailey, Borwein, López de
+Prado & Zhu (2017) · Black & Litterman (1992) · Chopra & Ziemba (1993) · DeMiguel, Garlappi
+& Uppal (2009) · Fama & French (1993) · Frazzini & Pedersen (2014) · Jagannathan & Ma (2003)
+· Jegadeesh & Titman (1993) · Jorion (1986) · Ledoit & Wolf (2004, 2008) · López de Prado
+(2016) · Maillard, Roncalli & Teïletche (2010) · Markowitz (1952) · Michaud (1989) · Politis
+& Romano (1994) · Swinkels (2019) — full canon with verdicts and implementation-grade deep
+dives in [literature.md](literature.md); the estimator's formal treatment in
+[estimator.md](estimator.md).
