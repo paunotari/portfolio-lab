@@ -104,9 +104,15 @@ Check items off as completed. Add new ones as they come up; keep entries short a
 > Portfolio Management* / *Journal of Asset Management* / a quant-finance conference. Top
 > academic journals (JF/RFS) are not realistic for this design. What's missing before writing:
 
-- [ ] **Statistical significance for Sharpe differences** — Ledoit & Wolf (2008) bootstrap
-      test for Sharpe equality (+ deflated Sharpe / López de Prado's PBO as overfitting
-      checks). Without this, no referee reads past the tables.
+- [x] **Statistical significance for Sharpe differences — BUILT 2026-07-19** (`portfolio/
+      inference.py` + deep dive `info/literature/sharpe-inference.md`): Ledoit-Wolf (2008)
+      HAC + studentized circular block bootstrap, and deflated Sharpe (Bailey-LdP 2014),
+      standing section of `REPORT_optimizer.md` on every build. **Verdict (M14): NOTHING
+      beats 1/N at 5%** — min-variance's +0.20 ann. Sharpe edge is p_boot 0.055 — and
+      1/N+vol-target / balanced sliders are significantly WORSE than 1/N vs Min-var.
+  - [ ] Remaining for the paper: PBO (CSCV — needs the per-refit trial matrix, pairs with
+        the per-sleeve attribution item) and the block-size sensitivity b ∈ {3, 6, 10}
+        (belongs in the sensitivity grids below).
 - [x] **Exposure-robustness of the walk-forward verdicts — BUILT 2026-07-19** (motivated by
       M12). (a) half-sample Sharpe split + (b) rolling-36m beats-1/N share + per-region
       Reference correlations are now a standing section of `REPORT_optimizer.md`

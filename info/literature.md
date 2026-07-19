@@ -31,6 +31,7 @@ codeable without fetching the paper:
 | [stationary-bootstrap.md](literature/stationary-bootstrap.md) | Politis-Romano ↔ our scenario engine, exact correspondence |
 | [low-volatility-anomaly.md](literature/low-volatility-anomaly.md) | Haugen-Baker → Clarke-de Silva-Thorley → Blitz-van Vliet · BAB mechanism · why min-var wins our walk-forward |
 | [factor-canon.md](literature/factor-canon.md) | FF3/momentum/VME/QMJ math + per-quadrant predictions vs our measurements |
+| [sharpe-inference.md](literature/sharpe-inference.md) | JK/Memmel baseline · Ledoit-Wolf 2008 HAC + studentized circular block bootstrap · deflated Sharpe (Bailey-LdP) · our pairwise protocol + pitfalls |
 
 ---
 
@@ -148,6 +149,20 @@ not the default.
 
 ---
 
+### Ledoit & Wolf (2008), "Robust performance hypothesis testing with the Sharpe ratio" — *Journal of Empirical Finance* ([pdf](http://www.ledoit.net/jef2008_abstract.htm)); + Bailey & López de Prado (2014), "The Deflated Sharpe Ratio" — *JPM*
+The referee-standard answer to "is that Sharpe difference real?": a delta-method HAC standard
+error plus a **studentized circular block bootstrap** p-value that stays honest under the heavy
+tails and autocorrelation that break the classic Jobson-Korkie z-test. Bailey-LdP add the
+**multiplicity** correction: the best of N tried strategies has an inflated Sharpe by
+construction; the deflated Sharpe is P(true SR > 0) against the expected maximum of N
+zero-skill trials.
+**⇒ for us — ADOPTED (2026-07, the paper-track gate):** implemented faithfully in
+`portfolio/inference.py` (bootstrap primary, HAC alongside, DSR per contestant) and run on the
+walk-forward net OOS returns every build. First verdict (M14): **nothing on the menu beats 1/N
+significantly at 5%** — even min-variance's +0.20 annualized Sharpe edge lands at p_boot
+0.055 — while two overlays are significantly WORSE than 1/N; every ranking sentence in the
+reports now carries its p-value. → [sharpe-inference.md](literature/sharpe-inference.md)
+
 ## 2. Regime detection & forecasting — what the grown-ups do
 
 ### Hamilton (1989), "A New Approach to the Economic Analysis of Nonstationary Time Series and the Business Cycle" — *Econometrica*
@@ -239,6 +254,9 @@ The literature, compressed into build directives for
    same honesty protocol that already governs the quadrant forecasting.
 8. **CVaR later, ML never (here)**: CVaR as an optional Tier-2 tail metric (Rockafellar-Uryasev);
    fitted regime/return models stay Phase 4 with non-FRED data.
+9. **No ranking claim without a p-value** (Ledoit-Wolf 2008; Bailey-LdP 2014): every Sharpe
+   comparison ships with the block-bootstrap test and the deflated Sharpe; "indistinguishable
+   from 1/N" is a reportable result, not a failure.
 
 ---
 

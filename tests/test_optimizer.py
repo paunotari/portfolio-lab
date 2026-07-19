@@ -393,6 +393,67 @@ def test_vol_managed_is_causal_and_derisks():
     assert (extra >= 0).all(), "turnover is non-negative"
 
 
+def test_sharpe_test_same_sharpe_not_rejected():
+    from portfolio_lab.portfolio.inference import sharpe_diff_test
+    rng = np.random.default_rng(11)
+    x = rng.normal(0.008, 0.04, 600)
+    y = rng.normal(0.008, 0.04, 600)          # independent, same true Sharpe
+    t = sharpe_diff_test(x, y, B=999, seed=3)
+    assert t["p_boot"] > 0.05 and t["p_hac"] > 0.05, f"false rejection: {t}"
+
+
+def test_sharpe_test_detects_real_difference():
+    from portfolio_lab.portfolio.inference import sharpe_diff_test
+    rng = np.random.default_rng(5)
+    x = rng.normal(0.012, 0.03, 480)          # SR ~0.40/month
+    y = rng.normal(-0.004, 0.05, 480)         # negative SR
+    t = sharpe_diff_test(x, y, B=999, seed=3)
+    assert t["delta"] > 0 and t["p_boot"] < 0.01 and t["p_hac"] < 0.01, f"missed: {t}"
+
+
+def test_sharpe_test_scale_invariant_and_symmetric():
+    from portfolio_lab.portfolio.inference import sharpe_diff_test
+    rng = np.random.default_rng(9)
+    x = rng.normal(0.01, 0.04, 300)
+    y = rng.normal(0.004, 0.05, 300)
+    a = sharpe_diff_test(x, y, B=499, seed=3)
+    b = sharpe_diff_test(3 * x, 3 * y, B=499, seed=3)   # Sharpe is scale-free
+    assert abs(a["d"] - b["d"]) < 1e-10 and a["p_boot"] == b["p_boot"]
+    c = sharpe_diff_test(y, x, B=499, seed=3)
+    assert abs(a["delta"] + c["delta"]) < 1e-12, "test not antisymmetric in its arguments"
+
+
+def test_deflated_sharpe_penalizes_multiplicity():
+    from portfolio_lab.portfolio.inference import deflated_sharpe, psr
+    rng = np.random.default_rng(2)
+    x = rng.normal(0.006, 0.03, 240)
+    assert psr(x, 0.0) > 0.9                              # decent Sharpe, no multiplicity
+    few = deflated_sharpe(x, [0.05, 0.20])
+    many = deflated_sharpe(x, list(rng.normal(0.1, 0.08, 60)))
+    assert many["sr0_star"] > few["sr0_star"], "expected-max SR should grow with N trials"
+    assert many["dsr"] < few["dsr"], "DSR should fall as the trial count grows"
+
+
+def test_inference_table_on_cached_walkforward():
+    if not C.OPTIMIZER_WALKFORWARD_RETURNS.exists():
+        return
+    import pandas as pd
+    from portfolio_lab.portfolio import inference as inf
+    monthly = pd.read_csv(C.OPTIMIZER_WALKFORWARD_RETURNS, index_col=0,
+                          parse_dates=True).iloc[:, :4]
+    old = C.OPTIMIZER_INFER_B
+    try:
+        C.OPTIMIZER_INFER_B = 199                          # keep the test fast
+        table = inf.inference_table(monthly)
+    finally:
+        C.OPTIMIZER_INFER_B = old
+    assert len(table) == monthly.shape[1]
+    for c in [c for c in table.columns if c.startswith("p_") or c == "dsr"]:
+        v = table[c].dropna()
+        assert ((v >= 0) & (v <= 1)).all(), f"{c} out of [0,1]"
+    assert table.set_index("portfolio")["delta_ann_vs_1/N"].isna()["1/N"]
+
+
 def test_exposure_diagnostics_bounds():
     if not (C.LEVELS_WIDE.exists() and C.OPTIMIZER_WALKFORWARD_RETURNS.exists()):
         return

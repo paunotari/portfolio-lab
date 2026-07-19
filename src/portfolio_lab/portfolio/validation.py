@@ -285,6 +285,8 @@ def run():
     monthly.to_csv(C.OPTIMIZER_WALKFORWARD_RETURNS)
     expo = exposure_diagnostics(monthly)
     expo.to_csv(C.OPTIMIZER_EXPOSURE, index=False)
+    from portfolio_lab.portfolio.inference import inference_table
+    inference_table(monthly).to_csv(C.OPTIMIZER_INFERENCE, index=False)
     print(f"[validation] walk-forward: {meta['n_refits']} refits, OOS "
           f"{meta['oos_start']} -> {meta['oos_end']} ({meta['oos_months']} months)")
     print(summary.to_string(index=False))

@@ -137,6 +137,12 @@ OPTIMIZER_WALKFORWARD_RETURNS = OPTIMIZER_DIR / "optimizer_walkforward_returns.c
 OPTIMIZER_EXPOSURE = OPTIMIZER_DIR / "optimizer_exposure.csv"          # M12 diagnostics
 OPTIMIZER_LORO = OPTIMIZER_DIR / "optimizer_loro.csv"                  # leave-one-region-out
 OPTIMIZER_LORO_REPORT = OPTIMIZER_DIR / "REPORT_exposure_robustness.md"
+OPTIMIZER_INFERENCE = OPTIMIZER_DIR / "optimizer_inference.csv"        # Sharpe inference
+
+# Sharpe inference (Ledoit-Wolf 2008 studentized circular block bootstrap — see
+# info/literature/sharpe-inference.md). Block=None -> auto T^(1/3).
+OPTIMIZER_INFER_B = 4999
+OPTIMIZER_INFER_BLOCK = None
 OPTIMIZER_VIZ = OPTIMIZER_DIR / "optimizer_viz.html"
 OPTIMIZER_MAX_SLEEVE_PCT = 40.0     # default per-sleeve cap (Tier-2 overridable)
 OPTIMIZER_MIN_SLEEVES = 3           # implied by the 40% cap; kept explicit for overrides

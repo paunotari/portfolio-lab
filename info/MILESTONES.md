@@ -189,3 +189,24 @@ TODO (paper track).
 `exposure_diagnostics` (standing report section + `optimizer_exposure.csv`).
 **Data:** MSCI 28-sleeve menu + proxies, net of 10 bps. **Status:** OOS modern (walk-forward
 protocol, training-only estimation, same warmup/refit/costs as the honesty table).
+
+## M14 — The honesty table now has p-values: NOTHING beats 1/N significantly
+**Claim:** with the Ledoit-Wolf (2008) studentized circular-block-bootstrap test on the
+walk-forward net OOS returns (B=4999, b≈T^⅓), **no contestant's Sharpe edge over 1/N is
+significant at 5%** — min-variance, the OOS winner with +0.20 annualized Sharpe over 1/N,
+lands at p_boot **0.055** (HAC z-test 0.034 — the bootstrap is the honest one under heavy
+tails). Downside significance IS detectable: vs 1/N, the 1/N+vol-target overlay is
+significantly worse (p=0.009); vs Min-variance, four contestants lose significantly
+(1/N+vol-target 0.003, balanced sliders 0.025, min-var+vol-target 0.027, momentum 0.032).
+The all-weather flagship is statistically indistinguishable from min-variance (p=0.70)
+while running at ~⅔ of its volatility — which is precisely its case. Deflated Sharpes (N=11 contestants) are
+all ≥0.98 — every fielded record survives multiplicity vs zero skill (a low bar in a
+2009-2026 OOS window with no prolonged bear). DeMiguel's verdict, replicated on our menu
+with our own inference: the estimation advantage the optimizers claim is not statistically
+demonstrable in 210 OOS months — which is WHY the product's preferences tilt a structural
+anchor instead of trusting estimated edges.
+**See:** `REPORT_optimizer.md` "Are the Sharpe differences real?" · `optimizer_inference.csv`.
+**Code:** `portfolio/inference.py` (LW test + DSR; unit-tested against synthetic
+same-Sharpe/different-Sharpe cases, scale-invariance and antisymmetry). **Data:** walk-forward
+net OOS monthly returns (2009-01..2026-06). **Status:** the test itself is the validation
+layer; remaining paper items: PBO (CSCV) and block-size sensitivity.

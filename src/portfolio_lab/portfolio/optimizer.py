@@ -746,19 +746,23 @@ def run():
             if uni_ext and set(full_w) <= set(uni_ext["series"]):
                 cones[name] = portfolio_cone(full_w, uni=uni_ext)
 
+    from portfolio_lab.portfolio.inference import inference_table
     from portfolio_lab.portfolio.validation import exposure_diagnostics, walk_forward
     wf_summary, wf_meta, wf_monthly = walk_forward()
     wf_summary.to_csv(C.OPTIMIZER_WALKFORWARD, index=False)
     wf_monthly.to_csv(C.OPTIMIZER_WALKFORWARD_RETURNS)   # cached for portfolio/visualize.py
     wf_expo = exposure_diagnostics(wf_monthly)
     wf_expo.to_csv(C.OPTIMIZER_EXPOSURE, index=False)
+    wf_infer = inference_table(wf_monthly)
+    wf_infer.to_csv(C.OPTIMIZER_INFERENCE, index=False)
 
     profiles = run_profiles(inp)
 
     rows = [dict(portfolio=name, series=s, weight=w)
             for name, res in portfolios.items() for s, w in res["weights"].items()]
     pd.DataFrame(rows).to_csv(C.OPTIMIZER_PORTFOLIOS, index=False)
-    _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta, profiles, wf_expo)
+    _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta, profiles, wf_expo,
+                  wf_infer)
     print(f"[optimizer] wrote {C.OPTIMIZER_REPORT} and {C.OPTIMIZER_PORTFOLIOS}")
 
 
@@ -771,7 +775,7 @@ def _md_table(df: pd.DataFrame, fmts: dict) -> list[str]:
 
 
 def _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta, profiles=None,
-                  wf_expo=None):
+                  wf_expo=None, wf_infer=None):
     rets = inp["rets"]
     L = ["# Portfolio optimizer — default report", ""]
     L += [f"Common window **{rets.index[0].date()} → {rets.index[-1].date()}** "
@@ -873,6 +877,33 @@ def _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta, profiles=N
               "`python -m portfolio_lab.portfolio.validation --loro` re-runs this table with "
               "each region removed (`REPORT_exposure_robustness.md`).", ""]
         L += _md_table(show, {"sharpe_h1": "{:.2f}", "sharpe_h2": "{:.2f}"})
+    if wf_infer is not None and len(wf_infer):
+        L += ["", "### Are the Sharpe differences real? (Ledoit-Wolf 2008 + deflated Sharpe)", ""]
+        L += ["Every ranking above is a point estimate. Per contestant: Ledoit-Wolf (2008) "
+              "studentized circular-block-bootstrap p-value for the Sharpe difference vs 1/N "
+              "and vs Min-variance (HAC z-test alongside in `optimizer_inference.csv`), and "
+              "the deflated Sharpe (Bailey-López de Prado 2014: P(true Sharpe > 0) after "
+              "adjusting for non-normality and for fielding "
+              f"{len(wf_infer)} contestants). Method: info/literature/sharpe-inference.md. "
+              "With ~20 pairwise tests, expect ~1 false positive at 5%; failing to reject is "
+              "modest power, not proof of equality.", ""]
+        show = wf_infer[["portfolio", "sharpe_ann", "dsr", "delta_ann_vs_1/N",
+                         "p_boot_vs_1/N", "delta_ann_vs_Min-variance",
+                         "p_boot_vs_Min-variance"]].copy()
+        for c in show.columns[1:]:
+            show[c] = ["—" if pd.isna(v) else
+                       (f"{v:.3f}" if c.startswith("p_") or c == "dsr" else f"{v:+.2f}")
+                       for v in show[c]]
+        L += _md_table(show, {})
+        sig = wf_infer[(wf_infer["delta_ann_vs_1/N"] > 0)
+                       & (wf_infer["p_boot_vs_1/N"] < 0.05)].portfolio.tolist()
+        worse = wf_infer[(wf_infer["delta_ann_vs_1/N"] < 0)
+                         & (wf_infer["p_boot_vs_1/N"] < 0.05)].portfolio.tolist()
+        L += ["", ("Significantly ABOVE 1/N at 5% (bootstrap): "
+                   + (", ".join(f"**{s}**" for s in sig) if sig else
+                      "**none** — the DeMiguel verdict, now with a p-value") + ".")]
+        if worse:
+            L += [f"Significantly BELOW 1/N: {', '.join(worse)}."]
     best = wf_summary.iloc[0].portfolio
     L += ["", f"Out of sample and net of costs, **{best}** had the best risk-adjusted result. "
           "As of the 2026-07 rule test, no momentum or volatility-targeting overlay beat it — "
