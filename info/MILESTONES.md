@@ -310,3 +310,16 @@ revised values — a full ALFRED-vintage replay is future appendix work.
 **See:** A/B table (reproducible: set the flag, re-run `walk_forward()`).
 **Code:** `optimizer._load_states` (shift) + `config.OPTIMIZER_STATE_LAG_MONTHS`.
 **Data:** MSCI walk-forward, net of costs. **Status:** OOS modern; closes pre-draft check 1.
+
+## M20 — The hierarchy survives the live-index era (backfill-bias check)
+**Claim:** MSCI's factor indices were launched ~2013-15 with backfilled history (providers
+launch what backtested well). Restricting the walk-forward OOS record to 2015+ months only
+(138 live-era months, every index computed in real time by then): the hierarchy holds —
+min-variance #1 (0.963), all-weather #2 (0.916), HRP 0.857 > ERC 0.831 > 1/N 0.812; capped
+maximin still beats unconstrained (0.804 vs 0.694). No ledger conclusion flips; the only
+movement is the equity maximin sliding a hair below 1/N (0.804 vs 0.812), consistent with
+M12. Together with the FF replications (M2, M16 — academic data computed continuously, no
+launch-selection bias), the backfill critique is answered with measurements, not words.
+**See:** split table (reproducible one-liner on `optimizer_walkforward_returns.csv`).
+**Code:** ad-hoc on cached CSV. **Data:** walk-forward net OOS returns. **Status:**
+descriptive sub-period read; closes pre-draft check 2.

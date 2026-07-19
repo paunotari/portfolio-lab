@@ -157,13 +157,10 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         CONSERVATIVE spec; defaults unchanged (no tuning on the test), paper states both.
         Remaining gap stated: revised-vs-vintage FRED values (ALFRED replay = future
         appendix).
-  - [ ] **MSCI backfill/selection bias (limitations paragraph + one cheap split).** The
-        factor indices were launched ~2013-15 with backfilled pre-launch history — index
-        providers launch what backtested well, so 1997-2013 factor-index history is a
-        provider backtest. Mitigation already in hand: every structural conclusion
-        replicates on continuously-computed academic FF data (M2 proxy race, M16 virgin
-        universe). Add the cheap live-era check: hierarchy on 2015+ months only, from the
-        cached walk-forward returns.
+  - [x] **MSCI backfill/selection bias — MEASURED 2026-07-19 (M20).** Live-era split
+        (2015+ only, 138 months): hierarchy holds (min-var #1 0.963, all-weather #2, HRP >
+        ERC > 1/N), no conclusion flips. Plus the FF replications (M2/M16) as the
+        structural defense. Limitations paragraph still to be written into the draft.
   - [ ] Limitations to STATE (no test needed): within-interval constant-mix drift turnover
         is uncosted (small; C1/C3 survive 25 bps anyway); DSR's N=11 counts fielded
         contestants, not every dev-time variant (the pre-registered M16 test is the
