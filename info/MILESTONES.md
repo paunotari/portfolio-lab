@@ -151,3 +151,20 @@ returns-only) + registry rows 145817/145829/706026/939200. **Data:** owner MSCI 
 in `data/raw/msci_indexes/Japan/` + `AC_Asia_ex_Japan/` (NETR USD monthly, verified in-file).
 **Status:** full-sample descriptive (excesses); walk-forward net-of-costs OOS (rankings).
 Look-through for all 7 factsheet-less sleeves stays approximated (caveat #18).
+
+## M12 — The equity maximin's OOS record is largely an EM ride (owner suspicion, confirmed)
+**Claim:** Maximin (diversified) holds ~48% EM at its caps (corner solution, flagged in the
+report) and its walk-forward OOS monthly returns correlate **0.93 with EM Reference** — the
+highest EM loading in the table after unconstrained maximin (0.96). Split at 2023-12: its
+pre-2024 OOS Sharpe is **0.70 — indistinguishable from 1/N (0.68) / ERC (0.71) / HRP (0.73)**;
+the 2024+ EM boom (EM sleeve Sharpe 0.43→1.40) lifts it to 1.68 along with everyone else.
+Min-variance's edge, by contrast, exists in BOTH halves (0.94 / 1.71). Conclusion: the equity
+maximin variant has no demonstrated skill beyond its structural EM tilt; the all-weather
+variant (0.72 / 2.79, corr 0.88) remains the defensible flagship. Recommendation unchanged
+but sharpened: never quote the equity maximin's full-period OOS Sharpe without this split.
+**See:** this entry's numbers (reproducible: split-Sharpe + corr on
+`optimizer_walkforward_returns.csv` × `levels_wide.csv` EM column). **Code:** ad-hoc
+one-liner; promotion to a standing report section is a TODO (sub-period + leave-region-out).
+**Data:** cached walk-forward OOS returns (2009-01..2026-06, net of costs).
+**Status:** descriptive decomposition of OOS results; not yet a significance test (that is
+paper-track item 1).

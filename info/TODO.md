@@ -107,6 +107,13 @@ Check items off as completed. Add new ones as they come up; keep entries short a
 - [ ] **Statistical significance for Sharpe differences** — Ledoit & Wolf (2008) bootstrap
       test for Sharpe equality (+ deflated Sharpe / López de Prado's PBO as overfitting
       checks). Without this, no referee reads past the tables.
+- [ ] **Exposure-robustness of the walk-forward verdicts** (motivated by M12 — the equity
+      maximin's OOS record is ~an EM ride). Promote the ad-hoc M12 decomposition into a
+      standing validation-report section: (a) sub-period OOS Sharpe split (pre/post-2024 or
+      rolling 5y), (b) per-contestant correlation with each region Reference, (c)
+      **leave-one-region-out walk-forward** (drop EM sleeves, re-run — does each contestant's
+      rank survive?), (d) OOS return attribution by sleeve. A rule only gets credit if its
+      edge survives removing its favorite region.
 - [ ] **A third universe** (international FF portfolios from the same Ken French library —
       Europe/Japan/Asia-Pacific factor portfolios, free) so the estimator's OOS gain is shown
       on data it never touched during development.
