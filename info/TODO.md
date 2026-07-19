@@ -90,11 +90,11 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       per profile in the report (`optimizer._profile_cones`): equity profiles ~14% 5y loss
       probability vs all-weather 1.4% (10x), converging by 20y — horizon is now a measured
       selector between profiles.
-- [~] **B3 — currency: EUR re-statement — UNHEDGED HALF MEASURED 2026-07-19 (M24).**
-      Podium unchanged in unhedged EUR (min-var #1, HRP #2, all-weather #3); vol-target
-      overlays lose their edge (FX noise dilutes vol control — their USD rank was partly a
-      currency artifact). Remaining: hedged re-statement (EUR short rate ~ forward points)
-      + the C2 hedging deep dive.
+- [x] **B3 — currency: EUR re-statement — CLOSED 2026-07-19 (M24 + update).** Unhedged:
+      podium unchanged, vol-target overlays lose their edge (FX noise). Hedged (CIP with
+      euro 3m interbank, carry −0.56%/yr): rankings virtually the USD table. All
+      construction conclusions hold in all three seats; the currency seat moves levels,
+      never decisions. C2 deep dive done (`literature/currency-hedging.md`).
 
 ### Paper track — toward a publishable contribution (owner goal, 2026-07)
 

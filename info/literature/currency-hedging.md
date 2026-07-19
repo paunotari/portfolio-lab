@@ -27,16 +27,16 @@ noise dilutes volatility control, so their USD ranking was partly a currency art
 Consistent with Campbell et al.: for an equity-heavy EUR investor, unhedged USD exposure
 behaved as the embedded hedge the theory predicts over this window.
 
-## 3. What remains (the hedged half of B3)
+## 3. The hedged half — MEASURED (same day; B3 closed)
 
-Implementation sketch, no new concepts: monthly hedged EUR return ≈ r_USD + (rf_EUR −
-rf_USD), with rf_EUR from a FRED euro-area short rate (3m interbank, 1994+; or €STR for
-recent years) and rf_USD from the FF risk-free series already ingested. Then re-state the
-walk-forward table hedged, compare hedged/unhedged/USD side by side, and check the
-bond-heavy all-weather specifically (the literature predicts hedging helps IT most).
-Caveats to state when done: CIP deviations post-2008 (basis), monthly rebalanced hedge
-assumed frictionless, and the whole exercise is a re-statement of the same decisions — the
-weights never see the currency.
+Monthly hedged EUR return ≈ r_USD + (rf_EUR − rf_USD) by covered interest parity (euro-area
+3m interbank from FRED as the short rate; FF rf on the US side; mean carry −0.56%/yr over
+the OOS window). Result: **rankings are virtually the USD table** — top-5 identical
+(min-var 0.99, min-var+VT 0.89, all-weather 0.85, HRP 0.81, ERC 0.79), only 1/N and the
+equity maximin swap #6/#7. Across all three seats (USD, EUR unhedged, EUR hedged) every
+construction conclusion holds: the currency seat moves LEVELS, never DECISIONS. Caveats:
+CIP basis post-2008, frictionless monthly hedge, 3m rate proxying the 1m tenor; and the
+whole exercise re-states the same decisions — the weights never see the currency.
 
 **⇒ for us:** the construction verdicts are currency-robust (measured); the hedging DECISION
 is a preference/profile question — "hedge the bond sleeve, leave equity USD unhedged" is the

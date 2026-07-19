@@ -387,6 +387,12 @@ re-statement (needs EUR short-rate data, pairs with the C2 deep dive) remains op
 **Code:** ad-hoc on cached CSV + keyless FRED fetch. **Data:** walk-forward OOS returns,
 DEXUSEU 1999+. **Status:** descriptive currency re-statement of OOS results; closes the
 unhedged half of B3.
+**Update (same day, hedged half — B3 CLOSED):** hedged EUR ≈ USD return + (rf_EUR − rf_US)
+(covered interest parity; euro-area 3m interbank from FRED, mean carry −0.56%/yr over the
+OOS window): rankings are virtually the USD table (top-5 identical; 1/N and equity maximin
+swap #6/#7). Across all three seats — USD, EUR unhedged, EUR hedged — every construction
+conclusion holds; the seat moves levels, never decisions. Caveats stated: CIP basis
+post-2008, frictionless monthly hedge, 3m rate as the 1m proxy.
 
 ## M25 — Anchor decision closed: ERC stays the prior, HRP is the (insignificantly) better construction
 **Claim:** with all accumulated evidence, HRP edges ERC in every table by a hair — modern
