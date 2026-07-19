@@ -178,7 +178,10 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
     meta = dict(warmup_months=warmup, refit_months=refit, n_refits=len(refit_dates),
                 oos_start=str(oos_index[0].date()), oos_end=str(oos_index[-1].date()),
                 oos_months=len(oos_index), tc_bps=C.OPTIMIZER_TC_BPS,
-                n_series=rets.shape[1], dropped_region=drop_region)
+                n_series=rets.shape[1], dropped_region=drop_region,
+                # pre-cost pieces, so the sensitivity grid can re-net at any cost level
+                # without re-running the optimization (weights never depend on costs)
+                _gross=pd.DataFrame(gross), _turnover=pd.DataFrame(turn))
     return summary, meta, pd.DataFrame(monthly)
 
 

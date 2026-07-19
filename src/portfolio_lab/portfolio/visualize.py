@@ -228,13 +228,38 @@ def build_data() -> dict:
     except Exception as e:
         print(f"[visualize] WARN profiles skipped ({e})")
 
+    # 13-16. the referee's checklist (M12-M17 artifacts, all from cached CSVs)
+    referee = {}
+    if C.OPTIMIZER_INFERENCE.exists():
+        referee["inference"] = pd.read_csv(C.OPTIMIZER_INFERENCE).round(4).to_dict("records")
+    if C.OPTIMIZER_LORO.exists():
+        referee["loro"] = (pd.read_csv(C.OPTIMIZER_LORO)
+                           [["dropped_region", "portfolio", "oos_sharpe_rf0", "rank"]]
+                           .round(3).to_dict("records"))
+    if C.FF_INTL_AB.exists():
+        ab = pd.read_csv(C.FF_INTL_AB, header=[0, 1], index_col=0)
+        referee["intl"] = [dict(portfolio=p,
+                                modern=round(float(ab.loc[p, ("modern", "oos_sharpe_rf0")]), 3),
+                                anchored=round(float(ab.loc[p, ("anchored", "oos_sharpe_rf0")]), 3))
+                           for p in ab.index]
+    if C.OPTIMIZER_SENSITIVITY.exists():
+        sd = pd.read_csv(C.OPTIMIZER_SENSITIVITY)
+        if "portfolio" in sd.columns:
+            referee["sens"] = (sd[sd.portfolio.notna()]
+                               [["dimension", "cell", "portfolio", "oos_sharpe"]]
+                               .round(3).to_dict("records"))
+        blk = sd[sd.dimension == "lw_block"]
+        if len(blk) and "c2_p_minvar_vs_1N" in blk.columns:
+            referee["sens_block"] = (blk[["cell", "c2_p_minvar_vs_1N", "c2_p_hrp_vs_1N"]]
+                                     .round(4).to_dict("records"))
+
     outlook = ({_short(k): round(float(v), 3) for k, v in inp["outlook"].items()}
                if inp["outlook"] else None)
     return dict(window=f"{rets.index[0].date()} → {rets.index[-1].date()}", T=inp["T"],
                 n=len(series), delta_star=round(inp["delta_star"], 3), outlook=outlook,
                 wf=wf, sleeves=sleeve_pts, portfolios=port_pts, quad=quad, bl=bl, wrc=wrc,
                 cones=cones, roster_weights=roster_weights, longhist=longhist,
-                phase_a=phase_a)
+                phase_a=phase_a, referee=referee)
 
 
 TEMPLATE = """<!DOCTYPE html>
@@ -661,6 +686,49 @@ out-of-sample results in every test we ran.</p>
 <div id="paprof" class="chart" style="height:380px"></div>
 </div>
 
+<div id="rf1">
+<div class="eyebrow">Referee's checklist · statistical significance</div>
+<h2>Is any Sharpe edge real? (Ledoit-Wolf 2008)</h2>
+<p class="cap">Each bar is a contestant's annualized OOS Sharpe edge over 1/N; the label is the
+studentized circular-block-bootstrap p-value. <b>Nothing clears 1/N at 5%</b> — even
+min-variance lands at p≈0.055 — while some overlays are significantly <i>worse</i> (red).
+Gray means "indistinguishable from equal weight," which with 210 OOS months is the expected
+DeMiguel verdict, now with p-values (MILESTONES M14).</p>
+<div id="infchart" class="chart" style="height:400px"></div>
+</div>
+
+<div id="rf2">
+<div class="eyebrow">Referee's checklist · exposure robustness</div>
+<h2>Does the rank survive losing a region? (leave-one-region-out)</h2>
+<p class="cap">The whole walk-forward re-run with each region's sleeves removed; lines track
+each contestant's RANK. Flat line = the rank is a property of the method. The one big mover:
+dropping EM <b>improves</b> every maximin variant (the all-weather takes #1 at 1.18) — EM
+exposure was a net drag the objective kept being attracted into (MILESTONES M13).</p>
+<div id="lorochart" class="chart" style="height:430px"></div>
+</div>
+
+<div id="rf3">
+<div class="eyebrow">Referee's checklist · the virgin universe</div>
+<h2>The pre-registered confirmatory test (Ken French international)</h2>
+<p class="cap">Protocol committed before the run: 9 sleeves (Europe/Japan/Asia-Pacific ×
+Reference/Value/Momentum, 1990+), 307 virgin OOS months including the dot-com bust and the
+GFC, one A/B — the frozen long-history estimator off (pale) vs on (solid). Declared verdict:
+<b>CONFIRMS</b> — every maximin variant improves or holds (MILESTONES M16). Context bars show
+the rest of the table barely moves, as expected: the estimator only touches regime inputs.</p>
+<div id="intlchart" class="chart" style="height:380px"></div>
+</div>
+
+<div id="rf4">
+<div class="eyebrow">Referee's checklist · sensitivity grids</div>
+<h2>Is anything a knife-edge? (costs · refit cadence · cap levels · block size)</h2>
+<p class="cap">One dimension varied at a time around the shipped configuration; lines are net
+OOS Sharpe for the key contestants. A flat line across a dimension means the conclusion does
+not depend on that choice. The second panel tracks the headline p-value (min-variance vs 1/N)
+across bootstrap block sizes against the 5% line (MILESTONES M17).</p>
+<div id="senschart" class="chart" style="height:400px"></div>
+<div id="sensblock" class="chart" style="height:240px"></div>
+</div>
+
 <hr><p class="cap">Companions: <span class="num">REPORT_optimizer.md</span> (numbers),
 <span class="num">REPORT_proxy_backtest.md</span> + <span class="num">REPORT_window_robustness.md</span>
 (the 90-year race), <span class="num">REPORT_stress.md</span> (episodes),
@@ -888,6 +956,84 @@ if(PA.profiles&&PA.profiles.length){
   L({barmode:'group',yaxis:{title:'historical CAGR (common window)',tickformat:'.0%',gridcolor:LINE},
      xaxis:{automargin:true},margin:{l:60,r:20,t:10,b:70}}),CFG);
 }else hideIf(true,'pa4');
+// 13-16 the referee's checklist
+const RF=DATA.referee||{};
+// 13 inference: Sharpe edge vs 1/N with bootstrap p labels
+if(RF.inference){
+ const inf=RF.inference.filter(r=>r.portfolio!=='1/N'&&isFinite(r['delta_ann_vs_1/N']))
+   .sort((a,b)=>b['delta_ann_vs_1/N']-a['delta_ann_vs_1/N']);
+ const col=r=>{const p=r['p_boot_vs_1/N'],d=r['delta_ann_vs_1/N'];
+   if(p<0.05&&d<0)return '#C94F4F'; if(p<0.05&&d>0)return '#2E9E68'; return '#B9B9C0';};
+ Plotly.newPlot('infchart',[{y:inf.map(r=>r.portfolio),x:inf.map(r=>r['delta_ann_vs_1/N']),
+   type:'bar',orientation:'h',marker:{color:inf.map(col)},
+   text:inf.map(r=>' p='+r['p_boot_vs_1/N'].toFixed(3)),textposition:'outside',
+   textfont:{size:11,color:MUT},cliponaxis:false,
+   hovertemplate:'%{y}<br>Δ Sharpe vs 1/N %{x:+.2f}<br>DSR %{customdata:.3f}<extra></extra>',
+   customdata:inf.map(r=>r.dsr)}],
+  L({xaxis:{title:'annualized OOS Sharpe difference vs 1/N (net of costs)',gridcolor:LINE},
+     yaxis:{automargin:true,autorange:'reversed'},margin:{l:200,r:80,t:10,b:45},
+     showlegend:false}),CFG);
+}else hideIf(true,'rf1');
+// 14 LORO: rank per dropped region (bump chart)
+if(RF.loro){
+ const drops=[...new Set(RF.loro.map(r=>r.dropped_region))];
+ const lbl=d=>d==='none'?'full menu':'– '+d.replace(/_/g,' ');
+ const ports=[...new Set(RF.loro.map(r=>r.portfolio))];
+ Plotly.newPlot('lorochart',ports.map(p=>({x:drops.map(lbl),
+   y:drops.map(d=>{const m=RF.loro.find(r=>r.portfolio===p&&r.dropped_region===d);
+     return m?m.rank:null;}),
+   name:p,mode:'lines+markers',line:{color:pc(p),width:1.6},marker:{size:5,color:pc(p)},
+   hovertemplate:p+'<br>%{x}: rank %{y} (Sharpe %{customdata:.2f})<extra></extra>',
+   customdata:drops.map(d=>{const m=RF.loro.find(r=>r.portfolio===p&&r.dropped_region===d);
+     return m?m.oos_sharpe_rf0:null;})})),
+  L({yaxis:{title:'rank (1 = best)',autorange:'reversed',dtick:1,gridcolor:LINE},
+     xaxis:{automargin:true},margin:{l:60,r:20,t:10,b:80},
+     legend:{orientation:'h',y:-0.25,font:{size:10.5}}}),CFG);
+}else hideIf(true,'rf2');
+// 15 the confirmatory A/B on the virgin universe
+if(RF.intl){
+ const mx=RF.intl.filter(r=>r.portfolio.startsWith('Maximin'));
+ const rest=RF.intl.filter(r=>!r.portfolio.startsWith('Maximin'))
+   .sort((a,b)=>b.anchored-a.anchored);
+ const rows=mx.concat(rest);
+ Plotly.newPlot('intlchart',[
+  {x:rows.map(r=>r.portfolio),y:rows.map(r=>r.modern),name:'estimator OFF (modern-only)',
+   type:'bar',marker:{color:rows.map(r=>pc(r.portfolio)),opacity:.35}},
+  {x:rows.map(r=>r.portfolio),y:rows.map(r=>r.anchored),name:'estimator ON (66y anchored)',
+   type:'bar',marker:{color:rows.map(r=>pc(r.portfolio))},
+   text:rows.map(r=>{const d=r.anchored-r.modern;
+     return Math.abs(d)>=0.002?('Δ'+(d>0?'+':'')+d.toFixed(3)):'';}),
+   textposition:'outside',textfont:{size:10.5,color:MUT},cliponaxis:false}],
+  L({barmode:'group',yaxis:{title:'net OOS Sharpe (virgin universe, 2000–2026)',gridcolor:LINE},
+     xaxis:{automargin:true,tickangle:-28},margin:{l:60,r:20,t:10,b:110}}),CFG);
+}else hideIf(true,'rf3');
+// 16 sensitivity grids
+if(RF.sens){
+ const DIMS=[['cost_bps',c=>'cost '+c+' bps'],['refit_months',c=>'refit '+c+'m'],
+             ['caps_slv_geo_fac',c=>'caps '+c]];
+ const cells=[];
+ DIMS.forEach(([d,f])=>{[...new Set(RF.sens.filter(r=>r.dimension===d).map(r=>r.cell))]
+   .forEach(c=>cells.push({d,c,label:f(c)}));});
+ const want=['Min-variance','1/N','HRP','Maximin (diversified)','Maximin (all-weather div)'];
+ Plotly.newPlot('senschart',want.map(p=>({x:cells.map(k=>k.label),
+   y:cells.map(k=>{const m=RF.sens.find(r=>r.dimension===k.d&&r.cell===k.c&&r.portfolio===p);
+     return m?m.oos_sharpe:null;}),
+   name:p,mode:'lines+markers',line:{color:pc(p),width:1.6},marker:{size:6,color:pc(p)}})),
+  L({yaxis:{title:'net OOS Sharpe',gridcolor:LINE},xaxis:{automargin:true,tickangle:-20},
+     margin:{l:60,r:20,t:10,b:90}}),CFG);
+ if(RF.sens_block){
+  Plotly.newPlot('sensblock',[{x:RF.sens_block.map(r=>'block b='+r.cell),
+    y:RF.sens_block.map(r=>r.c2_p_minvar_vs_1N),type:'bar',marker:{color:'#2E9E68'},
+    text:RF.sens_block.map(r=>r.c2_p_minvar_vs_1N.toFixed(3)),textposition:'outside',
+    cliponaxis:false,name:'p(min-var vs 1/N)'}],
+   L({yaxis:{title:'bootstrap p-value',gridcolor:LINE,rangemode:'tozero'},
+      shapes:[{type:'line',x0:-.5,x1:2.5,y0:.05,y1:.05,
+               line:{color:'#C94F4F',width:1,dash:'dot'}}],
+      annotations:[{x:2.4,y:.05,text:'5%',showarrow:false,yshift:8,
+                    font:{size:10.5,color:'#C94F4F'}}],
+      margin:{l:60,r:20,t:10,b:45},showlegend:false}),CFG);
+ }else document.getElementById('sensblock').style.display='none';
+}else hideIf(true,'rf4');
 </script></body></html>
 """
 

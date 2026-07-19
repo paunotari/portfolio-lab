@@ -138,6 +138,8 @@ OPTIMIZER_EXPOSURE = OPTIMIZER_DIR / "optimizer_exposure.csv"          # M12 dia
 OPTIMIZER_LORO = OPTIMIZER_DIR / "optimizer_loro.csv"                  # leave-one-region-out
 OPTIMIZER_LORO_REPORT = OPTIMIZER_DIR / "REPORT_exposure_robustness.md"
 OPTIMIZER_INFERENCE = OPTIMIZER_DIR / "optimizer_inference.csv"        # Sharpe inference
+OPTIMIZER_SENSITIVITY = OPTIMIZER_DIR / "optimizer_sensitivity.csv"    # M17 grids
+OPTIMIZER_SENSITIVITY_REPORT = OPTIMIZER_DIR / "REPORT_sensitivity.md"
 
 # Sharpe inference (Ledoit-Wolf 2008 studentized circular block bootstrap — see
 # info/literature/sharpe-inference.md). Block=None -> auto T^(1/3).

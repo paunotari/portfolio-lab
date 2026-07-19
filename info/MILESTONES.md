@@ -258,3 +258,22 @@ pre-registration commit precedes the results commit in git history),
 `data/raw/ff_intl/ff_intl_monthly_snapshot_2026-07-19.csv` (the library restates history —
 the snapshot is what this verdict was computed on). **Status:** OOS on a pre-registered
 virgin universe, net of costs — the strongest validation level in this ledger.
+
+## M17 — The sensitivity grids: a plateau, with one honestly-reported frontier
+**Claim:** varying one dimension at a time around the shipped configuration (MSCI menu),
+NO ledger conclusion flips in any of the 9 walk-forward grid cells: min-variance stays #1
+at costs 0/10/25 bps, refits 6/12/24m and caps 20/35/35–30/45/45 (C1); the capped maximin
+beats the unconstrained in every cell, +0.115 to +0.132 (C3 — constraints-as-shrinkage is a
+plateau, not a tuned point); the all-weather flagship stays on the podium (#2–#3) in every
+cell (C4). The one frontier, reported not hidden (C2): the headline p-value (min-variance
+vs 1/N) crosses 5% with the bootstrap block length — p=0.042 (b=3) / 0.055 (b=6, shipped) /
+0.066 (b=10). Smaller blocks under-respect autocorrelation, so the CONSERVATIVE reading
+stands: **borderline, not significant** — the claim is specification-sensitive at the 5%
+line and is stated as such wherever it appears.
+**See:** `REPORT_sensitivity.md` (+ `optimizer_sensitivity.csv`) · viz "Referee's checklist ·
+sensitivity grids". **Code:** `portfolio/sensitivity.py` (CLI, like `--loro`; cost grid
+re-netted from the walk-forward's own gross/turnover — no re-optimization, weights are
+cost-independent). **Data:** MSCI menu walk-forward (5 full runs + re-netting).
+**Status:** OOS modern across the declared grid. Out of scope by design: the agreement-rule
+variant grid (estimator specification, not result robustness — post-M16 it would need a
+fresh confirmatory universe).

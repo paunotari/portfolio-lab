@@ -136,8 +136,13 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       improves both maximin variants (Δ+0.002/+0.016); secondary — nothing beats 1/N
       significantly there either (best p=0.246), maximin family ranks last through two
       bears (equity-only, consistent M6). Snapshot frozen in `data/raw/ff_intl/`.
-- [ ] **Sensitivity grids**: cost levels (0/10/25 bps), refit frequencies, cap levels,
-      agreement-rule variants (sign vs magnitude bands) — show the result isn't a knife-edge.
+- [x] **Sensitivity grids — RUN 2026-07-19, verdict: plateau (M17).** `portfolio/
+      sensitivity.py` (CLI): costs 0/10/25 bps, refits 6/12/24m, caps 20/35/35–30/45/45,
+      LW block 3/6/10. No ledger conclusion flips in any walk-forward cell; the one
+      frontier: p(min-var vs 1/N) crosses 5% with block length (0.042/0.055/0.066) —
+      reported as borderline/specification-sensitive, conservative reading stands.
+      Agreement-rule variants (sign vs magnitude bands) deliberately out of scope: that
+      tests the ESTIMATOR's spec post-freeze and would need a fresh confirmatory universe.
 - [ ] **Formalize the estimator** (notation, assumptions, relation to James-Stein and
       empirical-Bayes shrinkage) and position against the regime-allocation literature
       (Ang-Bekaert; Guidolin-Timmermann).

@@ -393,6 +393,27 @@ def test_vol_managed_is_causal_and_derisks():
     assert (extra >= 0).all(), "turnover is non-negative"
 
 
+def test_sensitivity_cost_regrid_mechanics():
+    """Re-netting from gross+turnover must reproduce walk_forward's own net Sharpe."""
+    import pandas as pd
+    from portfolio_lab.portfolio.sensitivity import _conclusions, _sharpe_from
+    idx = pd.date_range("2010-01-31", periods=120, freq="ME")
+    rng = np.random.default_rng(4)
+    gross = pd.DataFrame({"A": rng.normal(0.01, 0.04, 120),
+                          "B": rng.normal(0.006, 0.05, 120)}, index=idx)
+    turn = pd.DataFrame({"A": np.full(120, 0.05), "B": np.zeros(120)}, index=idx)
+    s0 = _sharpe_from(gross, turn, 0.0)
+    s25 = _sharpe_from(gross, turn, 25.0)
+    assert s25["A"] < s0["A"], "costs must lower the turning portfolio's Sharpe"
+    assert abs(s25["B"] - s0["B"]) < 1e-12, "zero-turnover portfolio must be cost-invariant"
+    sh = pd.Series({"Min-variance": 1.0, "Maximin (diversified)": 0.8,
+                    "Maximin (worst quadrant)": 0.7, "Maximin (all-weather div)": 0.9,
+                    "1/N": 0.6})
+    c = _conclusions(sh)
+    assert c["c1_minvar_rank"] == 1 and c["c4_allweather_rank"] == 2
+    assert abs(c["c3_capped_minus_unconstrained"] - 0.1) < 1e-12
+
+
 def test_ff_intl_hi_mean_and_universe_shape():
     import pandas as pd
     from portfolio_lab.ingest.ff_international import _hi_mean
