@@ -23,35 +23,45 @@ def equal_weight(n: int) -> np.ndarray:
     return np.full(n, 1.0 / n)
 
 
-def erc_weights(sigma: np.ndarray) -> np.ndarray:
-    """Equal Risk Contribution: each asset contributes sigma_p/n of the portfolio risk.
+def erc_weights(sigma: np.ndarray, budgets: np.ndarray = None) -> np.ndarray:
+    """Risk-budgeted contributions: asset i contributes budgets_i of the portfolio risk
+    (default: equal budgets = classic ERC — each contributes sigma_p/n).
 
-    Solved via Spinu (2013)'s convex reformulation — minimize 1/2 y'Sigma y - sum(ln y_i)
-    (the log barrier keeps y > 0; the first-order condition y_i (Sigma y)_i = const is exactly
-    ERC), then normalize w = y / sum(y). Existence/uniqueness of the long-only solution:
-    Maillard, Roncalli & Teiletche (2010).
+    Solved via Spinu (2013)'s convex reformulation — minimize 1/2 y'Sigma y - sum(b_i ln y_i)
+    (the log barrier keeps y > 0; the first-order condition y_i (Sigma y)_i = b_i * const is
+    exactly the risk-budget condition), then normalize w = y / sum(y). Existence/uniqueness
+    of the long-only solution: Maillard, Roncalli & Teiletche (2010). `budgets`: positive,
+    normalized internally ("EM gets 10% of my RISK, not 10% of my money" — the TODO item).
     """
     sigma = np.asarray(sigma, dtype=float)
     n = len(sigma)
-    y0 = 1.0 / np.sqrt(np.diag(sigma))          # inverse-vol start (exact answer if corr equal)
+    if budgets is None:
+        b = np.full(n, 1.0 / n)
+    else:
+        b = np.asarray(budgets, dtype=float)
+        if len(b) != n or (b <= 0).any():
+            raise ValueError("budgets must be positive, one per asset")
+        b = b / b.sum()
+    bb = b * n                                  # barrier scaled so equal budgets reproduce
+    y0 = np.sqrt(bb) / np.sqrt(np.diag(sigma))  # the classic objective (solver precision)
 
     def f(y):
-        return 0.5 * y @ sigma @ y - np.log(y).sum()
+        return 0.5 * y @ sigma @ y - bb @ np.log(y)
 
     def grad(y):
-        return sigma @ y - 1.0 / y
+        return sigma @ y - bb / y
 
     res = minimize(f, y0, jac=grad, method="L-BFGS-B",
                    bounds=[(1e-9, None)] * n, options={"maxiter": 10_000, "ftol": 1e-14})
     y = res.x
     w = y / y.sum()
-    # sanity: risk contributions should be (near-)equal; a failed solve would show up here.
-    # Tolerance is RELATIVE to total risk — with very low-vol assets in the menu (e.g. the
-    # cash proxy) sigma_p is tiny and an absolute-ish threshold rejects perfectly good solves
+    # sanity: realized contribution SHARES should match the budgets; a failed solve shows up
+    # here. Tolerance is RELATIVE to total risk — with very low-vol assets in the menu (e.g.
+    # the cash proxy) sigma_p is tiny and an absolute-ish threshold rejects good solves
     rc = risk_contributions(w, sigma)
-    if rc.max() - rc.min() > 1e-3 * rc.sum():
-        raise RuntimeError(f"ERC solve did not converge (RC spread {rc.max() - rc.min():.2e} "
-                           f"vs sigma_p {rc.sum():.2e})")
+    if np.abs(rc / rc.sum() - b).max() > 1e-3:
+        raise RuntimeError(f"risk-budget solve did not converge (max share error "
+                           f"{np.abs(rc / rc.sum() - b).max():.2e})")
     return w
 
 

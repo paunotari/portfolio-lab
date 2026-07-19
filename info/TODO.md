@@ -292,8 +292,11 @@ protocol: walk-forward, net of costs, 1/N on screen._
 - [ ] CVaR-95 as third Tier-2 risk metric — un-parking route in
       [literature/cvar-optimization.md](literature/cvar-optimization.md): feed the
       Rockafellar-Uryasev LP with scenario-engine months instead of raw history.
-- [ ] Per-sleeve/per-region **risk budgeting** ("EM gets 10% of my risk, not 10% of my money") —
-      same convex program as ERC with target contributions b_i.
+- [x] Per-sleeve **risk budgeting — BUILT 2026-07-19**: `anchors.erc_weights(sigma,
+      budgets=…)` (Spinu program with b_i-weighted log barrier; equal budgets = classic ERC
+      bit-for-bit; convergence checked on contribution SHARES; unit-tested). Per-REGION
+      budgets (b over groups) and profile/CLI exposure remain a follow-up when a profile
+      wants them.
 - [x] Revisit **ERC vs HRP — CLOSED 2026-07-19 (M25)**: HRP edges ERC everywhere by a hair
       (never significantly: LW p 0.119) at 12x the turnover; ERC stays the BL anchor
       (neutrality + stability), HRP stays the marginally better standalone construction.

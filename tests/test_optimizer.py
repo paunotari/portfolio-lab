@@ -393,6 +393,25 @@ def test_vol_managed_is_causal_and_derisks():
     assert (extra >= 0).all(), "turnover is non-negative"
 
 
+def test_risk_budgeted_erc():
+    """budgets=None reproduces classic ERC; custom budgets land the contribution shares."""
+    X = _toy_returns(seed=3, T=400)
+    sigma = np.cov(X.T)
+    w_eq = anchors.erc_weights(sigma)
+    rc = anchors.risk_contributions(w_eq, sigma)
+    assert np.abs(rc / rc.sum() - 1 / 6).max() < 1e-3, "default must be equal contributions"
+    b = np.array([0.35, 0.25, 0.1, 0.1, 0.1, 0.1])
+    w_b = anchors.erc_weights(sigma, budgets=b)
+    rc_b = anchors.risk_contributions(w_b, sigma)
+    assert np.abs(rc_b / rc_b.sum() - b).max() < 1e-3, "shares must match the budgets"
+    assert abs(w_b.sum() - 1) < 1e-9 and (w_b > 0).all()
+    try:
+        anchors.erc_weights(sigma, budgets=np.array([0.5, 0.5, 0.0, 0.0, 0.0, 0.0]))
+        assert False, "zero budgets must be rejected"
+    except ValueError:
+        pass
+
+
 def test_pbo_cscv_null_vs_skill():
     import pandas as pd
     from portfolio_lab.portfolio.inference import pbo_cscv
