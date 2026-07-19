@@ -277,3 +277,18 @@ cost-independent). **Data:** MSCI menu walk-forward (5 full runs + re-netting).
 **Status:** OOS modern across the declared grid. Out of scope by design: the agreement-rule
 variant grid (estimator specification, not result robustness — post-M16 it would need a
 fresh confirmatory universe).
+
+## M18 — The 28-sleeve equity menu contains ~3 real bets (the KISS verdict, measured)
+**Claim:** the full MSCI menu's monthly returns have mean pairwise correlation 0.76 (min
+0.49); the first principal component explains 77% of variance, 4 components reach 90%, and
+the eigenvalue-entropy effective number of bets is **2.8**. Equity region×factor sleeves are
+one big bet with small tilts: adding equity index #29 adds paperwork, not diversification —
+consistent with LORO (M13: dropping entire regions barely moves the structural rules) and
+with M6 (one new ASSET CLASS — bonds/gold — was worth more than any number of equity sleeves:
+it doubled the stagflation floor). Menu-design principle for product and paper: selection =
+spanning distinct RISK SOURCES; within a source, redundancy is harmless for ERC/HRP (shared
+risk budgets) and harmful for 1/N (silent double-counting).
+**See:** this entry (reproducible one-liner: PCA/entropy on `levels_wide.csv` returns).
+**Code:** ad-hoc on cached CSV. **Data:** 28-sleeve common window. **Status:** descriptive,
+full-sample; the actionable consequences (B1b commodities as the next distinct source) were
+already OOS/century-tested where they land (M6/M7).
