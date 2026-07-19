@@ -387,3 +387,17 @@ re-statement (needs EUR short-rate data, pairs with the C2 deep dive) remains op
 **Code:** ad-hoc on cached CSV + keyless FRED fetch. **Data:** walk-forward OOS returns,
 DEXUSEU 1999+. **Status:** descriptive currency re-statement of OOS results; closes the
 unhedged half of B3.
+
+## M25 — Anchor decision closed: ERC stays the prior, HRP is the (insignificantly) better construction
+**Claim:** with all accumulated evidence, HRP edges ERC in every table by a hair — modern
+0.87 vs 0.85, 90y race 0.76 vs 0.75, virgin universe 0.70 vs 0.68, above it in every LORO
+menu and in the EUR seat — but the edge is NOT significant (LW p_boot 0.119 on the modern
+OOS pair) and costs 12× the turnover (5.0% vs 0.4% per refit). Decision, recorded: **ERC
+remains the BL anchor** (the prior's job is neutrality and stability, where ERC's near-zero
+turnover and clean risk-balance interpretation win); **HRP remains the marginally better
+standalone construction** and is described as such wherever rules are ranked. Revisit only
+if a future universe makes the HRP-ERC gap significant.
+**See:** the tables cited (M1/M2/M13/M16/M24) + this entry's LW test (reproducible
+one-liner on the cached walk-forward returns). **Code:** decision — no code change.
+**Data:** all accumulated walk-forward evidence. **Status:** design decision grounded in
+OOS measurements + significance test; closes the standing TODO item.

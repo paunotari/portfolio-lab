@@ -194,9 +194,12 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       safe-haven currencies are embedded hedges (Campbell-Serfaty-Viceira 2010) — consistent
       with M24's measured unhedged-EUR result; default shippable guidance: hedge the bond
       sleeve, leave equity USD unhedged. Hedged re-statement stays in B3.
-- [ ] **C3 — factor valuation/timing**: the Asness-vs-Arnott debate (can you time factors on
-      valuation spreads?) — directly relevant to "factores que rinden bien AHORA" and the
-      anti-recency discipline.
+- [x] **C3 — factor valuation/timing — DEEP DIVE 2026-07-19** (`literature/factor-timing.md`):
+      the Asness-Arnott debate adjudicated for us — no valuation-based factor timing in the
+      optimizer (weak at usable horizons, redundant with value, costly; our momentum
+      contestant's measured failure is the same verdict with our p-values). Possible future
+      Tier-2 dashboard diagnostic only; any promotion to input needs the M16-style
+      pre-registered checklist.
 
 _Sequencing: A first (all free, 1-2 sessions each), B in parallel as sourcing decisions land,
 C as each deep-dive becomes load-bearing. Every result flows through the same honesty
@@ -291,7 +294,10 @@ protocol: walk-forward, net of costs, 1/N on screen._
       Rockafellar-Uryasev LP with scenario-engine months instead of raw history.
 - [ ] Per-sleeve/per-region **risk budgeting** ("EM gets 10% of my risk, not 10% of my money") —
       same convex program as ERC with target contributions b_i.
-- [ ] Revisit **ERC vs HRP as the default anchor** when more walk-forward evidence accumulates
+- [x] Revisit **ERC vs HRP — CLOSED 2026-07-19 (M25)**: HRP edges ERC everywhere by a hair
+      (never significantly: LW p 0.119) at 12x the turnover; ERC stays the BL anchor
+      (neutrality + stability), HRP stays the marginally better standalone construction.
+      Original context: when more walk-forward evidence accumulates
       (first table 2026-07: min-var best OOS Sharpe 1.06, HRP 0.88, ERC 0.86, 1/N 0.84, maximin
       0.73, balanced sliders 0.70 — the balanced blend did NOT beat 1/N, exactly the DeMiguel
       expectation; min-var's win also matches the literature's "most-constrained models do best").
