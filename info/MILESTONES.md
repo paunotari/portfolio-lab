@@ -358,3 +358,32 @@ implementable scheme and loses nothing.
 the walk-forward's per-refit weights, no re-optimization). **Data:** walk-forward weights ×
 sleeve returns. **Status:** OOS re-implementation of identical decisions; closes C1's
 empirical half and the drift-turnover limitation.
+
+## M23 — Horizon is now a measured input: the equity/all-weather loss-probability gap is 10×
+**Claim:** per-profile scenario cones at 5/10/20 years (current_conditions, re-sequenced
+history — stated assumption, not a forecast): the equity profiles carry **~14% probability
+of cumulative loss at 5 years** (7.2-7.5% at 10y, ~1.2% at 20y) while the all-weather
+defensive profile carries **1.4% / 0.1% / 0.0%** — a 10× gap at short horizons that
+converges with time. Investment horizon therefore selects between the profiles as strongly
+as risk appetite does: below ~10 years the all-weather's floor is the dominant argument;
+at 20 years the equity profiles' higher median CAGR (~9.6-9.8% vs 7.3%) comes with nearly
+the same loss probability. The applied thesis gains its horizon axis with numbers.
+**See:** `REPORT_optimizer.md` "User profiles" horizon tables. **Code:**
+`portfolio/optimizer.py::_profile_cones` (+ `_profiles_section`), reusing
+`scenario.portfolio_cone(years=…)`. **Data:** scenario universes (equity + extended).
+**Status:** simulation under the stated re-sequenced-history assumption (validator layer,
+same caveat as every cone).
+
+## M24 — The verdicts survive the currency seat: unhedged EUR re-statement (B3, half 1)
+**Claim:** re-stating every contestant's walk-forward net OOS returns in unhedged EUR
+(FRED DEXUSEU month-end, EUR return = (1+r_USD)(1+r_FX)−1): the podium is unchanged —
+min-variance #1 (1.21), HRP #2 (1.12), all-weather #3 (1.11) — and every construction
+conclusion holds. All Sharpes RISE (USD appreciation 2009-2026 paid the EUR seat; FX vol
+8.5%/yr partially diversifies). The one real movement: **vol-target overlays lose their
+edge** (min-var+VT #2→#5) — their volatility control is diluted by unhedged FX noise, so
+for a EUR investor the overlay's USD result was partly a currency artifact. Hedged
+re-statement (needs EUR short-rate data, pairs with the C2 deep dive) remains open.
+**See:** this entry's table (reproducible: DEXUSEU × `optimizer_walkforward_returns.csv`).
+**Code:** ad-hoc on cached CSV + keyless FRED fetch. **Data:** walk-forward OOS returns,
+DEXUSEU 1999+. **Status:** descriptive currency re-statement of OOS results; closes the
+unhedged half of B3.

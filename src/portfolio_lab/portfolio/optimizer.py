@@ -712,6 +712,37 @@ def run_profiles(inp: dict = None) -> dict:
     return out
 
 
+_CONE_UNIS: dict = {}
+
+
+def _profile_cones(weights: dict, years=(5, 10, 20)) -> dict:
+    """Horizon-parametrized scenario cones for one profile's weights (TODO 'horizon' item):
+    P(loss) and the CAGR/maxDD cone at 5/10/20 years, so the user's time horizon is a
+    measured input rather than a narrative one. Universes cached per (equity/extended);
+    degrades to {} without macro/scenario outputs."""
+    needs_ext = any(s.startswith("Asset | ") for s in weights)
+    if needs_ext not in _CONE_UNIS:
+        try:
+            from portfolio_lab.analytics.scenario import build_universe
+            _CONE_UNIS[needs_ext] = build_universe(include_asset_classes=needs_ext)
+        except Exception as e:
+            print(f"[optimizer] WARN profile cones unavailable ({e})")
+            _CONE_UNIS[needs_ext] = None
+    uni = _CONE_UNIS[needs_ext]
+    if uni is None or not set(weights) <= set(uni["series"]):
+        return {}
+    from portfolio_lab.analytics.scenario import portfolio_cone
+    tot = sum(weights.values())          # reported weights drop sub-threshold dust; renorm
+    weights = {k: v / tot for k, v in weights.items()}
+    out = {}
+    for y in years:
+        try:
+            out[y] = portfolio_cone(weights, uni=uni, years=y)
+        except Exception as e:
+            print(f"[optimizer] WARN {y}y cone failed ({e})")
+    return out
+
+
 def _profiles_section(profiles: dict) -> list[str]:
     L = ["## User profiles — the price of preferences", "",
          "Preferences are personal; their COST is measurable. Each profile is a constraint "
@@ -737,6 +768,17 @@ def _profiles_section(profiles: dict) -> list[str]:
         L += [f"", f"Price of the guardrails: {r['CAGR'] - t['CAGR']:+.2%} CAGR for "
               f"{r['ann_vol'] - t['ann_vol']:+.2%} vol and "
               f"{len(rw['weights']) - len(tw['weights']):+d} sleeves of spread.", ""]
+        cones = _profile_cones(rw["weights"])
+        if cones:
+            L += ["Horizon cones (current_conditions, re-sequenced history — not a "
+                  "forecast):", "",
+                  "| horizon | CAGR p5 | CAGR p50 | CAGR p95 | maxDD p50 | P(cum. loss) |",
+                  "|---|---|---|---|---|---|"]
+            for y, c in cones.items():
+                L += [f"| {y}y | {c['cagr_p5']:.1%} | {c['cagr_p50']:.1%} | "
+                      f"{c['cagr_p95']:.1%} | {c['maxdd_p50']:.1%} | "
+                      f"{c['prob_cumulative_loss']:.1%} |"]
+            L += [""]
     return L
 
 

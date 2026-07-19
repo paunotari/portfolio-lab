@@ -86,13 +86,15 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       Free long-history sources are poor (GSCI licensed; BCOM ~1991) — needs a sourcing
       decision (owner). REITs/credit: distinct but lower priority (equity-correlated in
       crises / middle profile).
-- [ ] **Horizon-parametrized cones per profile**: the engine reflects the user's HORIZON only
-      through the fixed 10y scenario cone. Cheap upgrade: P(loss) and drawdown cones at
-      5/10/20y for each profile (scenario.portfolio_cone already takes `years`) — turns time
-      horizon into a measured input for the applied thesis instead of a narrative one.
-- [ ] **B3 — currency: returns in EUR as well as USD.** All results are USD today; for a
-      European investor hedged/unhedged outcomes genuinely differ. Needs FX data (free, FRED)
-      + a return transformation + the hedging-literature deep dive (C2).
+- [x] **Horizon-parametrized cones per profile — DONE 2026-07-19 (M23).** 5/10/20y cones
+      per profile in the report (`optimizer._profile_cones`): equity profiles ~14% 5y loss
+      probability vs all-weather 1.4% (10x), converging by 20y — horizon is now a measured
+      selector between profiles.
+- [~] **B3 — currency: EUR re-statement — UNHEDGED HALF MEASURED 2026-07-19 (M24).**
+      Podium unchanged in unhedged EUR (min-var #1, HRP #2, all-weather #3); vol-target
+      overlays lose their edge (FX noise dilutes vol control — their USD rank was partly a
+      currency artifact). Remaining: hedged re-statement (EUR short rate ~ forward points)
+      + the C2 hedging deep dive.
 
 ### Paper track — toward a publishable contribution (owner goal, 2026-07)
 
@@ -144,7 +146,11 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       reported as borderline/specification-sensitive, conservative reading stands.
       Agreement-rule variants (sign vs magnitude bands) deliberately out of scope: that
       tests the ESTIMATOR's spec post-freeze and would need a fresh confirmatory universe.
-- [ ] **Formalize the estimator** (notation, assumptions, relation to James-Stein and
+- [x] **Formalize the estimator — DONE 2026-07-19** (`info/estimator.md`: notation, the two
+      operative lines, EB/pretest interpretation, properties P1-P4 each tied to a ledger
+      entry, positioning vs Ang-Bekaert / Guidolin-Timmermann / BL / Jorion, measured
+      record M5-M19). Original sub-goals below kept for reference:
+      (notation, assumptions, relation to James-Stein and
       empirical-Bayes shrinkage) and position against the regime-allocation literature
       (Ang-Bekaert; Guidolin-Timmermann).
 - [ ] **Pre-draft checks (audit 2026-07-19)** — the remaining attackable assumptions:
@@ -162,7 +168,9 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         (2015+ only, 138 months): hierarchy holds (min-var #1 0.963, all-weather #2, HRP >
         ERC > 1/N), no conclusion flips. Plus the FF replications (M2/M16) as the
         structural defense. Limitations paragraph still to be written into the draft.
-  - [ ] Limitations to STATE (no test needed): within-interval constant-mix drift turnover
+  - [x] Limitations STATED 2026-07-19 (THESIS.md §5 rewrite + paper/draft.md §7; drift
+        turnover upgraded from 'stated' to MEASURED immaterial by M22). Original list:
+        within-interval constant-mix drift turnover
         is uncosted (small; C1/C3 survive 25 bps anyway); DSR's N=11 counts fielded
         contestants, not every dev-time variant (the pre-registered M16 test is the
         stronger multiplicity defense); USD-only (B3); 1/N is menu-relative — the menu is
@@ -182,8 +190,10 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       vs buy-and-hold on identical weight schedules: <=0.002 Sharpe difference, ranking
       identical — the assumption is not load-bearing. Band rules noted as a product-level
       refinement, not research.
-- [ ] **C2 — currency hedging**: Campbell, Serfaty-de Medeiros & Viceira (2010) — pairs
-      with B3.
+- [x] **C2 — currency hedging — DEEP DIVE 2026-07-19** (`literature/currency-hedging.md`):
+      safe-haven currencies are embedded hedges (Campbell-Serfaty-Viceira 2010) — consistent
+      with M24's measured unhedged-EUR result; default shippable guidance: hedge the bond
+      sleeve, leave equity USD unhedged. Hedged re-statement stays in B3.
 - [ ] **C3 — factor valuation/timing**: the Asness-vs-Arnott debate (can you time factors on
       valuation spreads?) — directly relevant to "factores que rinden bien AHORA" and the
       anti-recency discipline.
@@ -509,7 +519,8 @@ what moves the needle.
 - [x] **Index registry** (`data/index_registry.csv`) — explicit manifest of tracked indexes;
       ingest is registry-driven so adding an MSCI index = add a row + drop the file(s), no code
       edit. See `info/CLAUDE.md` §5.
-- [ ] **API data source** — add a `source=api` branch in `ingest/returns.py` so indexes can be
+- [x] **API data source — DONE 2026-07** (`source=msci_api` branch in `ingest/returns.py`,
+      cached JSON, 3 sleeves live). Original text: add a `source=api` branch so indexes can be
       pulled from an API (e.g. a ticker feed) instead of local MSCI files, using the same registry
       contract. Keep the index set small/curated (KISS — the main indexes, not 200 niche ones).
       Now also the door for the P1 asset-class extension above.
