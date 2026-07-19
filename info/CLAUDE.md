@@ -42,6 +42,9 @@ portfolio_lab/                     (repo root)
 │   ├── raw/msci_indexes/<REGION>/ source files: *Monthly.xlsx (returns) + *.pdf (factsheets)
 │   └── processed/                 tidy CSVs (REGENERABLE — gitignored)
 ├── outputs/                       analytics CSVs, REPORT.md, diversification/, dashboard.html (REGENERABLE — gitignored)
+├── paper/                         the working paper: draft.md (SSRN-style, numbers cite the
+│                                  ledger) + make_figures.py → figures/F1-F6.pdf (static
+│                                  exports from the same cached CSVs — rerun after pipeline)
 ├── src/portfolio_lab/             the Python package (see §4)
 ├── scripts/run_pipeline.py        one command to rebuild everything
 ├── tests/test_pipeline.py         data-integrity checks

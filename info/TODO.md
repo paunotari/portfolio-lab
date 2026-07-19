@@ -167,7 +167,13 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         contestants, not every dev-time variant (the pre-registered M16 test is the
         stronger multiplicity defense); USD-only (B3); 1/N is menu-relative — the menu is
         a design layer and the paper must say so.
-- [ ] Then: paper draft from THESIS.md skeleton → SSRN → journal submission.
+- [~] Paper draft — **v0.1 WRITTEN 2026-07-19** (`paper/draft.md`: full SSRN-style working
+      paper — abstract, intro, related lit, data incl. virgin universe, method incl. the
+      estimator's two operative lines, results R-sections with inference, referee's
+      checklist, limitations, references, reproducibility appendix) + **6 publication
+      figures** (`paper/make_figures.py` → `paper/figures/F1-F6.pdf`, from the same cached
+      CSVs the ledger cites). Owner pass pending: authorship, repo URL, tone check → then
+      SSRN.
 
 ### Phase C — targeted literature (specific gaps, not more canon)
 
