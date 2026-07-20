@@ -22,6 +22,9 @@ frontier: working papers and active groups solving our problem now (2023+), each
 with a "⇒ for us" verdict (position against it / borrow a technique / field it as a
 contestant). Frontier notes are positioning + candidate tests, not settled canon; anything
 promoted from frontier to a design change needs the M16-style pre-registered checklist.
+**[convergences.md](literature/convergences.md)** maps each measured ledger claim to the
+independent literature that confirms it — the paper's related-work/discussion ammunition,
+consolidated.
 
 ### Classics — the canon
 
@@ -53,6 +56,7 @@ promoted from frontier to a design change needs the M16-style pre-registered che
 | [universal-shrinkage-kelly.md](literature/frontier/universal-shrinkage-kelly.md) | Kelly-Malamud-Pourmohammadi-Trojani nonlinear/universal covariance shrinkage | Σ-estimator as a 4th sensitivity-grid dimension (expect "no material change" at N≪T — and say so) |
 | [asset-selection-menu-design.md](literature/frontier/asset-selection-menu-design.md) | **the other leg — SELECTION, not weights**: Ilmanen-Kizer (factor > asset-class diversification, corr ~0 vs ~0.4) · Choueifaty diversification ratio (DR² = independent bets) · Brodie sparse/lasso Markowitz · how-many-assets classics · trend/managed futures as the crisis diversifier | adopt **DR² as a standing menu/portfolio metric** (3 lines); the paper's menu-design principles now cite literature, not taste |
 | [markowitz-at-seventy-boyd.md](literature/frontier/markowitz-at-seventy-boyd.md) | Boyd-Johansson-Kahn-Schiele-Schmelzer 2024: the engineering-grade modern MVO (costs, limits, return-uncertainty penalties, open-source) | the perfect foil for the retail-data-scale framing + the recorded upgrade path if the product ever has institutional inputs |
+| [hrp-extensions.md](literature/frontier/hrp-extensions.md) | Antonov-Lipton-López de Prado 2024 (HRP's noise advantage PROVEN analytically — the theory under M2) · Raffinot's HERC (Ward + gap index + dendrogram splits + ERC) · CBS-thesis corroboration | cite ALP next to M2/M25; HERC recorded as candidate contestant ("both sides of M25 in one rule") |
 
 ---
 

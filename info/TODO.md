@@ -204,6 +204,10 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         bears). Prior expectation recorded: helps drawdowns, struggles net of costs.
   - [ ] **Sigma-estimator grid column**: nonlinear shrinkage (LW 2017 / Kelly et al.) as a
         4th sensitivity dimension; expect and report "no material change" at N<<T.
+  - [ ] **HERC contestant** (Raffinot 2018; frontier/hrp-extensions.md): ERC allocation on
+        HRP's topology with Ward linkage + gap-index cluster count — both sides of M25 in
+        one rule; report single-vs-Ward linkage sensitivity in the same run. Declared
+        prior: statistically indistinguishable from HRP/ERC.
   - [ ] **Diversification Ratio (DR^2) as a standing metric** (Choueifaty-Coignard, from
         the selection-leg sweep): report DR^2 = ((sum w_i sigma_i)/sigma_p)^2 next to the
         effective-bets numbers in the optimizer scorecards and the menu line — 3 lines,
