@@ -189,6 +189,16 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         bears). Prior expectation recorded: helps drawdowns, struggles net of costs.
   - [ ] **Sigma-estimator grid column**: nonlinear shrinkage (LW 2017 / Kelly et al.) as a
         4th sensitivity dimension; expect and report "no material change" at N<<T.
+  - [ ] **Diversification Ratio (DR^2) as a standing metric** (Choueifaty-Coignard, from
+        the selection-leg sweep): report DR^2 = ((sum w_i sigma_i)/sigma_p)^2 next to the
+        effective-bets numbers in the optimizer scorecards and the menu line — 3 lines,
+        needs only sigma/Sigma we already hold. Answers "does adding sleeve X buy a new
+        bet?" with the practitioner-standard number.
+  - [ ] Paper related-work additions from the selection sweep: Ilmanen-Kizer 2012 (factor >
+        asset-class diversification — upgrades the menu-design paragraph), Brodie 2009
+        (sparse/lasso as the SELECTING sibling of our SPREADING caps), Boyd et al. 2024
+        (the institutional foil for the retail-data-scale framing), Hurst-Ooi-Pedersen
+        (trend as crisis diversifier — the literature's answer to the B1b gap).
 - [~] Paper draft — **v0.1 WRITTEN 2026-07-19** (`paper/draft.md`: full SSRN-style working
       paper — abstract, intro, related lit, data incl. virgin universe, method incl. the
       estimator's two operative lines, results R-sections with inference, referee's
