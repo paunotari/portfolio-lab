@@ -31,16 +31,36 @@ line. MDP as a *contestant* is lower priority (another μ-free construction — 
 HRP/ERC-family behavior), but the metric is immediately useful for answering "does adding
 sleeve X buy a new bet?". [SSRN 1895459](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=1895459)
 
-## 3. Brodie, Daubechies, De Mol, Giannone & Loris (2009), "Sparse and Stable Markowitz Portfolios" — *PNAS*
+## 3. Brodie, Daubechies, De Mol, Giannone & Loris (2009), "Sparse and Stable Markowitz Portfolios" — *PNAS* (READ IN FULL 2026-07)
 
-Selection INSIDE the optimizer: add an ℓ1 penalty on weights → the optimization itself
-picks few assets (sparsity), stabilizes the solution, and the penalty doubles as a
-transaction-cost model. The lasso of portfolio choice.
-**⇒ for us:** the theory sibling of our caps-as-shrinkage (M3): both are norm constraints
-that regularize; theirs SELECTS (cardinality), ours SPREADS (anti-concentration) — opposite
-signs of the same mechanism, worth one paragraph in the paper's constraints section. Not a
-design change: our menu is already small and hand-designed; sparse selection matters when
-the universe is hundreds of names. [PNAS](https://www.pnas.org/doi/10.1073/pnas.0904287106) ·
+Selection INSIDE the optimizer: an ℓ1 penalty on weights stabilizes the ill-conditioned
+Markowitz regression, promotes sparsity, and doubles as a transaction-cost model. **They
+claim their sparse portfolios "outperform 1/N significantly and consistently"** (owner
+spotted the quote) — the verified specifics behind it:
+
+- Universes FF48 industries / FF100 size×B/M; annual rebuild, 5-year estimation windows,
+  target return = trailing 1/N mean; evaluation 1976-2006. FF48 full-period monthly Sharpe
+  0.41 vs 1/N's 0.27 — a big point gap.
+- **Their own p.6 observation:** under the budget constraint the ℓ1 penalty is exactly a
+  short-position penalty, and in the long-only case it is INERT (‖w‖₁≡1) — their FF48
+  winner is simply **no-short Markowitz at a target return** (Jagannathan-Ma
+  regularization, which they cite), naturally sparse at ~6 of 48 names.
+- Through our checklist: "significantly" is used colloquially — **no Sharpe-difference
+  test** anywhere (LW 2008 was contemporaneous), and **no transaction costs charged**;
+  sub-period tables exist (good) and they honestly flag that dense targets degrade
+  ("overfitting").
+
+**⇒ for us:** an ALLY, not a challenge — what wins in their experiment is the same family
+as our measured winner (positivity-constrained variance minimization; ours lands p=0.055
+net of costs on a far more redundant menu, and decomposes into 82% Quality, M21). The
+universe is the other half of the story: 48-100 dispersed industry portfolios leave real
+room for variance reduction; our 2.8-effective-bets index menu does not. Paper paragraph:
+cite them + DeMiguel-Garlappi-Nogales-Uppal (2009, *Mgmt Sci*, norm-constrained portfolios
+— the same-year regularization cousin) as the constrained-min-variance lineage our result
+extends WITH inference and costs. Candidate cheap test (TODO): field their exact rule —
+long-only min-variance at the trailing-1/N target return (our `optimize()` already supports
+hard targets) — as a walk-forward contestant with a LW p-value.
+[PNAS](https://www.pnas.org/doi/10.1073/pnas.0904287106) ·
 [arXiv 0708.0046](https://arxiv.org/pdf/0708.0046)
 
 ## 4. How many assets is "enough" — the classic line

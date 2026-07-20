@@ -181,6 +181,11 @@ Check items off as completed. Add new ones as they come up; keep entries short a
   - [ ] **Yuan-Zhou combination contestant (the priority one)**: 1/N-combined sample rule
         (Tu-Zhou/Yuan-Zhou delta) in the walk-forward + LW p vs 1/N — the direct answer to
         the strongest published challenge to our humility claim.
+  - [ ] **Brodie-2009 rule as contestant** (owner-spotted claim, paper read in full —
+        frontier/asset-selection-menu-design.md §3): long-only min-variance at the
+        trailing-1/N target return (their FF48 winner; the L1 penalty is inert long-only,
+        so this IS their rule). One line via optimize(target=...); LW p-value + net costs —
+        the two things their "significantly" lacked.
   - [ ] **Random-regime placebo**: re-run the maximin family with SHUFFLED state labels —
         if results match the real labels, the regime signal adds nothing beyond the menu.
   - [ ] **Nemenyi multiple-comparison test** next to the pairwise LW table.
