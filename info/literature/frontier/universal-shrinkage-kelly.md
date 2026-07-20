@@ -1,15 +1,22 @@
 # Kelly, Malamud, Pourmohammadi & Trojani — "Universal Portfolio Shrinkage" (SSRN 4660670, 2023+)
 
-*The covariance-shrinkage frontier beyond our Ledoit-Wolf 2004 workhorse.*
+*The covariance-shrinkage frontier beyond our Ledoit-Wolf 2004 workhorse. READ (intro/
+method/results sections) 2026-07, owner-supplied PDF (April 2026 version; Kelly is
+AQR/Yale).*
 
-## The idea
+## The idea (verified)
 
-Ledoit-Wolf (2004, our `shrinkage.py`) shrinks LINEARLY toward one target: Σ̂ = δF + (1−δ)S
-— every eigenvalue pulled with the same intensity. The nonlinear-shrinkage literature
-(Ledoit-Wolf's own 2017+ QuEST/analytical work, and this paper's "universal" formulation)
-shrinks **each eigenvalue by its own optimal amount**, in closed form — small (noise-driven)
-eigenvalues get pulled hard, large (signal) ones barely. Kelly et al. frame a shrinkage
-family that is provably near-optimal across environments ("universal") and cheap to compute.
+Ledoit-Wolf (2004, our `shrinkage.py`) shrinks LINEARLY toward one target — every
+eigenvalue pulled with the same intensity. UPSA ("universal portfolio shrinkage
+approximator") learns a NONLINEAR reweighting of principal components π_i = f(λ̄_i)·R̄_i,
+implemented in closed form as **a linear combination of ridge portfolios with different
+penalty levels** — "diversifying across beliefs" about estimation error (their Bayesian
+reading), with optional shape constraints (positivity/monotonicity). Built for the
+HIGH-dimensional regime (their lab: 153 anomaly factors, N up to and beyond T); gains vs
+ridge/LW-2017 significant (α t-stat 3.72). Two details that resonate with our ledger:
+their Figure 1 is our thesis drawn (OOS Sharpe collapsing as c=N/T grows), and UPSA's
+spectral tilts load systematically on **quality, value and low-risk** and away from
+momentum/seasonality — the same exposures our M21 attribution found behind min-variance.
 
 ## ⇒ for us — a robustness column, not a redesign
 

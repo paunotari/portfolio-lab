@@ -61,6 +61,12 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       Free candidates to evaluate first: FRED (TIPS yields → constructed TR, same Swinkels
       pattern), FTSE Nareit (REITs, downloadable), commodities likely needs a provider.
       Lands via the `source=api` registry branch.
+      **Route found (Bouyé-Teiletche read, 2026-07): TIPS pre-1997 backfill via Swinkels'
+      SPF-expectations method** — the same approach they use in the FAJ paper; un-blocks
+      the descoped TIPS sleeve if we want the 1973+ history. Also noted from their OOS
+      protocol: the real-time Sahm rule as a publication-lag-free growth signal — an
+      alternative/complement to our lagged-labels discipline (idea only, needs its own
+      test).
 - [x] **B2 — equity menu gaps — MOSTLY DONE 2026-07 via the new `source=msci_api` branch**
       (MSCI's own end-of-day service, keyless, verified identical to the xlsx source to 9
       significant figures; codes discovered by probing — names are embedded in the XLS
@@ -178,9 +184,13 @@ Check items off as completed. Add new ones as they come up; keep entries short a
 - [ ] **Frontier follow-ups (from the 2026-07 literature sweep — `literature/frontier/`).**
       Candidate tests, each cheap and referee-motivated; any design change they suggest
       needs the M16-style pre-registration discipline:
-  - [ ] **Yuan-Zhou combination contestant (the priority one)**: 1/N-combined sample rule
-        (Tu-Zhou/Yuan-Zhou delta) in the walk-forward + LW p vs 1/N — the direct answer to
-        the strongest published challenge to our humility claim.
+  - [ ] **Yuan-Zhou combination contestant (the priority one; paper READ IN FULL, exact
+        formulas in frontier/beating-1N-yuan-zhou.md)**: field the GMV combo w = lambda*
+        Sigma^-1*1 + (1-lambda)*1/N with their closed-form lambda* (eq. 29) as a
+        walk-forward contestant, LW p vs 1/N, net of costs. Their own theory PREDICTS no
+        significant win on our menu (one-factor-dominated per their Prop 3; our warmup
+        T=120 < their required 360) — either outcome is a publishable sentence, and the
+        prediction is declared in advance.
   - [ ] **Brodie-2009 rule as contestant** (owner-spotted claim, paper read in full —
         frontier/asset-selection-menu-design.md §3): long-only min-variance at the
         trailing-1/N target return (their FF48 winner; the L1 penalty is inert long-only,

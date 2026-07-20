@@ -4,15 +4,46 @@
 neighbors. Purpose: positioning for the paper's related-work section + techniques worth
 borrowing. Found 2026-07 via SSRN/arXiv sweeps.*
 
-## 1. Bouyé & Teiletche — "Regime-Based Strategic Asset Allocation" (SSRN 4801115, 2024)
+## 1. Bouyé & Teiletche — "Regime-Based Strategic Asset Allocation" (*FAJ* 2025; READ IN FULL 2026-07, owner-supplied PDF)
 
-The closest neighbor with the best pedigree: Teiletche co-authored our ERC canon paper
-(Maillard-Roncalli-Teiletche 2010). Strategic (not tactical) allocation built on macro
-regimes, connecting mean-variance and risk-based investing under regime conditioning.
-**⇒ for us:** the natural positioning anchor — cite it as the institutional-scale sibling;
-our differentiators are (a) the era-agreement-gated long-history estimator for the regime
-inputs, (b) the pre-registered virgin-universe validation, and (c) the retail data scale
-framing. [SSRN 4801115](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4801115)
+The closest neighbor, now with the best pedigree confirmed: World Bank Treasury;
+Teiletche co-authored our ERC canon paper. **Verified method:** regimes as a MIXTURE of
+distributions with constant long-run probabilities (deliberately strategic — simpler than
+Markov-switching, chosen for tractability and governance; a statistical Gaussian-mixture
+alternative is tried in their appendix and REJECTED for interpretability — our
+observable-classifier choice, independently made). Regimes = NBER growth × (CPI>5% +
+positive surprise) inflation → Overheating 11.1% / Goldilocks 75.6% / Stagflation 5.1% /
+Downturn 8.2% of 1973-2023; universe = 7 asset classes (S&P, Treasuries, IG credit, TIPS
+— backfilled pre-1997 via Swinkels' SPF method — REITs, gold, commodities ex-gold).
+Analytics: mixture moments with an intra/inter-regime covariance decomposition; the
+multi-regime MVO = covariance-weighted average of per-regime MVOs; **risk budgeting ACROSS
+REGIMES** (risk contributions per regime, not per asset). Four constructions: rg-PWA
+(θ=p_i), rg-EWA (θ=1/N), rg-ERC (equal risk contribution across regime portfolios —
+explicitly the All Weather philosophy), rg-PRC (RC_i = p_i).
+
+**Verified findings, and the convergences with our ledger:**
+- Their OOS protocol implements OUR M19 independently: inflation lagged ~2 months,
+  NBER replaced by the **real-time Sahm rule** (because official dating lags 4-21 months).
+  Two teams, same real-time discipline.
+- OOS (1998-2023, expanding window): **MVO flips from best in-sample to WORST OOS** — the
+  M1/DeMiguel result again; all regime-based portfolios dominate MVO by certainty
+  equivalent.
+- **rg-ERC = at-par Sharpe with the best drawdown/worst-month/Calmar** — "buys the floor,
+  not returns": our M7/M14 all-weather profile, confirmed on a different universe with a
+  different method. Their per-regime optimal portfolios: Stagflation = TIPS+gold only,
+  Downturn = government bonds only; gold peaks in stagflation, commodities ex-gold in
+  overheating; volatilities +50% in bad-growth regimes.
+- Their commodity split (gold=stagflation, energy-commodities=overheating) is our B1b
+  thesis with numbers; their Swinkels-SPF TIPS backfill is the ROUTE that un-blocks our
+  descoped TIPS sleeve.
+
+**⇒ for us:** the positioning anchor AND a convergence exhibit: cite as the
+institutional-scale sibling whose independent choices (observable regimes, strategic not
+tactical, risk-parity-across-regimes, real-time labels) match ours; our differentiators
+remain the era-agreement-gated long-history estimator, the pre-registered virgin-universe
+validation, the inference layer (they report no Sharpe-difference tests), and the retail
+data scale. [SSRN 4801115](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4801115) ·
+FAJ DOI 10.1080/0015198X.2025.2558354
 
 ## 2. "Tactical Asset Allocation with Macroeconomic Regime Detection" (arXiv 2503.11499; Quantitative Finance 2026)
 

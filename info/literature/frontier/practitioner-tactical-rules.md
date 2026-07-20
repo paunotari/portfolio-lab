@@ -26,15 +26,20 @@ whipsaws — but it deserves the test before the paper claims overlays don't hel
 [SSRN 962461](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=962461) ·
 [author PDF](https://mebfaber.com/wp-content/uploads/2016/05/SSRN-id962461.pdf)
 
-## 2. Antonacci (2012) — "Risk Premia Harvesting Through Dual Momentum"
+## 2. Antonacci (2012/2016) — "Risk Premia Harvesting Through Dual Momentum" (READ 2026-07, owner PDF)
 
-Another perennial download leader. **Dual momentum** = relative momentum (hold the stronger
-of an asset pair over the last 12m) + absolute momentum (only if it also beat T-bills;
-else cash). Reported: higher return, lower vol, smaller max drawdown across equity, credit,
-REIT and gold/treasury module pairs.
-**⇒ for us:** a hybrid of our momentum contestant (relative) and Faber's filter (absolute).
-If we field the trend overlay above, dual momentum is the natural second variant (one
-extra line). Same honesty protocol; same prior expectation.
+Another perennial download leader (NAAIM Wagner award). **Verified rule:** modules of asset
+pairs (US/EAFE+ equities, HY/credit, equity/mortgage REITs, gold/long Treasuries); each
+month hold the pair member with the higher trailing 12-month return (relative momentum,
+no skip-month) ONLY if it also beat T-bills over the same 12m (absolute momentum) — else
+sit in T-bills. **Verified headline** (equities module, 1974-2011): Sharpe 0.73 vs 0.35
+(US) / 0.33 (EAFE+), maxDD −23% vs −51/−57% — "doubles the Sharpe, halves the drawdown."
+**Through our checklist:** no transaction costs deducted (defensible: ~1.4 switches/year)
+and no significance testing; the lift comes mostly from the ABSOLUTE filter sidestepping
+2001-02 and 2008 — i.e. the same trend mechanism as Faber, whose value concentrates in
+prolonged bears (absent from our modern OOS window; present in the FF-intl universe).
+**⇒ for us:** with Faber's filter, one overlay family to field once, fairly, on the
+two-bear virgin universe. Same honesty protocol; prior expectation recorded.
 [SSRN 2042750](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2042750)
 
 ## 3. Frazzini, Kabiller & Pedersen (2013/2018) — "Buffett's Alpha" (*FAJ* 2018)
