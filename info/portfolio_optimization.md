@@ -15,7 +15,7 @@ and the FRED-ToS line (CLAUDE.md caveat #11 — everything below is closed-form 
 resampling; nothing fitted).
 
 The one-sentence version (see
-[literature/STATE-OF-THE-ART-IN-PLAIN-WORDS.md](literature/STATE-OF-THE-ART-IN-PLAIN-WORDS.md)):
+[literature/classics/STATE-OF-THE-ART-IN-PLAIN-WORDS.md](literature/classics/STATE-OF-THE-ART-IN-PLAIN-WORDS.md)):
 *with 330 months of data your biggest enemy is your own estimation error — so build from the
 stable structure of the assets, add opinions only in proportion to confidence, defend the worst
 regime rather than chasing the best, and keep the equal-weight benchmark on screen.*
@@ -78,7 +78,7 @@ nonlinear by multi-start SLSQP) — so "Return 5 / Risk 5" is genuinely balanced
 | Objective | Consumes | Notes |
 |---|---|---|
 | Return | w·μ_BL | tilts, never dominates — the literature's hardest rule |
-| Risk | vol from shrunk Σ (default) · empirical blended maxDD (Tier-2 toggle) | CVaR-95 parked ([cvar-optimization.md](literature/cvar-optimization.md) has the un-parking route: feed the Rockafellar-Uryasev LP with scenario-engine months) |
+| Risk | vol from shrunk Σ (default) · empirical blended maxDD (Tier-2 toggle) | CVaR-95 parked ([cvar-optimization.md](literature/classics/cvar-optimization.md) has the un-parking route: feed the Rockafellar-Uryasev LP with scenario-engine months) |
 | Diversification | geometric mean of look-through effective bets (1/HHI over sector/country/stock, exact quadratic forms w·AAᵀ·w) | geometric because stock-level bets run ~100× sector-level (top-10-only data, caveat #4) |
 | Regime row (Tier-2) | Σ_q importance_q × score_q(w·μ̂_q), each quadrant scored on its own range | presets: historical frequency / even 25×4 / Markov-outlook-weighted |
 | **Maximin (mode)** | max_w min_q w·μ̂_q, epigraph reformulation | one checkbox; All Weather's philosophy; targets exactly where Ang-Bekaert located the value (not being destroyed in the bad state) |
@@ -123,7 +123,7 @@ under your priorities — not a forecast."**
   vol-targeting cut min-var's drawdown (−29%→−22%) but not its Sharpe (→0.99). Exactly the
   DeMiguel humility the method predicts, printed in the report — the optimizer's value is
   *expressing preferences and regime robustness transparently*, not beating equal weight. The
-  low-vol anomaly ([low-volatility-anomaly.md](literature/low-volatility-anomaly.md)) explains
+  low-vol anomaly ([low-volatility-anomaly.md](literature/classics/low-volatility-anomaly.md)) explains
   the winner; min-var-as-default-anchor is the open decision this evidence keeps reinforcing.
 
 ---

@@ -3,7 +3,7 @@
 The literature's hardest rule (Michaud 1989, Chopra-Ziemba 1993, DeMiguel 2009): never hand an
 optimizer raw historical mean returns — it amplifies exactly their errors. This module builds the
 one return vector the optimizer is allowed to see, the BL posterior mu_BL, in two moves
-(info/literature/black-litterman.md):
+(info/literature/classics/black-litterman.md):
 
 1. Reverse-optimize the neutral anchor:  Pi = delta_ra . Sigma . w0. If you say nothing else, the
    optimizer hands back exactly w0 — garbage-in is structurally impossible at this stage.

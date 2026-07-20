@@ -1,7 +1,7 @@
 """Sharpe-ratio inference — are the walk-forward's Sharpe differences real?
 
 Implements the paper-track gate (info/TODO.md "Paper track", item 1) per the deep dive
-info/literature/sharpe-inference.md:
+info/literature/classics/sharpe-inference.md:
 
 - ``sharpe_diff_test``: Ledoit & Wolf (2008) robust test for the difference of two Sharpe
   ratios — delta-method HAC (Parzen kernel) z-test + the primary STUDENTIZED CIRCULAR BLOCK

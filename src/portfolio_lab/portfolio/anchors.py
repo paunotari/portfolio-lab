@@ -8,7 +8,7 @@ min-variance are computed on every run as the mandatory honesty benchmarks (DeMi
 
 All engines take a covariance matrix (feed them the Ledoit-Wolf shrunk one from
 ``portfolio.shrinkage``) and return long-only weights summing to 1. Deep dives:
-info/literature/risk-parity-erc.md and info/literature/hierarchical-risk-parity.md.
+info/literature/classics/risk-parity-erc.md and info/literature/classics/hierarchical-risk-parity.md.
 """
 from __future__ import annotations
 import numpy as np

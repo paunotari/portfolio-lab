@@ -975,7 +975,7 @@ def _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta, profiles=N
               "and vs Min-variance (HAC z-test alongside in `optimizer_inference.csv`), and "
               "the deflated Sharpe (Bailey-López de Prado 2014: P(true Sharpe > 0) after "
               "adjusting for non-normality and for fielding "
-              f"{len(wf_infer)} contestants). Method: info/literature/sharpe-inference.md. "
+              f"{len(wf_infer)} contestants). Method: info/literature/classics/sharpe-inference.md. "
               "With ~20 pairwise tests, expect ~1 false positive at 5%; failing to reject is "
               "modest power, not proof of equality.", ""]
         show = wf_infer[["portfolio", "sharpe_ann", "dsr", "delta_ann_vs_1/N",

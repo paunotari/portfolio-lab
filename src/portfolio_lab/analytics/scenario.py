@@ -39,7 +39,7 @@ LINEAGE: this is a state-conditioned STATIONARY BOOTSTRAP (Politis & Romano, JAS
 random geometric block lengths are our geometric spell durations (continuation probability = the
 transition matrix diagonal), their uniform block starts are our within-state block sampling, with
 the regime path conditioning layered on top. The method has a name and asymptotic theory; see
-info/literature/stationary-bootstrap.md for the exact correspondence. Our expected block length
+info/literature/classics/stationary-bootstrap.md for the exact correspondence. Our expected block length
 is economically pinned by measured regime persistence (~4-6 months), rather than statistically
 tuned (Politis-White 2004 is the alternative, and roughly agrees in order of magnitude).
 

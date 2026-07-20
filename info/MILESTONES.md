@@ -32,7 +32,7 @@ momentum/vol-target). **Data:** `data/processed/levels_wide.csv` (MSCI, 1999–2
 **Code:** `portfolio/proxy_backtest.py` (`run`, `run_dispersion`). **Data:**
 `ff_portfolios_monthly.csv` (6 FF size×value long-only portfolios, Ken French, 1926+).
 **Status:** century-scale + OOS windows. Explains M1's winner: the low-volatility/Quality
-decade (see `literature/low-volatility-anomaly.md`).
+decade (see `literature/classics/low-volatility-anomaly.md`).
 
 ## M3 — Constraints are implicit shrinkage: capping IMPROVED out-of-sample results
 **Claim:** the geo-capped maximin beat the unconstrained maximin OOS (Sharpe 0.84 vs 0.73);
@@ -354,7 +354,7 @@ momentum tilt meeting the 2024+ trend). The "within-interval drift turnover is u
 limitation is quantified and immaterial; annual-refit buy-and-hold is the cheapest
 implementable scheme and loses nothing.
 **See:** `REPORT_rebalancing.md` + `optimizer_rebalancing.csv` · deep dive
-`info/literature/rebalancing.md` (C1). **Code:** `portfolio/rebalancing.py` (CLI; reuses
+`info/literature/classics/rebalancing.md` (C1). **Code:** `portfolio/rebalancing.py` (CLI; reuses
 the walk-forward's per-refit weights, no re-optimization). **Data:** walk-forward weights ×
 sleeve returns. **Status:** OOS re-implementation of identical decisions; closes C1's
 empirical half and the drift-turnover limitation.

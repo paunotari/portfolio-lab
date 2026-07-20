@@ -433,7 +433,7 @@ most constrained ones — constraints act as implicit shrinkage.
 <ul class="src">
 <li>DeMiguel, Garlappi &amp; Uppal (2009), "Optimal Versus Naive Diversification" — <a href="https://academic.oup.com/rfs/article-abstract/22/5/1915/1592901">RFS 22(5)</a></li>
 <li>Jagannathan &amp; Ma (2003), <i>JF</i> — no-short/cap constraints ≈ shrinking extreme covariances</li>
-<li>Repo deep dive: <span class="num">info/literature/mean-variance-and-estimation-error.md</span> · code: <span class="num">portfolio/validation.py</span></li>
+<li>Repo deep dive: <span class="num">info/literature/classics/mean-variance-and-estimation-error.md</span> · code: <span class="num">portfolio/validation.py</span></li>
 </ul></div></details>
 <div id="race" class="chart" style="height:440px"></div>
 

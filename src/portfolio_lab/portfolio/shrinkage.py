@@ -10,7 +10,7 @@ Extreme entries of S — exactly the ones a mean-variance optimizer piles onto �
 the structure in proportion to how noisy they are. Closed-form, no tuning, no fitting loop
 (cleanly on the allowed side of the FRED-ToS line, and it consumes MSCI returns anyway).
 
-Two variants (see info/literature/ledoit-wolf-shrinkage.md):
+Two variants (see info/literature/classics/ledoit-wolf-shrinkage.md):
 
 - ``shrink_constant_correlation`` (variant B, *JPM* 2004 "Honey, I Shrunk the Sample Covariance
   Matrix") — the DEFAULT. Target keeps each asset's own variance and sets every correlation to

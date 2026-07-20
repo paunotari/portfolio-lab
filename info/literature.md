@@ -13,28 +13,44 @@ version is a *known* failure mode. This is the map so the optimizer
 
 **This file is the index + verdicts.** For the whole literature as one plain-language story (no
 formulas — read this first for comprehensive understanding), see
-[literature/STATE-OF-THE-ART-IN-PLAIN-WORDS.md](literature/STATE-OF-THE-ART-IN-PLAIN-WORDS.md).
-Each entry below also has an implementation-grade deep dive in [literature/](literature/) — the
-principles AND the mathematics (formulas, algorithms, pitfalls, unit tests), written to be
-codeable without fetching the paper:
+[literature/classics/STATE-OF-THE-ART-IN-PLAIN-WORDS.md](literature/classics/STATE-OF-THE-ART-IN-PLAIN-WORDS.md).
+The deep dives live on two shelves (reorganized 2026-07):
+**[literature/classics/](literature/classics/)** — the established canon this project is
+built on, implementation-grade (formulas, algorithms, pitfalls, unit tests), codeable
+without fetching the paper. **[literature/frontier/](literature/frontier/)** — the LIVING
+frontier: working papers and active groups solving our problem now (2023+), each analyzed
+with a "⇒ for us" verdict (position against it / borrow a technique / field it as a
+contestant). Frontier notes are positioning + candidate tests, not settled canon; anything
+promoted from frontier to a design change needs the M16-style pre-registered checklist.
+
+### Classics — the canon
 
 | Deep dive | Covers |
 |---|---|
-| [mean-variance-and-estimation-error.md](literature/mean-variance-and-estimation-error.md) | Markowitz math · Michaud error-maximization mechanics · Chopra-Ziemba 11× · DeMiguel evidence · resampled efficiency |
-| [ledoit-wolf-shrinkage.md](literature/ledoit-wolf-shrinkage.md) | both shrinkage estimators, closed-form, numpy-ready |
-| [black-litterman.md](literature/black-litterman.md) | full posterior math + our prior/regime-views adaptation |
-| [risk-parity-erc.md](literature/risk-parity-erc.md) | Euler risk contributions, ERC existence/computation, leverage-aversion caveat |
-| [hierarchical-risk-parity.md](literature/hierarchical-risk-parity.md) | exact 3-stage HRP algorithm, pitfalls, unit tests |
-| [cvar-optimization.md](literature/cvar-optimization.md) | Rockafellar-Uryasev LP formulation, when to un-park it |
-| [regime-switching.md](literature/regime-switching.md) | Hamilton filter math, Ang-Bekaert findings, maximin reformulation, ToS boundary |
-| [nowcasting-dfm.md](literature/nowcasting-dfm.md) | DFM/Kalman sketch, GDPNow/NY Fed production notes, upgrade path |
-| [stationary-bootstrap.md](literature/stationary-bootstrap.md) | Politis-Romano ↔ our scenario engine, exact correspondence |
-| [low-volatility-anomaly.md](literature/low-volatility-anomaly.md) | Haugen-Baker → Clarke-de Silva-Thorley → Blitz-van Vliet · BAB mechanism · why min-var wins our walk-forward |
-| [factor-canon.md](literature/factor-canon.md) | FF3/momentum/VME/QMJ math + per-quadrant predictions vs our measurements |
-| [sharpe-inference.md](literature/sharpe-inference.md) | JK/Memmel baseline · Ledoit-Wolf 2008 HAC + studentized circular block bootstrap · deflated Sharpe (Bailey-LdP) · CSCV PBO · our pairwise protocol + pitfalls |
-| [rebalancing.md](literature/rebalancing.md) | frequency/bands · diversification return (Booth-Fama, Willenbrock) · our M22 measurement: constant-mix vs buy-and-hold is not load-bearing |
-| [currency-hedging.md](literature/currency-hedging.md) | Campbell-Serfaty-Viceira 2010 (safe-haven currencies = embedded hedges; hedge bonds, not necessarily equity) · our M24 unhedged-EUR re-statement · the hedged-half implementation sketch |
-| [factor-timing.md](literature/factor-timing.md) | the Asness-Arnott valuation-spread debate · why no factor timing enters the optimizer · the M9/M12 tie-in |
+| [mean-variance-and-estimation-error.md](literature/classics/mean-variance-and-estimation-error.md) | Markowitz math · Michaud error-maximization mechanics · Chopra-Ziemba 11× · DeMiguel evidence · resampled efficiency |
+| [ledoit-wolf-shrinkage.md](literature/classics/ledoit-wolf-shrinkage.md) | both shrinkage estimators, closed-form, numpy-ready |
+| [black-litterman.md](literature/classics/black-litterman.md) | full posterior math + our prior/regime-views adaptation |
+| [risk-parity-erc.md](literature/classics/risk-parity-erc.md) | Euler risk contributions, ERC existence/computation, leverage-aversion caveat |
+| [hierarchical-risk-parity.md](literature/classics/hierarchical-risk-parity.md) | exact 3-stage HRP algorithm, pitfalls, unit tests |
+| [cvar-optimization.md](literature/classics/cvar-optimization.md) | Rockafellar-Uryasev LP formulation, when to un-park it |
+| [regime-switching.md](literature/classics/regime-switching.md) | Hamilton filter math, Ang-Bekaert findings, maximin reformulation, ToS boundary |
+| [nowcasting-dfm.md](literature/classics/nowcasting-dfm.md) | DFM/Kalman sketch, GDPNow/NY Fed production notes, upgrade path |
+| [stationary-bootstrap.md](literature/classics/stationary-bootstrap.md) | Politis-Romano ↔ our scenario engine, exact correspondence |
+| [low-volatility-anomaly.md](literature/classics/low-volatility-anomaly.md) | Haugen-Baker → Clarke-de Silva-Thorley → Blitz-van Vliet · BAB mechanism · why min-var wins our walk-forward |
+| [factor-canon.md](literature/classics/factor-canon.md) | FF3/momentum/VME/QMJ math + per-quadrant predictions vs our measurements |
+| [sharpe-inference.md](literature/classics/sharpe-inference.md) | JK/Memmel baseline · Ledoit-Wolf 2008 HAC + studentized circular block bootstrap · deflated Sharpe (Bailey-LdP) · CSCV PBO · our pairwise protocol + pitfalls |
+| [rebalancing.md](literature/classics/rebalancing.md) | frequency/bands · diversification return (Booth-Fama, Willenbrock) · our M22 measurement: constant-mix vs buy-and-hold is not load-bearing |
+| [currency-hedging.md](literature/classics/currency-hedging.md) | Campbell-Serfaty-Viceira 2010 (safe-haven currencies = embedded hedges; hedge bonds, not necessarily equity) · our M24 unhedged-EUR re-statement · the hedged-half implementation sketch |
+| [factor-timing.md](literature/classics/factor-timing.md) | the Asness-Arnott valuation-spread debate · why no factor timing enters the optimizer · the M9/M12 tie-in |
+
+### Frontier — the living papers (2023+, added 2026-07)
+
+| Frontier note | Covers | Action it motivates |
+|---|---|---|
+| [beating-1N-yuan-zhou.md](literature/frontier/beating-1N-yuan-zhou.md) | Yuan-Zhou JFQA 2023 (+ Kan-Zhou/Tu-Zhou lineage): why 1/N is near-unimprovable in theory — and the 1/N-combination rule that beats it | **the required referee response**: field their combination as a walk-forward contestant |
+| [regime-allocation-groups.md](literature/frontier/regime-allocation-groups.md) | Bouyé-Teiletche 2024 (regime SAA, our nearest institutional sibling) · k-means TAA w/ FRED-MD (QF 2026) · Shu et al. per-asset regimes · Chan et al. ML-conditional optimization | positioning anchors + 2 cheap borrowed tests: random-regime placebo, Nemenyi multiple-comparison |
+| [practitioner-tactical-rules.md](literature/frontier/practitioner-tactical-rules.md) | the perennial SSRN download podium: Faber 10-month-SMA GTAA · Antonacci dual momentum · Buffett's Alpha (=BAB+QMJ levered) | trend-filter overlay as the missing contestant family; Buffett's Alpha ↔ our M21 (min-var = 82% Quality) |
+| [universal-shrinkage-kelly.md](literature/frontier/universal-shrinkage-kelly.md) | Kelly-Malamud-Pourmohammadi-Trojani nonlinear/universal covariance shrinkage | Σ-estimator as a 4th sensitivity-grid dimension (expect "no material change" at N≪T — and say so) |
 
 ---
 
@@ -78,14 +94,14 @@ returns at ~25–30% less volatility; Blitz & van Vliet confirmed it globally. F
 supplied the mechanism: most investors can't or won't use leverage, so they overpay for exciting
 high-beta assets to reach return targets, leaving boring low-beta assets structurally cheap —
 their BAB factor harvests exactly that premium (same leverage-aversion logic as risk parity,
-[risk-parity-erc.md](literature/risk-parity-erc.md) §4).
+[risk-parity-erc.md](literature/classics/risk-parity-erc.md) §4).
 **⇒ for us: the explanation of our own walk-forward result.** Min-variance won BOTH halves of
 our out-of-sample test (Sharpe 1.21 in 2009–2017, 0.96 in 2018–2026 — measured 2026-07) without
 estimating a single expected return. That's not "better optimization": it's (a) immunity to
 mean-estimation error and (b) harvesting this structural premium — on our menu, via the Quality
 sleeves it concentrates in. License to consider min-var as the default anchor (open TODO
 decision), with the caveat said out loud: a min-var portfolio is a *factor bet on defensive
-equity*, not a neutral allocation. → [low-volatility-anomaly.md](literature/low-volatility-anomaly.md)
+equity*, not a neutral allocation. → [low-volatility-anomaly.md](literature/classics/low-volatility-anomaly.md)
 
 ### Ledoit & Wolf (2004), "Honey, I Shrunk the Sample Covariance Matrix" — *JPM* ([pdf](http://www.ledoit.net/honey.pdf))
 Opening line of the abstract, literally: *"nobody should be using the sample covariance matrix
@@ -164,7 +180,7 @@ zero-skill trials.
 walk-forward net OOS returns every build. First verdict (M14): **nothing on the menu beats 1/N
 significantly at 5%** — even min-variance's +0.20 annualized Sharpe edge lands at p_boot
 0.055 — while two overlays are significantly WORSE than 1/N; every ranking sentence in the
-reports now carries its p-value. → [sharpe-inference.md](literature/sharpe-inference.md)
+reports now carries its p-value. → [sharpe-inference.md](literature/classics/sharpe-inference.md)
 
 ## 2. Regime detection & forecasting — what the grown-ups do
 

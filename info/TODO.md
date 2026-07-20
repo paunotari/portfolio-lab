@@ -94,7 +94,7 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       podium unchanged, vol-target overlays lose their edge (FX noise). Hedged (CIP with
       euro 3m interbank, carry −0.56%/yr): rankings virtually the USD table. All
       construction conclusions hold in all three seats; the currency seat moves levels,
-      never decisions. C2 deep dive done (`literature/currency-hedging.md`).
+      never decisions. C2 deep dive done (`literature/classics/currency-hedging.md`).
 
 ### Paper track — toward a publishable contribution (owner goal, 2026-07)
 
@@ -107,7 +107,7 @@ Check items off as completed. Add new ones as they come up; keep entries short a
 > academic journals (JF/RFS) are not realistic for this design. What's missing before writing:
 
 - [x] **Statistical significance for Sharpe differences — BUILT 2026-07-19** (`portfolio/
-      inference.py` + deep dive `info/literature/sharpe-inference.md`): Ledoit-Wolf (2008)
+      inference.py` + deep dive `info/literature/classics/sharpe-inference.md`): Ledoit-Wolf (2008)
       HAC + studentized circular block bootstrap, and deflated Sharpe (Bailey-LdP 2014),
       standing section of `REPORT_optimizer.md` on every build. **Verdict (M14): NOTHING
       beats 1/N at 5%** — min-variance's +0.20 ann. Sharpe edge is p_boot 0.055 — and
@@ -175,6 +175,20 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         contestants, not every dev-time variant (the pre-registered M16 test is the
         stronger multiplicity defense); USD-only (B3); 1/N is menu-relative — the menu is
         a design layer and the paper must say so.
+- [ ] **Frontier follow-ups (from the 2026-07 literature sweep — `literature/frontier/`).**
+      Candidate tests, each cheap and referee-motivated; any design change they suggest
+      needs the M16-style pre-registration discipline:
+  - [ ] **Yuan-Zhou combination contestant (the priority one)**: 1/N-combined sample rule
+        (Tu-Zhou/Yuan-Zhou delta) in the walk-forward + LW p vs 1/N — the direct answer to
+        the strongest published challenge to our humility claim.
+  - [ ] **Random-regime placebo**: re-run the maximin family with SHUFFLED state labels —
+        if results match the real labels, the regime signal adds nothing beyond the menu.
+  - [ ] **Nemenyi multiple-comparison test** next to the pairwise LW table.
+  - [ ] **Trend-filter overlay contestants** (Faber 10m-SMA; Antonacci dual momentum) in
+        `rules.py` — the missing overlay family; fair arena = the FF-intl universe (two
+        bears). Prior expectation recorded: helps drawdowns, struggles net of costs.
+  - [ ] **Sigma-estimator grid column**: nonlinear shrinkage (LW 2017 / Kelly et al.) as a
+        4th sensitivity dimension; expect and report "no material change" at N<<T.
 - [~] Paper draft — **v0.1 WRITTEN 2026-07-19** (`paper/draft.md`: full SSRN-style working
       paper — abstract, intro, related lit, data incl. virgin universe, method incl. the
       estimator's two operative lines, results R-sections with inference, referee's
@@ -186,15 +200,15 @@ Check items off as completed. Add new ones as they come up; keep entries short a
 ### Phase C — targeted literature (specific gaps, not more canon)
 
 - [x] **C1 — rebalancing — DEEP DIVE + MEASURED 2026-07-19 (M22)**:
-      `literature/rebalancing.md` + `portfolio/rebalancing.py`. Constant-mix vs fully-costed
+      `literature/classics/rebalancing.md` + `portfolio/rebalancing.py`. Constant-mix vs fully-costed
       vs buy-and-hold on identical weight schedules: <=0.002 Sharpe difference, ranking
       identical — the assumption is not load-bearing. Band rules noted as a product-level
       refinement, not research.
-- [x] **C2 — currency hedging — DEEP DIVE 2026-07-19** (`literature/currency-hedging.md`):
+- [x] **C2 — currency hedging — DEEP DIVE 2026-07-19** (`literature/classics/currency-hedging.md`):
       safe-haven currencies are embedded hedges (Campbell-Serfaty-Viceira 2010) — consistent
       with M24's measured unhedged-EUR result; default shippable guidance: hedge the bond
       sleeve, leave equity USD unhedged. Hedged re-statement stays in B3.
-- [x] **C3 — factor valuation/timing — DEEP DIVE 2026-07-19** (`literature/factor-timing.md`):
+- [x] **C3 — factor valuation/timing — DEEP DIVE 2026-07-19** (`literature/classics/factor-timing.md`):
       the Asness-Arnott debate adjudicated for us — no valuation-based factor timing in the
       optimizer (weak at usable horizons, redundant with value, costly; our momentum
       contestant's measured failure is the same verdict with our p-values). Possible future
@@ -290,7 +304,7 @@ protocol: walk-forward, net of costs, 1/N on screen._
       grid would need precomputed combos; revisit only on demand). Header subtitle made
       dynamic (28 series · 8 regions — was hardcoded 21/7).
 - [ ] CVaR-95 as third Tier-2 risk metric — un-parking route in
-      [literature/cvar-optimization.md](literature/cvar-optimization.md): feed the
+      [literature/classics/cvar-optimization.md](literature/classics/cvar-optimization.md): feed the
       Rockafellar-Uryasev LP with scenario-engine months instead of raw history.
 - [x] Per-sleeve **risk budgeting — BUILT 2026-07-19**: `anchors.erc_weights(sigma,
       budgets=…)` (Spinu program with b_i-weighted log barrier; equal budgets = classic ERC

@@ -144,7 +144,7 @@ OPTIMIZER_ATTRIBUTION = OPTIMIZER_DIR / "optimizer_attribution.csv"    # M21 per
 OPTIMIZER_PBO_S = 16                       # CSCV blocks (Bailey et al. 2017); C(16,8)=12870
 
 # Sharpe inference (Ledoit-Wolf 2008 studentized circular block bootstrap — see
-# info/literature/sharpe-inference.md). Block=None -> auto T^(1/3).
+# info/literature/classics/sharpe-inference.md). Block=None -> auto T^(1/3).
 OPTIMIZER_INFER_B = 4999
 OPTIMIZER_INFER_BLOCK = None
 
