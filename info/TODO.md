@@ -339,6 +339,24 @@ protocol: walk-forward, net of costs, 1/N on screen._
 
 ### Phase-3 follow-ups (post engine build, 2026-07)
 
+- [ ] **Michaud resampled efficient frontier — figure + dashboard panel** (owner question
+      2026-07-21: "are we using the efficient frontier, does it make sense?"). We use the
+      frontier as the method's SKELETON (`optimizer.py` stage 4) but deliberately never draw
+      the classical mean-variance one, because its vertical axis is raw mu — the single most
+      error-contaminated object in the theory (Chopra-Ziemba 11x; Michaud's "error
+      maximizer"; our T=330 vs DeMiguel's ~3000). The canonical answer to exactly this
+      problem is **Michaud (1998) resampled efficiency**: re-draw the frontier over B
+      bootstrap resamples and show the CLOUD instead of the line. Cheap for us — the
+      stationary-bootstrap machinery already exists in `analytics/scenario.py`, and the
+      solver already traces constrained frontiers.
+      Deliverables: (a) a paper figure — the resampled frontier cloud with 1/N, ERC, HRP,
+      min-var and the flagships plotted on it; (b) a Tier-2 dashboard panel with the same.
+      **Why it earns its place: it makes the project's thesis visible in one image** — the
+      "frontier" is a wide smear, 1/N falls inside it, and on a DR^2 = 1.31 menu (M27) the
+      smear is nearly degenerate, which is why every rule lands within 0.2 Sharpe of every
+      other. Declared expectation, recorded in advance: the cloud will be wide enough that
+      the flagship portfolios' separation is not visually resolvable.
+
 - [x] **Rule-based contestants + transaction costs in the walk-forward** (2026-07) —
       `portfolio/rules.py` (`momentum_weights` = Jegadeesh-Titman 12-1; `vol_managed` = unlevered
       Moreira-Muir vol targeting) tested through the same walk-forward, now **net of
