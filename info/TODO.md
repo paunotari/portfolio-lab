@@ -351,6 +351,12 @@ protocol: walk-forward, net of costs, 1/N on screen._
       solver already traces constrained frontiers.
       Deliverables: (a) a paper figure — the resampled frontier cloud with 1/N, ERC, HRP,
       min-var and the flagships plotted on it; (b) a Tier-2 dashboard panel with the same.
+      Composition settled by the 2026-07-21 read of a tutorial the owner linked
+      (`literature/classics/mean-variance-and-estimation-error.md` §6): **Dirichlet random
+      portfolios as the background cloud, but the frontier LINE from the optimizer, never
+      from binning the cloud** — measured, a 200k-draw cloud on our 28-sleeve menu reaches
+      the true min-variance edge (0.12% gap) but only **68% of the maximum attainable
+      return**, because Dirichlet draws concentrate near 1/N as N grows.
       **Why it earns its place: it makes the project's thesis visible in one image** — the
       "frontier" is a wide smear, 1/N falls inside it, and on a DR^2 = 1.31 menu (M27) the
       smear is nearly degenerate, which is why every rule lands within 0.2 Sharpe of every

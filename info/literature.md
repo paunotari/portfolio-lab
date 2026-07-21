@@ -30,7 +30,7 @@ consolidated.
 
 | Deep dive | Covers |
 |---|---|
-| [mean-variance-and-estimation-error.md](literature/classics/mean-variance-and-estimation-error.md) | Markowitz math · Michaud error-maximization mechanics · Chopra-Ziemba 11× · DeMiguel evidence · resampled efficiency |
+| [mean-variance-and-estimation-error.md](literature/classics/mean-variance-and-estimation-error.md) | Markowitz math · Michaud error-maximization mechanics · Chopra-Ziemba 11× · DeMiguel evidence · resampled efficiency · **§6 a pedagogical walkthrough fact-checked (owner link)**: the Monte-Carlo bullet cloud as a figure idea + why binning it breaks past N≈10 (measured: 68% return coverage at N=28), their own GMV-vs-tangency table as a ready-made error-maximization illustration, and two defects flagged |
 | [ledoit-wolf-shrinkage.md](literature/classics/ledoit-wolf-shrinkage.md) | both shrinkage estimators, closed-form, numpy-ready |
 | [black-litterman.md](literature/classics/black-litterman.md) | full posterior math + our prior/regime-views adaptation |
 | [risk-parity-erc.md](literature/classics/risk-parity-erc.md) | Euler risk contributions, ERC existence/computation, leverage-aversion caveat |
