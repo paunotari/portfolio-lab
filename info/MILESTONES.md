@@ -697,3 +697,44 @@ power.
 (`scramble_states`, `_regime_walk_forward`, `_realized_floor`); `optimizer.build_inputs(states=)`
 exists solely to feed it. **Data:** 28-sleeve MSCI menu + the extended 31-sleeve universe, 81
 full walk-forwards. **Status:** `OOS modern`, permutation-tested, harness-verified.
+
+## M34 — Why nothing is significant, measured two ways: the sleeves are one bet, and so are the portfolios
+**Claim:** the humility result (M14/M31) is usually reported as a fact about statistical power.
+On this menu it is better described as a fact about the OBJECTS being compared. Two measurements,
+both cheap, both new:
+
+**(a) Long-only factor tilts do NOT decorrelate — they are the most correlated cut of the menu.**
+Mean pairwise correlation of monthly returns, 1998-2026:
+
+| cut | mean corr | min |
+|---|---|---|
+| **same country, different factors** (Ref/Value/Momentum/Quality) | **0.885** | 0.766 |
+| same factor, different countries | 0.786 | 0.555 |
+| Reference across countries (pure market beta) | 0.821 | 0.629 |
+
+Diversifying by FACTOR inside a country diversifies **less** than diversifying by COUNTRY.
+Against the three non-equity proxies: Treasuries **−0.115**, gold **−0.007**, cash +0.018 vs the
+28 equity sleeves. **⇒ this qualifies Ilmanen-Kizer (2012) for our case rather than contradicting
+them.** Their near-zero cross-factor correlations are for LONG-SHORT factor portfolios, where the
+market beta has been sold off; a long-only factor index is ~95% its parent market and ~5% tilt,
+so the beta dominates and the correlations go to 0.885. They say the benefit is largest
+long-short and "meaningful" long-only; on our menu the long-only version is not meaningful. This
+is the practitioner-facing sentence the paper's menu-design section needed: **for an investor who
+cannot short, the asset-class route delivers the decorrelation the factor route promises.**
+
+**(b) The contestants themselves are 93–99.8% correlated.** OOS net monthly return correlations:
+Brodie vs Min-variance **0.975**, Brodie vs 1/N 0.955, Min-variance vs 1/N 0.929, HRP vs ERC
+**0.998**. **A Sharpe-difference test cannot separate series that move together this closely —
+which is the mechanical reason the p-values sit at 0.05-0.2 and not lower**, and it is DR² = 1.31
+(M27) showing up a third time. HRP and ERC at 0.998 are, for practical purposes, the same
+portfolio wearing two names (consistent with M25's decision to stop arguing about them).
+**Corollary for the paper's multiplicity accounting:** Brodie (M28) is not independent evidence —
+it is minimum variance with a return floor, it earns from the same place (USA Quality 47% vs
+min-var's 52%, M21 attribution), and it inflates the deflated-Sharpe trial count without adding
+an independent test. The honesty table should be read as **~4 distinct strategies wearing 17
+labels**, and the paper must say so rather than let the row count imply breadth.
+**See:** reproducible one-liners on `levels_wide.csv` / `optimizer_walkforward_returns.csv` /
+`optimizer_attribution.csv`. **Code:** ad-hoc on cached CSVs (the correlation cuts) +
+`validation.sleeve_attribution`. **Data:** 28-sleeve common window; 210 OOS months.
+**Status:** descriptive, full-sample — a property of the opportunity set and of the contestant
+field, not a backtested claim.
