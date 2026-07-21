@@ -79,3 +79,87 @@ def shrink_identity(returns: np.ndarray) -> tuple[np.ndarray, float]:
     b2 = min(b2_bar, d2)
     delta = float(b2 / d2) if d2 > 0 else 0.0
     return delta * m * np.eye(n) + (1.0 - delta) * S, delta
+
+
+def shrink_nonlinear(returns: np.ndarray) -> tuple[np.ndarray, float]:
+    """Ledoit & Wolf (2020) ANALYTICAL nonlinear shrinkage. Returns (Sigma, mean_adjustment).
+
+    The linear estimators above pull the whole sample matrix a single distance delta* toward one
+    target. Nonlinear shrinkage instead corrects **each eigenvalue by its own amount**, using the
+    Marchenko-Pastur theory of how the sample spectrum spreads out relative to the true one: the
+    largest sample eigenvalues are shrunk down, the smallest pushed up, and the middle barely
+    touched. It is the estimator that supersedes LW-2004 in the large-dimensional literature, so
+    a referee will ask whether our verdicts are an artifact of the simpler one.
+
+    Implements the closed-form kernel estimator of *Analytical Nonlinear Shrinkage of
+    Large-Dimensional Covariance Matrices* (Ann. Statist. 48(5)): eigendecompose the sample
+    covariance, estimate the limiting spectral density and its Hilbert transform with an
+    Epanechnikov kernel of bandwidth h = n^(-1/3), and map
+
+        d_i = lambda_i / ( (pi*(p/n)*lambda_i*f(lambda_i))^2
+                           + (1 - p/n - pi*(p/n)*lambda_i*Hf(lambda_i))^2 )
+
+    No tuning parameter and no fitting loop, so it stays on the allowed side of the FRED-ToS
+    line (caveat #11) exactly like the linear variants.
+
+    The second return value is NOT a delta* — a nonlinear estimator has no single shrinkage
+    intensity. It is the mean relative eigenvalue adjustment mean(|d_i - lambda_i|/lambda_i),
+    reported so the diagnostic slot stays populated and comparable in spirit.
+
+    Only the p <= n case is implemented: this project always has more months than sleeves, and a
+    silent wrong branch is worse than an explicit error.
+    """
+    X = np.asarray(returns, dtype=float)
+    t, p = X.shape
+    if t < 2 or p < 2:
+        raise ValueError(f"need at least 2 observations and 2 assets, got shape {X.shape}")
+    X = X - X.mean(axis=0)
+    n = t - 1                                              # effective sample size
+    if p > n:
+        raise ValueError(f"analytical nonlinear shrinkage needs p <= n, got p={p}, n={n}")
+    S = X.T @ X / n
+    lam, u = np.linalg.eigh(S)                             # ascending, orthonormal
+    lam = np.maximum(lam, 0.0)
+
+    h = n ** (-1.0 / 3.0)
+    L = np.tile(lam.reshape(-1, 1), (1, p))                # L[i, j] = lambda_i
+    H = h * L.T                                            # H[i, j] = h * lambda_j
+    x = (L - L.T) / H                                      # (lambda_i - lambda_j)/(h lambda_j)
+
+    # Epanechnikov density estimate of the limiting spectral distribution
+    f_tilde = (3.0 / 4.0 / np.sqrt(5.0)) * np.mean(np.maximum(1.0 - x ** 2 / 5.0, 0.0) / H, axis=1)
+    # its Hilbert transform (closed form for the Epanechnikov kernel)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        hf = ((-3.0 / 10.0 / np.pi) * x
+              + (3.0 / 4.0 / np.sqrt(5.0) / np.pi) * (1.0 - x ** 2 / 5.0)
+              * np.log(np.abs((np.sqrt(5.0) - x) / (np.sqrt(5.0) + x))))
+    edge = np.abs(np.abs(x) - np.sqrt(5.0)) < 1e-12        # the log's removable singularity
+    hf[edge] = (-3.0 / 10.0 / np.pi) * x[edge]
+    hf = np.nan_to_num(hf, nan=0.0, posinf=0.0, neginf=0.0)
+    hf_tilde = np.mean(hf / H, axis=1)
+
+    c = p / n
+    denom = (np.pi * c * lam * f_tilde) ** 2 + (1.0 - c - np.pi * c * lam * hf_tilde) ** 2
+    d = np.where(denom > 0, lam / np.maximum(denom, 1e-300), lam)
+    sigma = u @ np.diag(d) @ u.T
+    sigma = (sigma + sigma.T) / 2.0                        # kill numerical asymmetry
+    nz = lam > 1e-300
+    return sigma, float(np.mean(np.abs(d[nz] - lam[nz]) / lam[nz]))
+
+
+ESTIMATORS = {"constant_correlation": shrink_constant_correlation,
+              "identity": shrink_identity,
+              "nonlinear": shrink_nonlinear}
+
+
+def estimate_covariance(returns: np.ndarray, method: str = None) -> tuple[np.ndarray, float]:
+    """Dispatcher used by ``optimizer.build_inputs`` so the covariance estimator is a
+    ONE-LINE swap (config.OPTIMIZER_SIGMA_ESTIMATOR) and can therefore be a sensitivity grid
+    dimension rather than a hard-coded assumption. Default: the shipped constant-correlation
+    Ledoit-Wolf."""
+    from portfolio_lab import config as C
+    method = method or C.OPTIMIZER_SIGMA_ESTIMATOR
+    if method not in ESTIMATORS:
+        raise ValueError(f"unknown covariance estimator {method!r} "
+                         f"(one of {sorted(ESTIMATORS)})")
+    return ESTIMATORS[method](returns)

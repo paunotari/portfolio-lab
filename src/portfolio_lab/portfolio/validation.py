@@ -42,14 +42,26 @@ import pandas as pd
 
 from portfolio_lab import config as C
 from portfolio_lab.analytics.engine import _perf_stats
+from portfolio_lab.portfolio import anchors
 from portfolio_lab.portfolio import optimizer as opt
 from portfolio_lab.portfolio import rules
 
 # base portfolios the volatility-targeting overlay is tested on (one naive, one that already wins)
 VOLTARGET_BASES = ["1/N", "Min-variance"]
 
+MOMENTUM_NAME = (f"Momentum {C.OPTIMIZER_MOMENTUM_LOOKBACK}-{C.OPTIMIZER_MOMENTUM_SKIP} "
+                 f"(top {C.OPTIMIZER_MOMENTUM_K})")
+# trend-following overlays (base, display name, mode) — the missing overlay family. Faber's
+# 10-month SMA switch on the naive benchmark, and Antonacci's dual momentum built as it is
+# defined: the cross-sectional momentum contestant (relative leg) gated by absolute momentum.
+TREND_OVERLAYS = [
+    ("1/N", "1/N + trend (Faber 10m SMA)", "sma"),
+    (MOMENTUM_NAME, "Dual momentum (Antonacci)", "absmom"),
+]
+
 
 GMV_COMBO_NAME = "GMV combo (Yuan-Zhou)"
+BRODIE_NAME = "Sparse Markowitz (Brodie 2009)"
 
 
 def _contestants(inp: dict, n_starts: int, seed: int, diag: dict = None) -> dict:
@@ -59,12 +71,20 @@ def _contestants(inp: dict, n_starts: int, seed: int, diag: dict = None) -> dict
     out["Balanced sliders (5/5/5)"] = opt.optimize(
         prefs={"return": 5, "risk": 5, "diversification": 5},
         inputs=inp, n_starts=n_starts, seed=seed)["w"]
-    out[f"Momentum {C.OPTIMIZER_MOMENTUM_LOOKBACK}-{C.OPTIMIZER_MOMENTUM_SKIP} "
-        f"(top {C.OPTIMIZER_MOMENTUM_K})"] = rules.momentum_weights(inp["rets"])
+    out[MOMENTUM_NAME] = rules.momentum_weights(inp["rets"])
     w_gmv, lam = rules.gmv_combo_weights(inp["rets"])       # the Yuan-Zhou challenger
     out[GMV_COMBO_NAME] = w_gmv
+    out[BRODIE_NAME] = rules.brodie_weights(inp["rets"])    # the Brodie-2009 challenger
+    # HERC (Raffinot 2018) — ERC on HRP's topology. Both linkages fielded, because linkage is a
+    # hyperparameter and reporting only the flattering one is how hyperparameters get hidden.
+    for label, method in (("Ward", "ward"), ("single", "single")):
+        w_h, k_h = anchors.herc_weights(inp["sigma"], rets=inp["rets"].values, method=method)
+        out[f"HERC ({label} linkage)"] = w_h
+        if diag is not None:
+            diag[f"herc_{method}_k"] = float(k_h)
     if diag is not None:
         diag["gmv_lambda"] = lam
+        diag["brodie_n_sleeves"] = float((out[BRODIE_NAME] > 0.01).sum())
     if inp["mu_q"] is not None and len(inp["mu_q"]) >= 2:
         out["Maximin (worst quadrant)"] = opt.optimize(
             maximin=True, inputs=inp, n_starts=n_starts, seed=seed)["w"]
@@ -173,6 +193,13 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
         vt = f"{base} + vol-target"
         gross[vt] = managed
         turn[vt] = turn[base] + extra_turn
+
+    for base, label, mode in TREND_OVERLAYS:               # Faber / Antonacci
+        if base not in gross:
+            continue
+        managed, extra_turn = rules.trend_overlay(gross[base], mode=mode)
+        gross[label] = managed
+        turn[label] = turn[base] + extra_turn
 
     cost = C.OPTIMIZER_TC_BPS / 10_000.0
     rows, monthly = [], {}

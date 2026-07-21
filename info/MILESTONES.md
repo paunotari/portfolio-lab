@@ -438,3 +438,122 @@ gmv_combo_weights` (λ\* re-derived from their five stated scalars — the deriv
 docstring, their eq. 29 was not transcribable from the deep dive), fielded in
 `portfolio/validation.py::_contestants`. **Data:** the 28-sleeve MSCI menu, 1998-12→2026-06.
 **Status:** `OOS modern`, with the outcome PRE-DICTED by the challenger's theory before the run.
+
+## M27 — DR² lands: the 28-sleeve equity menu is 1.3 independent risk bets, and min-variance's 4 sleeves are the same 1.3
+**Claim:** the Choueifaty-Coignard Diversification Ratio (DR = Σwᵢσᵢ/σ_p; **DR² = the effective
+number of independent RISK bets**) is now a standing number next to the look-through
+effective-bets counts, because the two answer different questions and only one of them is about
+diversification. Look-through counts EXPOSURE spread (how many sectors/countries/stocks the
+money touches); DR² counts RISK spread. **Measured on the shipped menu:** the 28-sleeve equity
+menu at 1/N has **DR² = 1.31** — against look-through bets in the dozens. **Min-variance, which
+holds FOUR sleeves, has DR² = 1.28.** Holding 28 equity sleeves instead of 4 buys **0.03 of an
+independent bet.** ERC 1.32, HRP 1.31 — the whole podium is the same single bet, differently
+sliced. This is M18's KISS verdict in the practitioner's own metric, and it is harsher than the
+eigenvalue-entropy number (3.0 on the shrunk correlation; M18's 2.8 was on the raw one — both
+promoted from an ad-hoc one-liner to `optimizer.menu_diagnostics`, a standing report section).
+**The asset-class contrast, at menu level:** adding the three non-equity proxy sleeves moves
+mean pairwise correlation 0.76→0.61, **minimum pairwise correlation 0.53→−0.14** (the first
+genuinely negative pair the project has ever had on its menu), PC1 77%→69%, components-for-90%
+4→7, entropy bets 3.0→4.1 and **DR² 1.31→1.43** — three sleeves buying more than twenty-eight
+did. That is M6's "one new asset class beat any number of equity sleeves" measured on the MENU,
+before any optimizer touches it, which makes it a statement about the opportunity set rather
+than about our weighting scheme. **⇒ the B1/B1b sourcing items are the highest-value open work
+in the backlog, and the paper's menu-design paragraph now has its number.**
+**See:** `REPORT_optimizer.md` §"The menu itself" + the DR² column in the benchmark table and a
+DR² clause on every flagship. **Code:** `portfolio/optimizer.py::diversification_ratio` /
+`::menu_diagnostics`; unit-tested against both known endpoints (DR² = N for N uncorrelated
+equal-vol sleeves, DR² = 1 for perfectly correlated). **Data:** shrunk Σ on the 28-sleeve MSCI
+common window (and the 31-sleeve extended menu). **Status:** descriptive, full-sample — a
+property of the opportunity set, not a backtested claim.
+
+## M28 — Brodie 2009's "significantly outperforms 1/N" does not replicate once you test it
+**Claim:** the owner spotted the claim in Brodie-Daubechies-De Mol-Giannone-Loris (2009, *PNAS*)
+that their sparse-and-stable Markowitz portfolios "outperform 1/N significantly and
+consistently" (FF48 Sharpe 0.41 vs 0.27, 1976-2006). Reading the paper closed two gaps: (a) under
+the budget constraint their ℓ1 penalty is a short-position penalty and is **inert long-only**
+(‖w‖₁ ≡ 1), so their FF48 winner IS long-only minimum variance at the trailing-1/N target
+return; (b) "significantly" is used colloquially — there is **no Sharpe-difference test and no
+transaction-cost charge** anywhere in the paper. Fielded here with both.
+**Measured (210 OOS months, net of 10 bps):** **net Sharpe 0.933 — third in the table, ahead of
+HRP, ERC and 1/N**, Δ vs 1/N = **+0.104 annualized, LW p_boot 0.149** (p_hac 0.132). So: a real
+point estimate, and **not statistically significant** — the same verdict our own min-variance
+gets (+0.201, p 0.055) on a menu with far less variance-reduction room than their 48 dispersed
+industry portfolios. It is also NOT significantly worse than min-variance (p 0.111), and it is
+cheap (0.086 turnover per refit vs min-var's 0.041). Sparsity: 4-6 of 28 sleeves, the constraint
+set's doing, exactly as they observe.
+**⇒ they are an ALLY, not a challenge, and the adjudication is symmetric**: the family that wins
+their experiment (positivity-constrained variance minimization) is the family that wins ours;
+what does not survive is the word "significantly", in their table and in ours alike. Brodie is
+the SELECTING sibling of our SPREADING caps — both are Jagannathan-Ma regularization — and that
+is the paper's related-work paragraph.
+**See:** `optimizer_walkforward.csv` / `optimizer_inference.csv`, row "Sparse Markowitz (Brodie
+2009)". **Code:** `portfolio/rules.py::brodie_weights` (sample covariance and the raw mean
+vector — their specification, faithfully; caveat #19 governs OUR optimizer, not a replicated
+challenger), fielded in `validation._contestants`. **Data:** 28-sleeve MSCI menu.
+**Status:** `OOS modern`.
+
+## M29 — HERC measured: the hybrid lands BELOW both its parents, and the linkage does not matter
+**Claim:** HERC (Raffinot 2018) is literally "ERC on HRP's topology" — both sides of the M25
+anchor decision in one rule — so it was the natural frontier contestant. Declared prior,
+recorded in TODO before the run: *statistically indistinguishable from HRP/ERC*.
+**Measured:** **HERC (Ward) 0.800, HERC (single) 0.797** net OOS Sharpe — **below 1/N (0.830),
+below ERC (0.848) and below HRP (0.870)**. Versus 1/N: Δ −0.030 (p_boot 0.573) and −0.033
+(p 0.576) — indistinguishable, as predicted. Versus min-variance both are significantly worse
+(p 0.033 / 0.012). **The prior was right about the statistics and wrong about the direction:
+combining the two structural rules is not better than either.** Linkage — the hyperparameter the
+CBS thesis insists on reporting — moves the answer by **0.003 Sharpe**, so the Ward-vs-single
+question that the HERC literature makes much of is, on this menu, not a question.
+**The third finding, and the most useful one: Raffinot's early stopping is INOPERATIVE here.**
+The gap index rises monotonically to its ceiling (Gap = 1.41 at k=1 → 3.69 at k=21, s ≈ 0.01
+throughout), so the 1-standard-error rule never fires and the rule descends the full hierarchy.
+The reason is mechanical and worth stating rather than hiding: the permutation null has
+near-zero correlation everywhere, so its dispersion falls only through the arithmetic
+0.25·(n−k) term while the real menu's falls faster at every k. **There is no scale at which our
+sleeves stop looking more clustered than nothing at all** — M18/M27 from a third angle, and a
+caution for anyone reporting a gap-index cluster count on a one-factor-dominated menu.
+**See:** `optimizer_walkforward.csv` / `optimizer_inference.csv`, rows "HERC (…)".
+**Code:** `portfolio/anchors.py::herc_weights` + `::gap_index` (exact ERC solves at every split
+and inside every terminal cluster — the recursion never leaves the ERC family). **Data:**
+28-sleeve MSCI menu. **Status:** `OOS modern`. **Decision:** HERC is NOT promoted; ERC stays the
+anchor and HRP the better standalone construction (M25 unchanged).
+
+## M30 — the trend family joins the losing overlays: Faber buys drawdown, not Sharpe; dual momentum is significantly worse
+**Claim:** trend-following was the one overlay family the table lacked (vol-targeting scales
+exposure by turbulence; trend switches it by direction). Declared prior, recorded before the
+run: *helps drawdowns, struggles net of costs.* Both halves measured.
+**Measured:** **1/N + Faber 10-month SMA: net Sharpe 0.656 vs 1/N's 0.830** (Δ −0.174,
+p_boot 0.326 — worse, not significantly so) — but **max drawdown −19.9% against 1/N's −26.9%,
+the shallowest of any equity rule in the table**, at 12% volatility instead of 15%. So the prior
+is confirmed on both counts and the honest summary is that Faber trades Sharpe for drawdown, at
+1.67 turnover per refit. **Antonacci dual momentum** (the cross-sectional momentum contestant
+gated by absolute momentum — the rule as defined, both legs): **0.460, Δ −0.371, p_boot 0.034 —
+SIGNIFICANTLY WORSE than 1/N**, the third overlay to earn that label alongside 1/N+vol-target
+(p 0.009) and, at 7%, the balanced sliders.
+**⇒ the overlay family verdict is now complete and one-directional: on this menu, over this
+window, every timing overlay tested — volatility targeting, cross-sectional momentum, trend
+switching, dual momentum — fails to beat the thing it overlays, and three of them lose
+significantly to doing nothing.** The window is stated honestly: 2009-2026 is a 17-year bull
+with two short crashes, the least hospitable arena imaginable for rules whose payoff is
+sidestepping prolonged bears — which is exactly why the FF-international universe (two bears)
+is the fair arena and the next place to read these rows.
+**See:** `optimizer_walkforward.csv` / `optimizer_inference.csv`, rows "1/N + trend (Faber 10m
+SMA)" and "Dual momentum (Antonacci)". **Code:** `portfolio/rules.py::trend_overlay`, wired via
+`validation.TREND_OVERLAYS`. **Data:** 28-sleeve MSCI menu. **Status:** `OOS modern`.
+
+## M31 — the joint test agrees with the pairwise one: Friedman rejects, Nemenyi names nobody above 1/N
+**Claim:** the honesty table is a stack of pairwise Ledoit-Wolf tests, which is a multiplicity
+problem the deflated Sharpe only partly covers. The Demšar (2006) protocol answers the joint
+question directly: rank all 17 contestants inside each of 17 non-overlapping 12-month OOS
+blocks, then test the average ranks.
+**Measured:** **Friedman χ² = 46.6 (p = 0.0001)**, Iman-Davenport F = 3.31 (p < 0.0001) — **the
+ordering is NOT noise**; something in this table is genuinely better than something else.
+**Nemenyi critical difference at 5% = 5.99 rank units**, and against it: **no contestant differs
+from 1/N** (best gap: min-variance at −2.97, half the threshold), while the two worst — the
+unconstrained equity maximin (+3.18) and dual momentum (+4.41) — do differ from the top.
+**⇒ two claims that are easy to conflate, now separated with evidence: the ranking is real, and
+the gap to 1/N is not.** C2 survives the simultaneous-comparison test as well as the pairwise
+one, which is the stronger statement.
+**See:** `REPORT_optimizer.md` §"All contestants at once" + `optimizer_nemenyi.csv`.
+**Code:** `portfolio/inference.py::friedman_nemenyi` / `::block_ranks`. **Data:** the walk-forward
+net OOS returns (common panel — rows with any NaN dropped, so all contestants face the same
+months). **Status:** `OOS modern`.

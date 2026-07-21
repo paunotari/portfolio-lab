@@ -10,6 +10,12 @@ info/literature/classics/sharpe-inference.md:
   for non-normality AND for having fielded N contestants and looked at the best.
 - ``inference_table``: both applied to the walk-forward net OOS returns, every contestant
   vs 1/N (the DeMiguel bar) and vs Min-variance (the incumbent winner).
+- ``friedman_nemenyi``: Demšar (2006) protocol for comparing MANY methods at once — Friedman
+  test on average ranks across time blocks, then the Nemenyi post-hoc critical difference.
+  The pairwise LW table answers "is A better than B?" one pair at a time; run over a dozen
+  contestants that is a multiplicity problem the DSR only partly covers. This answers the
+  joint question directly: is the whole ranking distinguishable from noise, and which gaps
+  survive a simultaneous comparison?
 
 Point estimates rank; p-values decide what a ranking claim is worth. Failing to reject is
 not "equal" — with ~210 OOS months power is modest, so the CI is reported alongside.
@@ -20,7 +26,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-from scipy.stats import norm
+from scipy.stats import chi2, f as f_dist, norm, studentized_range
 
 from portfolio_lab import config as C
 
@@ -186,6 +192,81 @@ def pbo_cscv(monthly: pd.DataFrame, S: int = None) -> dict:
         if omega <= 0.5:
             below += 1
     return dict(pbo=float(below / len(combos)), S=S, n_trials=N, n_combos=len(combos))
+
+
+# ------------------------------------------- Friedman + Nemenyi (Demšar 2006 protocol)
+
+def block_ranks(monthly: pd.DataFrame, block: int = 12, metric: str = "sharpe") -> pd.DataFrame:
+    """Rank every contestant within each non-overlapping block of `block` OOS months.
+
+    Rank 1 = best in that block. Rows with any NaN are dropped first so all contestants face
+    the SAME months — a rank comparison is only meaningful on a common panel (this costs the
+    all-weather sleeve's slightly shorter tail, and is stated rather than silently patched).
+    A trailing partial block shorter than half `block` is discarded.
+
+    metric: "sharpe" (per-block mean/std — risk-adjusted, the quantity the whole table is
+    about) or "return" (per-block compounded return).
+    """
+    M = monthly.dropna()
+    g = np.arange(len(M)) // block
+    keep = pd.Series(g).value_counts()
+    g = pd.Series(g, index=M.index)
+    M = M[g.map(keep) >= max(2, block // 2)]
+    g = g[M.index]
+    if metric == "sharpe":
+        scores = M.groupby(g).agg(lambda s: s.mean() / s.std() if s.std() > 0 else np.nan)
+    elif metric == "return":
+        scores = M.groupby(g).agg(lambda s: float((1 + s).prod() - 1))
+    else:
+        raise ValueError(f"unknown metric {metric!r} (sharpe | return)")
+    return scores.dropna().rank(axis=1, ascending=False)
+
+
+def friedman_nemenyi(monthly: pd.DataFrame, block: int = 12, metric: str = "sharpe",
+                     alpha: float = 0.05) -> dict:
+    """Demšar (2006): Friedman test across blocks + the Nemenyi post-hoc critical difference.
+
+    Two stages, and the second only means anything if the first rejects:
+
+    1. **Friedman** on the average ranks R_j: chi2_F = 12N/(k(k+1)) * [sum R_j^2 - k(k+1)^2/4],
+       reported with the Iman-Davenport F correction (chi2_F is known to be conservative).
+       H0: every contestant has the same average rank, i.e. the whole ranking is noise.
+    2. **Nemenyi**: two contestants differ at level alpha iff their average ranks differ by
+       more than CD = q_alpha * sqrt(k(k+1)/(6N)), q_alpha = the Studentized range critical
+       value at infinite df divided by sqrt(2). One threshold covering ALL pairs simultaneously
+       — which is exactly what a table of a dozen pairwise LW tests does not give you.
+
+    Returns the average ranks, CD, the Friedman/Iman-Davenport statistics and, per contestant,
+    whether its rank gap to 1/N and to the best-ranked contestant clears CD.
+    """
+    ranks = block_ranks(monthly, block=block, metric=metric)
+    N, k = ranks.shape
+    if N < 3 or k < 3:
+        return dict(n_blocks=N, k=k, note="too few blocks/contestants for Friedman")
+    avg = ranks.mean().sort_values()
+    chi_f = (12.0 * N / (k * (k + 1))) * (float((avg ** 2).sum()) - k * (k + 1) ** 2 / 4.0)
+    p_chi = float(chi2.sf(chi_f, k - 1))
+    denom = N * (k - 1) - chi_f
+    f_f = ((N - 1) * chi_f / denom) if denom > 0 else np.inf
+    p_f = float(f_dist.sf(f_f, k - 1, (k - 1) * (N - 1))) if np.isfinite(f_f) else 0.0
+    q = float(studentized_range.ppf(1 - alpha, k, np.inf)) / np.sqrt(2.0)
+    cd = q * np.sqrt(k * (k + 1) / (6.0 * N))
+
+    best = avg.index[0]
+    rows = []
+    for name in avg.index:
+        row = dict(portfolio=name, avg_rank=float(avg[name]),
+                   gap_to_best=float(avg[name] - avg[best]),
+                   differs_from_best=bool(abs(avg[name] - avg[best]) > cd))
+        if "1/N" in avg.index:
+            row["gap_to_1/N"] = float(avg[name] - avg["1/N"])
+            row["differs_from_1/N"] = bool(abs(avg[name] - avg["1/N"]) > cd)
+        rows.append(row)
+    return dict(n_blocks=N, k=k, block=block, metric=metric, alpha=alpha,
+                chi2_friedman=float(chi_f), p_friedman=p_chi,
+                F_iman_davenport=float(f_f), p_iman_davenport=p_f,
+                critical_difference=float(cd), best=best,
+                table=pd.DataFrame(rows))
 
 
 # ----------------------------------------------------------------- the standing table

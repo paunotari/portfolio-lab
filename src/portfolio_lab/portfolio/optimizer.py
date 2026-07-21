@@ -57,7 +57,7 @@ from scipy.optimize import minimize
 from portfolio_lab import config as C
 from portfolio_lab.analytics.engine import _perf_stats
 from portfolio_lab.portfolio import anchors, views as bl
-from portfolio_lab.portfolio.shrinkage import shrink_constant_correlation
+from portfolio_lab.portfolio.shrinkage import estimate_covariance
 from portfolio_lab.portfolio.diversification import _load_tables
 
 ANN = 12                       # months per year
@@ -261,15 +261,20 @@ def _anchor_mu_q(mu_q: pd.DataFrame, long_prior: dict, asset_prior: dict,
     return mu
 
 
-def build_inputs(rets: pd.DataFrame = None, include_asset_classes: bool = False) -> dict:
+def build_inputs(rets: pd.DataFrame = None, include_asset_classes: bool = False,
+                 states: pd.DataFrame = None) -> dict:
     """Everything one optimization needs, computed once (pass a sliced `rets` to rebuild on a
-    training window — the walk-forward does). include_asset_classes: see load_returns."""
+    training window — the walk-forward does). include_asset_classes: see load_returns.
+
+    states: substitute a macro-state label frame for the pipeline's (already reindexed to
+    `rets`). The ONLY caller is the random-regime placebo (`portfolio/placebo.py`, M32), which
+    feeds scrambled labels to ask whether the regime signal adds anything beyond the menu."""
     rets = load_returns(include_asset_classes) if rets is None else rets
     series = list(rets.columns)
     R = rets.values
     T = len(rets)
 
-    sigma, delta_star = shrink_constant_correlation(R)
+    sigma, delta_star = estimate_covariance(R)
     w_erc = anchors.erc_weights(sigma)
     anchor_set = {"1/N": anchors.equal_weight(len(series)), "ERC (anchor)": w_erc,
                   "HRP": anchors.hrp_weights(sigma), "Min-variance": anchors.min_var_weights(sigma)}
@@ -278,7 +283,8 @@ def build_inputs(rets: pd.DataFrame = None, include_asset_classes: bool = False)
 
     mu_q, mu_q_obj, view_descs, outlook = None, None, [], None
     mu_bl = pi.copy()
-    states = _load_states(rets.index)
+    states = _load_states(rets.index) if states is None else states.reindex(rets.index).dropna(
+        subset=["state"])
     if states is not None and len(states) >= C.MACRO_MIN_OVERLAP_MONTHS:
         from portfolio_lab.analytics.macro_state import transition_matrix, quadrant_outlook
         perf_long = _state_mean_returns(rets, states)
@@ -369,6 +375,56 @@ def effective_bets_by_dim(w: np.ndarray, mats: dict) -> dict:
     """Per-dimension effective number of look-through bets, 1/HHI_dim(w) — the display version
     of the diversification objective."""
     return {dim: 1.0 / max(float(w @ M @ w), 1e-12) for dim, M in mats.items()}
+
+
+def diversification_ratio(w: np.ndarray, sigma: np.ndarray) -> float:
+    """Choueifaty & Coignard (2008) Diversification Ratio: DR = (Σ wᵢσᵢ) / σ_p.
+
+    The weighted average of the sleeves' STANDALONE volatilities over the portfolio's realized
+    volatility — i.e. how much of the sleeves' individual risk the correlations cancel. DR = 1
+    means no diversification at all (a single asset, or perfectly correlated ones); it rises as
+    the holdings decorrelate.
+
+    **DR² is the practitioner-standard "effective number of independent bets"** (Choueifaty-
+    Froidure-Reynier 2013: for uncorrelated equal-risk assets DR² = N exactly). We report it
+    next to the look-through effective bets because the two answer different questions: the
+    look-through numbers count exposure spread (how many sectors/countries/stocks the money
+    touches), DR² counts RISK spread (how many independent bets that exposure actually is).
+    On a one-factor-dominated equity menu the first is large and the second is not — which is
+    the M18 verdict expressed as a single number, and the number to watch when asking "does
+    adding sleeve X buy a new bet?"
+
+    Uses the shrunk Σ, like every other risk number in the engine."""
+    vol = np.sqrt(np.maximum(np.diag(sigma), 0.0))
+    sig_p = np.sqrt(max(float(w @ sigma @ w), 1e-18))
+    return float(np.abs(w) @ vol / sig_p)
+
+
+def menu_diagnostics(inp: dict) -> dict:
+    """How many real bets does the MENU itself contain? (M18, promoted from an ad-hoc one-liner)
+
+    Menu-level structure, independent of any portfolio choice: mean pairwise correlation, the
+    first principal component's variance share, how many components reach 90%, the
+    eigenvalue-entropy effective number of bets (exp of the entropy of the normalized
+    eigenvalue spectrum), and 1/N's DR² — the same question asked five ways. Selection is the
+    leg the optimizer cannot fix: if the menu holds ~3 bets, no weighting scheme invents a
+    fourth."""
+    sigma = inp["sigma"]
+    d = np.sqrt(np.maximum(np.diag(sigma), 1e-18))
+    corr = sigma / np.outer(d, d)
+    n = len(d)
+    off = corr[~np.eye(n, dtype=bool)]
+    ev = np.sort(np.linalg.eigvalsh(corr))[::-1]
+    ev = np.maximum(ev, 0.0)
+    share = ev / ev.sum()
+    cum = np.cumsum(share)
+    nz = share[share > 1e-12]
+    w_n = np.ones(n) / n
+    return dict(n_sleeves=n, mean_pairwise_corr=float(off.mean()),
+                min_pairwise_corr=float(off.min()), pc1_variance_share=float(share[0]),
+                n_pcs_for_90pct=int(np.searchsorted(cum, 0.90) + 1),
+                entropy_effective_bets=float(np.exp(-(nz * np.log(nz)).sum())),
+                dr2_equal_weight=float(diversification_ratio(w_n, sigma) ** 2))
 
 
 def _linear_extreme(mu: np.ndarray, cap: float, maximize: bool) -> float:
@@ -659,7 +715,9 @@ def _package(inp, w, mode, risk_metric, diag, warnings) -> dict:
         objective_values={"return_monthly_mu_bl": fns["return"](w),
                           "risk": fns["risk"](w),
                           "effective_bets": fns["diversification"](w),
-                          "effective_bets_by_dim": effective_bets_by_dim(w, inp["div_mats"])},
+                          "effective_bets_by_dim": effective_bets_by_dim(w, inp["div_mats"]),
+                          "diversification_ratio": diversification_ratio(w, inp["sigma"]),
+                          "dr2_independent_bets": diversification_ratio(w, inp["sigma"]) ** 2},
         risk_contributions={series[i]: float(rc[i]) for i in range(len(series))
                             if w[i] >= DISPLAY_MIN_W},
         per_quadrant_monthly=per_quadrant, warnings=warnings, diagnostics=diag,
@@ -676,7 +734,8 @@ def benchmark_table(inp: dict) -> pd.DataFrame:
         p = _perf_stats(blended_level(inp["rets"], w))
         rows.append(dict(portfolio=name, CAGR=p["CAGR"], ann_vol=p["ann_vol"],
                          sharpe_rf0=p["sharpe_rf0"], max_drawdown=p["max_drawdown"],
-                         n_sleeves=int((w > 0.01).sum())))
+                         n_sleeves=int((w > 0.01).sum()),
+                         dr2_independent_bets=diversification_ratio(w, inp["sigma"]) ** 2))
     return pd.DataFrame(rows)
 
 
@@ -841,6 +900,10 @@ def run():
     wf_expo.to_csv(C.OPTIMIZER_EXPOSURE, index=False)
     wf_infer = inference_table(wf_monthly)
     wf_infer.to_csv(C.OPTIMIZER_INFERENCE, index=False)
+    from portfolio_lab.portfolio.inference import friedman_nemenyi
+    wf_nem = friedman_nemenyi(wf_monthly, block=C.OPTIMIZER_NEMENYI_BLOCK)
+    if "table" in wf_nem:
+        wf_nem["table"].to_csv(C.OPTIMIZER_NEMENYI, index=False)
     from portfolio_lab.portfolio.inference import pbo_cscv
     from portfolio_lab.portfolio.validation import sleeve_attribution
     wf_pbo = pbo_cscv(wf_monthly)
@@ -853,7 +916,7 @@ def run():
             for name, res in portfolios.items() for s, w in res["weights"].items()]
     pd.DataFrame(rows).to_csv(C.OPTIMIZER_PORTFOLIOS, index=False)
     _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta, profiles, wf_expo,
-                  wf_infer, wf_pbo, wf_attr)
+                  wf_infer, wf_pbo, wf_attr, wf_nem)
     print(f"[optimizer] wrote {C.OPTIMIZER_REPORT} and {C.OPTIMIZER_PORTFOLIOS}")
 
 
@@ -866,7 +929,7 @@ def _md_table(df: pd.DataFrame, fmts: dict) -> list[str]:
 
 
 def _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta, profiles=None,
-                  wf_expo=None, wf_infer=None, wf_pbo=None, wf_attr=None):
+                  wf_expo=None, wf_infer=None, wf_pbo=None, wf_attr=None, wf_nem=None):
     rets = inp["rets"]
     L = ["# Portfolio optimizer — default report", ""]
     L += [f"Common window **{rets.index[0].date()} → {rets.index[-1].date()}** "
@@ -879,9 +942,21 @@ def _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta, profiles=N
           "priorities_ — not a forecast.** The method is documented in "
           "info/portfolio_optimization.md; the evidence behind it in info/literature.md.", ""]
 
+    md = menu_diagnostics(inp)
+    L += ["## The menu itself — how many real bets are on offer? (M18)", "",
+          f"Before any weighting scheme: **{md['n_sleeves']} sleeves, mean pairwise correlation "
+          f"{md['mean_pairwise_corr']:.2f}** (min {md['min_pairwise_corr']:.2f}); the first "
+          f"principal component explains **{md['pc1_variance_share']:.0%}** of variance and "
+          f"{md['n_pcs_for_90pct']} components reach 90%. Eigenvalue-entropy effective bets: "
+          f"**{md['entropy_effective_bets']:.1f}**. 1/N's Choueifaty-Coignard **DR² = "
+          f"{md['dr2_equal_weight']:.2f} independent risk bets**.", "",
+          "_Selection is the leg no optimizer can fix: if the menu holds a handful of bets, no "
+          "weighting scheme invents another one. Every portfolio below reports its own DR² so "
+          "the question \"does this allocation buy a new bet?\" has a number._", ""]
+
     L += ["## Benchmarks (always on screen — DeMiguel 2009)", ""]
     L += _md_table(bench, {"CAGR": "{:.2%}", "ann_vol": "{:.2%}", "sharpe_rf0": "{:.2f}",
-                           "max_drawdown": "{:.1%}"})
+                           "max_drawdown": "{:.1%}", "dr2_independent_bets": "{:.2f}"})
     L += [""]
     if inp["view_descs"]:
         L += ["## Active regime views (Black-Litterman tilt on the anchor)", ""]
@@ -909,7 +984,10 @@ def _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta, profiles=N
                   " · ".join(f"{k} **{v:.0f}**" for k, v in sc.items())]
         by_dim = res["objective_values"]["effective_bets_by_dim"]
         L += ["Effective look-through bets: " +
-              ", ".join(f"{d} {v:.1f}" for d, v in by_dim.items())]
+              ", ".join(f"{d} {v:.1f}" for d, v in by_dim.items()) +
+              f" — and **DR² = {res['objective_values']['dr2_independent_bets']:.2f} "
+              f"independent RISK bets** (Choueifaty-Coignard: DR = Σwᵢσᵢ/σ_p; exposure spread "
+              f"and risk spread are not the same number)."]
         L += ["Look-through geographic exposure: " +
               " · ".join(f"{z} {v:.0%}" for z, v in res["geo_exposure"].items())]
         L += ["Factor exposure: " +
@@ -1000,6 +1078,36 @@ def _write_report(inp, bench, portfolios, cones, wf_summary, wf_meta, profiles=N
                   f"S={wf_pbo['S']}, {wf_pbo['n_combos']} splits): "
                   f"{wf_pbo['pbo']:.0%}** — the chance that the contestant you would pick "
                   "in-sample is no better than the median out of sample."]
+    if wf_nem and "table" in wf_nem:
+        nt = wf_nem["table"]
+        L += ["", "### All contestants at once (Friedman + Nemenyi, Demšar 2006)", ""]
+        L += ["The table above is a stack of PAIRWISE tests. This is the joint one: rank every "
+              f"contestant inside each of the {wf_nem['n_blocks']} non-overlapping "
+              f"{wf_nem['block']}-month OOS blocks (rank 1 = best {wf_nem['metric']}), then test "
+              "the average ranks. Friedman asks whether the ranking is noise at all; Nemenyi "
+              "gives ONE critical difference covering every pair simultaneously — the "
+              "multiplicity the pairwise column cannot handle.", "",
+              f"Friedman χ² = {wf_nem['chi2_friedman']:.2f} (p = {wf_nem['p_friedman']:.4f}); "
+              f"Iman-Davenport F = {wf_nem['F_iman_davenport']:.2f} "
+              f"(p = {wf_nem['p_iman_davenport']:.4f}). "
+              f"Nemenyi critical difference at {wf_nem['alpha']:.0%}: **{wf_nem['critical_difference']:.2f} "
+              f"rank units** (k = {wf_nem['k']}, N = {wf_nem['n_blocks']}).", ""]
+        show = nt[["portfolio", "avg_rank", "gap_to_1/N", "differs_from_1/N",
+                   "gap_to_best", "differs_from_best"]].copy()
+        for c in ["avg_rank", "gap_to_1/N", "gap_to_best"]:
+            show[c] = [f"{v:.2f}" for v in show[c]]
+        for c in ["differs_from_1/N", "differs_from_best"]:
+            show[c] = ["**yes**" if v else "no" for v in show[c]]
+        L += _md_table(show, {})
+        beats = nt[(nt["gap_to_1/N"] < 0) & (nt["differs_from_1/N"])].portfolio.tolist()
+        L += ["", ("Ranked significantly ABOVE 1/N under the simultaneous threshold: "
+                   + (", ".join(f"**{s}**" for s in beats) if beats else
+                      "**none**") + ". "
+                   + ("The Friedman rejection says the ordering is not pure noise; the Nemenyi "
+                      "threshold says which gaps are wide enough to name. Those are different "
+                      "claims and the report makes both."
+                      if wf_nem["p_friedman"] < 0.05 else
+                      "Friedman does not even reject: on block ranks, this table is noise."))]
     if wf_attr is not None and len(wf_attr):
         L += ["", "### Where each record actually came from (per-sleeve attribution)", ""]
         L += ["Arithmetic contribution shares over all OOS months (weights per refit × "
@@ -1033,6 +1141,9 @@ def _render(res: dict) -> str:
     lines.append("effective look-through bets: " +
                  "  ".join(f"{d} {v:.1f}" for d, v in by_dim.items()) +
                  f"  (geo-mean {res['objective_values']['effective_bets']:.1f})")
+    lines.append(f"DR^2 independent risk bets: "
+                 f"{res['objective_values']['dr2_independent_bets']:.2f}  "
+                 f"(DR = {res['objective_values']['diversification_ratio']:.2f})")
     lines.append("\nweights:")
     for s, v in sorted(res["weights"].items(), key=lambda kv: -kv[1]):
         lines.append(f"  {v:6.1%}  {s}   (risk contribution "

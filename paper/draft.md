@@ -4,7 +4,7 @@
 Portfolio Management* / *Journal of Asset Management*.**
 
 *Author: [owner]. Full reproducibility: every number in this paper is an entry in the
-project's critical-findings ledger (MILESTONES M1–M21), names the module that produces it,
+project's critical-findings ledger (MILESTONES M1–M28), names the module that produces it,
 and regenerates from public data with one command. Repository: [URL on publication].*
 
 ---
@@ -91,14 +91,58 @@ referee's checklist. Section 7 states limitations; Section 8 concludes.
 (Michaud 1989; Chopra & Ziemba 1993); DeMiguel et al. (2009) quantify the collision: across
 14 models and 7 datasets, nothing consistently beats 1/N out of sample. We replicate this on
 our menu and — unlike most of the literature — attach the p-values that make "nothing beats"
-a statistical statement rather than a table read.
+a statistical statement rather than a table read. Yuan & Zhou (2023) supply the missing
+*theory* for that result — the plug-in Sharpe converges to τ·SR with τ = √((1−η)/(1+η/SR²)),
+η = N/T, and under a one-factor structure 1/N is asymptotically optimal as N grows — and then
+beat 1/N with a closed-form combination of the plug-in GMV and 1/N. We field their rule
+(§5.1): on our menu it loses, which their own Proposition 3 and their T = 360 estimation-window
+requirement predict in advance. Our humility result therefore survives its strongest published
+challenger, adjudicated with that challenger's mathematics rather than against it.
+
+**Selection, not just weighting.** A weighting study is only as interesting as its menu.
+Ilmanen & Kizer (2012) give the selection-side result with the best evidence — average
+correlation across *factor* constituents near zero against roughly 0.4 across asset classes —
+which is why a factor-spanning menu diversifies more per slot than another regional equity
+wrapper. We measure our own menu with the practitioner metric this literature standardized:
+the Choueifaty & Coignard (2008) diversification ratio, whose square estimates the number of
+independent risk bets. Our 28 equity sleeves are 1.31 such bets; the four-sleeve
+minimum-variance portfolio is 1.28. Three non-equity proxy sleeves move the menu's minimum
+pairwise correlation from 0.53 to −0.14. Hurst, Ooi & Pedersen's century of trend-following
+evidence points at the diversifier we do not yet hold, strongest precisely in prolonged equity
+bears; we test the *rule* form of it here (§5.1) and flag the *asset* form as the more
+promising route.
+
+**Selecting versus spreading.** Brodie et al. (2009) regularize Markowitz with an ℓ1 penalty
+that both stabilizes the ill-conditioned problem and sparsifies the solution, reporting
+portfolios that outperform 1/N on 48 industry portfolios. Their own analysis notes that under
+a budget constraint the ℓ1 term is a short-position penalty and is therefore inert once
+shorting is barred — so their long-only winner is minimum variance at a target return, the
+same Jagannathan-Ma family as our caps. That makes them the *selecting* sibling of our
+*spreading* constraints, and the natural contestant to field: we do so with the two things
+their claim lacked, a Sharpe-difference test and transaction costs. DeMiguel, Garlappi,
+Nogales & Uppal (2009) are the norm-constrained cousin of the same lineage.
 
 **Structure over estimation.** Risk-parity/ERC (Maillard, Roncalli & Teïletche 2010; Asness,
 Frazzini & Pedersen 2012), hierarchical risk parity (López de Prado 2016), and
 minimum-variance (Clarke, de Silva & Thorley 2006), whose empirical success the
 low-volatility anomaly explains (Haugen & Baker 1991; Frazzini & Pedersen 2014). Our
 attribution section makes that explanation concrete: minimum variance on our menu earns 82%
-of its out-of-sample return in Quality sleeves.
+of its out-of-sample return in Quality sleeves. Antonov, Lipton & López de Prado (2024) supply
+the theory the 2016 proposal lacked — analytical expressions showing HRP's weights carry less
+estimation-induced noise than plug-in Markowitz's — which is the mechanism our nine-decade
+race measures. Raffinot (2018) hybridizes the two structural families as HERC: Ward linkage,
+a gap-index cluster count, and equal-risk-contribution splits down the hierarchy. We field it
+in both linkages, since linkage is a hyperparameter and reporting only the flattering one is
+how hyperparameters get hidden.
+
+**The institutional foil.** Boyd, Johansson, Kahn, Schiele & Schmelzer (2024) show what
+Markowitz looks like when the inputs are there: one convex program carrying holding and
+transaction costs, factor risk models, and explicit robustness terms against forecast
+uncertainty. Their position — that the failures blamed on Markowitz are failures of inputs
+and naive implementations — is compatible with ours and sharpens it. This paper is about the
+opposite regime: T ≈ 330 months, no live forecasts, no engineering budget. At that data scale
+the correct robustness term degenerates into exactly what we test — structure, constraints,
+and cross-era shrinkage.
 
 **Constraints as shrinkage.** Jagannathan & Ma (2003) showed weight constraints act as
 covariance shrinkage. We measure the effect prospectively: capped robust portfolios beat
@@ -119,8 +163,12 @@ inspectable, and self-limiting.
 
 **Backtest honesty.** Ledoit & Wolf (2008) for Sharpe inference under heavy tails and
 autocorrelation; Bailey & López de Prado (2014) for multiplicity-deflated Sharpe; Bailey et
-al. (2017) for the probability of backtest overfitting; Politis & Romano (1994) for the
-stationary bootstrap our scenario validator uses. All four are implemented, not cited.
+al. (2017) for the probability of backtest overfitting; Demšar (2006) for the Friedman /
+Nemenyi protocol that tests a dozen contestants *simultaneously* rather than as a stack of
+pairwise comparisons; Politis & Romano (1994) for the stationary bootstrap our scenario
+validator uses. All five are implemented, not cited. Ledoit & Wolf's (2020) analytical
+nonlinear shrinkage enters as a sensitivity dimension on the covariance estimator that every
+risk number in the study rides on.
 
 ## 3. Data
 
@@ -296,7 +344,18 @@ The modern OOS window contains no prolonged bear; the proxy race and the virgin 
 (two bears) are the complements, but proxies are frictionless constructs. The classifier
 carries a mild full-sample z-normalization (scale, never direction; bounded by the
 real-time lag test) and uses revised rather than vintage FRED values — an ALFRED-vintage
-replay is future work. MSCI factor indices carry pre-launch backfill (mitigated in §6.2).
+replay is future work. **MSCI factor indices carry pre-launch backfill**, and the concern is real: an index provider
+launching a factor index in the mid-2010s computes its earlier history with the benefit of
+knowing which factor definitions had worked. Two defenses, one measured and one structural.
+Measured: restricting the walk-forward's scoring to the live-index era (2015 onward, 138
+months) leaves the hierarchy intact — minimum variance still first, the all-weather flagship
+still second, HRP still above ERC still above 1/N — so no conclusion in this paper depends on
+backfilled months. Structural: every headline result replicates on Ken French portfolios, which
+are continuously computed from the underlying stock data and have no launch date to backfill
+from — the 90-year race, the nine-sleeve international confirmatory test, and the 66-year
+regime evidence the estimator draws on. What backfill can still do is inflate the *level* of
+factor-sleeve returns before 2015; it cannot manufacture the relative ordering of construction
+rules applied to the same sleeves, which is the object of study.
 Costs are flat 10 bps on refit turnover; within-interval drift turnover is uncharged but
 measured immaterial (largest Sharpe overstatement 0.002; a buy-and-hold implementation of the
 same weight schedules preserves the ranking exactly); taxes, spreads and tracking error are
@@ -304,7 +363,13 @@ not modeled. The deflated-Sharpe trial count includes fielded contestants,
 not every development-time variant — the pre-registered test is the stronger multiplicity
 defense. All results are USD. Equal weight is menu-relative and the menu is a design layer:
 our selection principle — span distinct risk sources, measured as effective bets — is
-stated, not optimized. Nothing here is fitted or machine-learned; the flip side is that
+stated, not optimized. That layer is where the largest unexploited gain sits, and we say so
+with a number rather than a hope: our 28 equity sleeves carry a diversification ratio squared
+of 1.31 independent risk bets, and the four-sleeve minimum-variance portfolio carries 1.28.
+Adding three non-equity proxy sleeves moves the menu's minimum pairwise correlation from 0.53
+to −0.14 and its first principal component from 77% to 69% — three slots buying more than
+twenty-eight. A study of weighting rules on a menu of roughly one bet is, by construction,
+a study of small differences, and readers should discount our effect sizes accordingly. Nothing here is fitted or machine-learned; the flip side is that
 nothing exploits information beyond counting, shrinking and constraining.
 
 ## 8. Conclusion
@@ -325,21 +390,39 @@ the fact any honest adjudication at this data scale must lead with.
 
 Ang, A. & Bekaert, G. (2002). International Asset Allocation with Regime Shifts. *RFS* 15.
 Ang, A. & Bekaert, G. (2004). How Do Regimes Affect Asset Allocation? *FAJ* 60(2).
+Antonacci, G. (2014). *Dual Momentum Investing.* McGraw-Hill.
+Antonov, A., Lipton, A. & López de Prado, M. (2024). Overcoming Markowitz's Instability with
+the Help of the Hierarchical Risk Parity. *Transactions of ADIA Lab* 1.
 Asness, C., Frazzini, A. & Pedersen, L. (2012). Leverage Aversion and Risk Parity. *FAJ* 68(1).
 Bailey, D. & López de Prado, M. (2014). The Deflated Sharpe Ratio. *JPM* 40(5).
 Bailey, D., Borwein, J., López de Prado, M. & Zhu, Q. (2017). The Probability of Backtest
 Overfitting. *Journal of Computational Finance* 20(4).
 Black, F. & Litterman, R. (1992). Global Portfolio Optimization. *FAJ* 48(5).
+Boyd, S., Johansson, K., Kahn, R., Schiele, P. & Schmelzer, T. (2024). Markowitz Portfolio
+Construction at Seventy. arXiv:2401.05080.
+Brodie, J., Daubechies, I., De Mol, C., Giannone, D. & Loris, I. (2009). Sparse and Stable
+Markowitz Portfolios. *PNAS* 106(30).
+Choueifaty, Y. & Coignard, Y. (2008). Toward Maximum Diversification. *JPM* 35(1).
 Chopra, V. & Ziemba, W. (1993). The Effect of Errors in Means, Variances, and Covariances
 on Optimal Portfolio Choice. *JPM* 19(2).
 Clarke, R., de Silva, H. & Thorley, S. (2006). Minimum-Variance Portfolios in the U.S.
 Equity Market. *JPM* 33(1).
+DeMiguel, V., Garlappi, L., Nogales, F. & Uppal, R. (2009). A Generalized Approach to
+Portfolio Optimization: Improving Performance by Constraining Portfolio Norms.
+*Management Science* 55(5).
 DeMiguel, V., Garlappi, L. & Uppal, R. (2009). Optimal Versus Naive Diversification. *RFS* 22(5).
+Demšar, J. (2006). Statistical Comparisons of Classifiers over Multiple Data Sets. *JMLR* 7.
+Faber, M. (2007). A Quantitative Approach to Tactical Asset Allocation. *Journal of Wealth
+Management* 9(4).
 Frazzini, A. & Pedersen, L. (2014). Betting Against Beta. *JFE* 111(1).
 Frost, P. & Savarino, J. (1986). An Empirical Bayes Approach to Efficient Portfolio
 Selection. *JFQA* 21(3).
 Guidolin, M. & Timmermann, A. (2007). Asset Allocation under Multivariate Regime
 Switching. *JEDC* 31(11).
+Hurst, B., Ooi, Y. H. & Pedersen, L. (2017). A Century of Evidence on Trend-Following
+Investing. *JPM* 44(1).
+Ilmanen, A. & Kizer, J. (2012). The Death of Diversification Has Been Greatly Exaggerated.
+*JPM* 38(3).
 Haugen, R. & Baker, N. (1991). The Efficient Market Inefficiency of Capitalization-Weighted
 Stock Portfolios. *JPM* 17(3).
 Jagannathan, R. & Ma, T. (2003). Risk Reduction in Large Portfolios: Why Imposing the Wrong
@@ -351,6 +434,8 @@ Estimators in Econometrics.* North-Holland.
 Ledoit, O. & Wolf, M. (2004). Honey, I Shrunk the Sample Covariance Matrix. *JPM* 30(4).
 Ledoit, O. & Wolf, M. (2008). Robust Performance Hypothesis Testing with the Sharpe Ratio.
 *Journal of Empirical Finance* 15(5).
+Ledoit, O. & Wolf, M. (2020). Analytical Nonlinear Shrinkage of Large-Dimensional Covariance
+Matrices. *Annals of Statistics* 48(5).
 López de Prado, M. (2016). Building Diversified Portfolios that Outperform Out-of-Sample.
 *JPM* 42(4).
 Maillard, S., Roncalli, T. & Teïletche, J. (2010). The Properties of Equally Weighted Risk
@@ -359,16 +444,21 @@ Markowitz, H. (1952). Portfolio Selection. *JF* 7(1).
 Michaud, R. (1989). The Markowitz Optimization Enigma: Is 'Optimized' Optimal? *FAJ* 45(1).
 Moreira, A. & Muir, T. (2017). Volatility-Managed Portfolios. *JF* 72(4).
 Politis, D. & Romano, J. (1994). The Stationary Bootstrap. *JASA* 89(428).
+Raffinot, T. (2018). The Hierarchical Equal Risk Contribution Portfolio. SSRN 3237540.
 Swinkels, L. (2019). Treasury Bond Return Data Starting in 1962. *Data* 4(3).
+Tibshirani, R., Walther, G. & Hastie, T. (2001). Estimating the Number of Clusters in a Data
+Set via the Gap Statistic. *JRSS-B* 63(2).
+Yuan, M. & Zhou, G. (2023). Why Naive Diversification Is Not So Naive, and How to Beat It?
+*JFQA* 58(7).
 
 ## Appendix A — Reproducibility statement
 
 Every table and figure regenerates from public data: MSCI end-of-day index levels, FRED,
 the Ken French data library, and an LBMA gold mirror. The repository ships (i) the
-critical-findings ledger (M1–M21), where each claim names its producing module, inputs and
+critical-findings ledger (M1–M28), where each claim names its producing module, inputs and
 validation status; (ii) a 16-stage pipeline (`python scripts/run_pipeline.py`) plus CLI
 modules for the expensive probes (leave-one-region-out, sensitivity grids, the confirmatory
-test); (iii) 63 unit/integrity tests; and (iv) the frozen snapshot of the confirmatory
+test); (iii) 71 unit/integrity tests; and (iv) the frozen snapshot of the confirmatory
 dataset and the pre-registration commit that precedes its single run in the git history.
 
 ## Appendix B — Figure and table plan (to be exported from the cached CSVs)

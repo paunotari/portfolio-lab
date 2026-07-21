@@ -9,6 +9,13 @@ re-reading the conclusions the ledger actually relies on:
   caps    : the diversified preset at (20/35/35), (25/40/40, shipped), (30/45/45)
             [sleeve/geo/factor %] (full re-runs)
   block   : the Ledoit-Wolf bootstrap block length 3 / 6 / 10 on the headline pairs
+  sigma   : the covariance ESTIMATOR itself — constant-correlation Ledoit-Wolf (shipped),
+            scaled-identity Ledoit-Wolf, and Ledoit-Wolf 2020 analytical NONLINEAR shrinkage
+            (full re-runs). Declared expectation, recorded before the run: no material change,
+            because N << T here (p/n = 0.085 on the full window) is precisely the regime where
+            nonlinear shrinkage has little left to correct — every risk number in the engine
+            rides on this one matrix, so "little left to correct" deserves to be measured
+            rather than asserted.
 
 Conclusions tracked across every cell (the grid's verdict line):
   C1 "min-variance is the OOS winner"            — min-var rank 1 among the always-on set
@@ -38,6 +45,7 @@ COSTS_BPS = (0.0, 10.0, 25.0)
 REFITS = (6, 12, 24)
 CAPS = ((20, 35, 35), (25, 40, 40), (30, 45, 45))       # sleeve / geo / factor, %
 BLOCKS = (3, 6, 10)
+SIGMA_ESTIMATORS = ("constant_correlation", "identity", "nonlinear")
 AW = "Maximin (all-weather div)"
 
 
@@ -102,6 +110,21 @@ def run() -> pd.DataFrame:
         rows.append(dict(dimension="caps_slv_geo_fac", cell="/".join(map(str, caps)),
                          sharpes=sh, **_conclusions(sh)))
         print(f"[sensitivity] caps {caps} done")
+
+    shipped_sigma = C.OPTIMIZER_SIGMA_ESTIMATOR
+    for est in SIGMA_ESTIMATORS:
+        if est == shipped_sigma:
+            sh = _sharpe_from(gross, turn, C.OPTIMIZER_TC_BPS)
+        else:
+            try:
+                C.OPTIMIZER_SIGMA_ESTIMATOR = est
+                s_, m_, _ = walk_forward()
+                sh = s_.set_index("portfolio")["oos_sharpe_rf0"]
+            finally:
+                C.OPTIMIZER_SIGMA_ESTIMATOR = shipped_sigma
+        rows.append(dict(dimension="sigma_estimator", cell=est,
+                         sharpes=sh, **_conclusions(sh)))
+        print(f"[sensitivity] sigma estimator {est} done")
 
     # block-size grid on the headline inference pair (+ HRP, the other near-line pair)
     blocks = {}

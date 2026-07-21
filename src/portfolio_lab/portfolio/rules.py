@@ -27,10 +27,21 @@ decision dates in the walk-forward, never on a single return snapshot.
   (first PC 77%, M18), i.e. Proposition-3 territory where 1/N is asymptotically optimal.
   The only UNCONSTRAINED (short-allowing) contestant in the table, deliberately — constraining
   it would test our rule, not theirs.
+
+- ``brodie_weights`` — Brodie, Daubechies, De Mol, Giannone & Loris (2009, *PNAS*), "Sparse and
+  stable Markowitz portfolios": minimize ||Rw − ρ1||² + τ||w||₁ subject to w'μ̂ = ρ and Σw = 1.
+  Under the long-only constraint ||w||₁ ≡ 1, so **the L1 penalty is inert and their rule reduces
+  exactly to long-only minimum variance at a target return** — which is what we field, with ρ =
+  the training window's own 1/N mean return (their FF48 winner's specification). Owner-spotted
+  claim: they report beating 1/N "significantly" without a Sharpe-difference test or transaction
+  costs; this contestant supplies both. Note it is the ONE rule here that consumes raw historical
+  mean returns (caveat #19 forbids that inside our optimizer — it does not apply to an external
+  challenger being replicated faithfully, any more than it applies to momentum).
 """
 from __future__ import annotations
 import numpy as np
 import pandas as pd
+from scipy.optimize import minimize
 
 from portfolio_lab import config as C
 
@@ -145,3 +156,87 @@ def gmv_combo_weights(rets_train: pd.DataFrame, sigma: np.ndarray = None
 
     lam = max([0.0, lam_star, 1.0], key=est_sharpe)
     return lam * w_g + (1 - lam) * w_n, lam
+
+
+def brodie_weights(rets_train: pd.DataFrame, target: float = None) -> np.ndarray:
+    """Brodie et al. (2009) sparse-and-stable Markowitz portfolio, long-only form.
+
+        min_w  w'S w      s.t.   w'μ̂ = ρ,   Σw = 1,   w ≥ 0
+
+    Their published objective is ||Rw − ρ1||² + τ||w||₁ under the same two equality constraints.
+    Two reductions make this exactly their rule rather than an approximation of it:
+
+    1. On the long-only simplex ||w||₁ = Σwᵢ = 1 identically, so the L1 term is a CONSTANT — the
+       sparsity penalty that gives the paper its title does no work once shorting is barred. (Their
+       own no-short results are the τ-independent corner of their grid, and it is the corner that
+       won on FF48.) The sparsity in our solution is therefore the constraint set's doing, which
+       is the same mechanism as our caps (M3, "constraints are implicit shrinkage") — Brodie is
+       the SELECTING sibling of our SPREADING caps, and worth the paper's related-work paragraph.
+    2. Given w'μ̂ = ρ, ||Rw − ρ1||²/T is the portfolio's sample variance, so minimizing it is
+       minimizing w'Sw with S the SAMPLE covariance — not our Ledoit-Wolf Σ. Kept faithful: this
+       contestant differs from our Min-variance anchor on BOTH the return constraint and the
+       covariance estimator, and reporting it that way is the point.
+
+    ρ defaults to the training window's own 1/N mean monthly return — the specification behind
+    their FF48 result. It is feasible by construction (1/N itself attains it), so the program
+    never needs a relaxation branch.
+
+    Convex QP with linear constraints and a box: the minimum is unique, so a single deterministic
+    start (1/N, always feasible) is enough — no multi-start, no seed.
+    """
+    R = rets_train.values
+    T, N = R.shape
+    mu = R.mean(axis=0)
+    rho = float(mu.mean()) if target is None else float(target)   # 1/N's trailing mean
+    S = np.cov(R, rowvar=False)
+    w0 = np.ones(N) / N
+
+    res = minimize(lambda w: float(w @ S @ w), w0, jac=lambda w: 2.0 * (S @ w),
+                   method="SLSQP", bounds=[(0.0, 1.0)] * N,
+                   constraints=[{"type": "eq", "fun": lambda w: w.sum() - 1.0,
+                                 "jac": lambda w: np.ones(N)},
+                                {"type": "eq", "fun": lambda w: float(w @ mu) - rho,
+                                 "jac": lambda w: mu}],
+                   options={"maxiter": 500, "ftol": 1e-12})
+    w = np.clip(res.x, 0.0, None)
+    return w / w.sum() if w.sum() > 0 else w0
+
+
+def trend_overlay(gross: pd.Series, mode: str = "sma", months: int = None,
+                  threshold=0.0) -> tuple[pd.Series, pd.Series]:
+    """Binary trend-following overlay on a base portfolio's monthly gross return series.
+    Returns (managed_gross, extra_turnover) — the same contract as ``vol_managed``.
+
+    The missing overlay FAMILY in this table: vol-targeting scales exposure by turbulence,
+    trend-following switches it by direction. Both are causal by construction (the signal at
+    month t uses only information through t−1) and both are charged their own turnover.
+
+    - ``mode="sma"`` — **Faber (2007), "A Quantitative Approach to Tactical Asset Allocation"**:
+      hold the portfolio while its level is above its own 10-month simple moving average, sit in
+      cash otherwise. The most-replicated tactical rule in practitioner literature.
+    - ``mode="absmom"`` — **the absolute-momentum leg of Antonacci's dual momentum**: hold while
+      the trailing 12-month return clears `threshold`, cash otherwise. Applied on top of the
+      cross-sectional ``momentum_weights`` contestant (the RELATIVE leg), the pair IS dual
+      momentum: pick the strongest sleeves, then refuse to hold any of them in a falling market.
+      `threshold` may be a scalar or a Series aligned to `gross` (pass the trailing T-bill return
+      to reproduce Antonacci exactly; 0.0 is the slightly more permissive variant).
+
+    Deliberately unlevered and binary (exposure ∈ {0,1}), like `vol_managed`'s max_lev=1: a
+    long-only investor's actual choice set. Declared prior, recorded in TODO before the run:
+    helps drawdowns, struggles net of costs — the whipsaw months are the whole cost of the rule,
+    and a 12-month refit table full of low-turnover structural rules is a hostile arena for it.
+    """
+    months = months or (C.OPTIMIZER_TREND_SMA_MONTHS if mode == "sma"
+                        else C.OPTIMIZER_TREND_MOM_MONTHS)
+    if mode == "sma":
+        level = (1.0 + gross).cumprod()
+        sma = level.rolling(months, min_periods=months).mean()
+        signal = (level > sma).shift(1)                     # decided on last month's close
+    elif mode == "absmom":
+        trail = (1.0 + gross).rolling(months).apply(np.prod, raw=True) - 1.0
+        thr = threshold if np.isscalar(threshold) else pd.Series(threshold).reindex(gross.index)
+        signal = (trail > thr).shift(1)
+    else:
+        raise ValueError(f"unknown trend mode {mode!r} (sma | absmom)")
+    exposure = signal.fillna(True).astype(float)            # invested until the signal exists
+    return exposure * gross, exposure.diff().abs().fillna(0.0)

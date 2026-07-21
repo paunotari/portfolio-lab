@@ -193,33 +193,61 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         exposure**. Sensitivity reported, not fielded: with our LW Σ, λ* 0.296, exposure
         1.6×, net Sharpe 0.825 — a dead heat with 1/N, so the verdict is not a handicap
         artifact.
-  - [ ] **Brodie-2009 rule as contestant** (owner-spotted claim, paper read in full —
-        frontier/asset-selection-menu-design.md §3): long-only min-variance at the
-        trailing-1/N target return (their FF48 winner; the L1 penalty is inert long-only,
-        so this IS their rule). One line via optimize(target=...); LW p-value + net costs —
-        the two things their "significantly" lacked.
-  - [ ] **Random-regime placebo**: re-run the maximin family with SHUFFLED state labels —
-        if results match the real labels, the regime signal adds nothing beyond the menu.
-  - [ ] **Nemenyi multiple-comparison test** next to the pairwise LW table.
-  - [ ] **Trend-filter overlay contestants** (Faber 10m-SMA; Antonacci dual momentum) in
-        `rules.py` — the missing overlay family; fair arena = the FF-intl universe (two
-        bears). Prior expectation recorded: helps drawdowns, struggles net of costs.
-  - [ ] **Sigma-estimator grid column**: nonlinear shrinkage (LW 2017 / Kelly et al.) as a
-        4th sensitivity dimension; expect and report "no material change" at N<<T.
-  - [ ] **HERC contestant** (Raffinot 2018; frontier/hrp-extensions.md): ERC allocation on
-        HRP's topology with Ward linkage + gap-index cluster count — both sides of M25 in
-        one rule; report single-vs-Ward linkage sensitivity in the same run. Declared
-        prior: statistically indistinguishable from HRP/ERC.
-  - [ ] **Diversification Ratio (DR^2) as a standing metric** (Choueifaty-Coignard, from
-        the selection-leg sweep): report DR^2 = ((sum w_i sigma_i)/sigma_p)^2 next to the
-        effective-bets numbers in the optimizer scorecards and the menu line — 3 lines,
-        needs only sigma/Sigma we already hold. Answers "does adding sleeve X buy a new
-        bet?" with the practitioner-standard number.
-  - [ ] Paper related-work additions from the selection sweep: Ilmanen-Kizer 2012 (factor >
-        asset-class diversification — upgrades the menu-design paragraph), Brodie 2009
-        (sparse/lasso as the SELECTING sibling of our SPREADING caps), Boyd et al. 2024
-        (the institutional foil for the retail-data-scale framing), Hurst-Ooi-Pedersen
-        (trend as crisis diversifier — the literature's answer to the B1b gap).
+  - [x] **Brodie-2009 rule — FIELDED + MEASURED 2026-07-21 (M28).** `rules.brodie_weights`
+        (long-only min-variance at the trailing-1/N target, sample covariance — their exact
+        specification). **Net Sharpe 0.933, THIRD in the table, ahead of HRP/ERC/1/N — but
+        Delta +0.104 vs 1/N at p_boot 0.149, i.e. NOT significant.** Their "significantly and
+        consistently" does not survive the Sharpe test and the cost charge they never ran.
+        They are an ally, not a challenge: same family as our measured winner.
+  - [~] **Random-regime placebo — BUILT 2026-07-21 (`portfolio/placebo.py`), permutation
+        test RUNNING** (40 replicates x 2 shuffle modes: circular rotation, which preserves
+        marginals/run-lengths/transitions exactly, and iid permutation). Verdict lands as
+        M32.
+  - [x] **Nemenyi — BUILT + MEASURED 2026-07-21 (M31).** `inference.friedman_nemenyi`, a
+        standing report section. **Friedman rejects (chi2 46.6, p 0.0001) — the ordering is
+        not noise — but the Nemenyi critical difference is 5.99 rank units and NOTHING
+        differs from 1/N** (min-var's gap is 2.97, half the threshold). C2 survives the
+        simultaneous test as well as the pairwise one.
+  - [x] **Trend overlays — BUILT + MEASURED 2026-07-21 (M30).** `rules.trend_overlay`
+        (Faber 10m SMA; Antonacci dual momentum = the momentum contestant gated by absolute
+        momentum). **Prior confirmed on both counts: Faber's maxDD -19.9% vs 1/N's -26.9%
+        (shallowest equity rule in the table) but Sharpe 0.656 vs 0.830; dual momentum 0.460,
+        p_boot 0.034 = SIGNIFICANTLY WORSE than 1/N.** The overlay-family verdict is now
+        complete and one-directional. Still to read on the FF-intl universe (two bears) —
+        the fair arena for a rule whose payoff is sidestepping prolonged bears.
+  - [~] **Sigma-estimator grid column — BUILT 2026-07-21, grid re-run pending.**
+        `shrinkage.shrink_nonlinear` (Ledoit-Wolf 2020 ANALYTICAL nonlinear shrinkage,
+        closed-form Epanechnikov kernel; unit-tested to beat the sample matrix 4x on a known
+        identity) + `shrinkage.estimate_covariance` dispatcher +
+        `config.OPTIMIZER_SIGMA_ESTIMATOR`, so the estimator is now a
+        `sensitivity.py` dimension. First read on the full window: at p/n = 0.085 nonlinear
+        shrinkage barely moves the spectrum (smallest eigenvalue 3.4e-7 vs the sample's
+        2.8e-7) — the near-null direction in 28 correlated sleeves is real structure, not
+        noise. Run the grid to close the item.
+  - [x] **HERC — BUILT + MEASURED 2026-07-21 (M29).** `anchors.herc_weights` + `gap_index`.
+        **Prior right about the statistics, wrong about the direction: Ward 0.800 / single
+        0.797, indistinguishable from 1/N (p 0.57) but BELOW both parents (ERC 0.848, HRP
+        0.870).** Linkage moves it 0.003 Sharpe — the Ward-vs-single debate is not a debate
+        here. Third finding: **the gap index never stops early on our menu** (monotone to
+        the ceiling), so Raffinot's early stopping is inoperative — M18/M27 from a third
+        angle. HERC NOT promoted; M25 unchanged.
+  - [x] **Diversification Ratio (DR^2) — BUILT + MEASURED 2026-07-21 (M27).**
+        `optimizer.diversification_ratio` + `menu_diagnostics` (which also promotes M18's
+        ad-hoc PCA one-liner into a standing report section). Headline: the 28-sleeve
+        equity menu at 1/N is **DR^2 = 1.31 independent risk bets** and min-variance's FOUR
+        sleeves are 1.28 — 24 extra sleeves buy 0.03 of a bet. Adding the 3 asset-class
+        proxies moves min pairwise correlation 0.53 -> **-0.14** and DR^2 -> 1.43, which is
+        M6 measured at the MENU level and makes B1/B1b the highest-value open backlog item.
+  - [x] **Paper related-work additions — WRITTEN 2026-07-21** (`paper/draft.md` §2): four
+        new/rewritten paragraphs (estimation-error-and-1/N now carries Yuan-Zhou's theory and
+        our fielded verdict; a new "Selection, not just weighting" paragraph on
+        Ilmanen-Kizer + Choueifaty-Coignard + Hurst-Ooi-Pedersen with M27's DR^2 numbers; a
+        new "Selecting versus spreading" paragraph on Brodie + DeMiguel-Garlappi-Nogales-
+        Uppal; Antonov-Lipton-LdP and Raffinot into "Structure over estimation"; Boyd et al.
+        as "The institutional foil"; Demsar + LW-2020 into "Backtest honesty"). Plus 16 new
+        references, the MSCI-backfill limitations paragraph (closing the M20 follow-up) and
+        a menu-design limitation stating DR^2 = 1.31 so readers discount effect sizes
+        accordingly.
 - [~] Paper draft — **v0.1 WRITTEN 2026-07-19** (`paper/draft.md`: full SSRN-style working
       paper — abstract, intro, related lit, data incl. virgin universe, method incl. the
       estimator's two operative lines, results R-sections with inference, referee's

@@ -141,6 +141,17 @@ OPTIMIZER_INFERENCE = OPTIMIZER_DIR / "optimizer_inference.csv"        # Sharpe 
 OPTIMIZER_SENSITIVITY = OPTIMIZER_DIR / "optimizer_sensitivity.csv"    # M17 grids
 OPTIMIZER_SENSITIVITY_REPORT = OPTIMIZER_DIR / "REPORT_sensitivity.md"
 OPTIMIZER_ATTRIBUTION = OPTIMIZER_DIR / "optimizer_attribution.csv"    # M21 per-sleeve
+# Covariance estimator behind every risk number (portfolio/shrinkage.py::estimate_covariance).
+# "constant_correlation" = the shipped Ledoit-Wolf 2004 variant B; "identity" = variant A;
+# "nonlinear" = Ledoit-Wolf 2020 analytical nonlinear shrinkage. A config switch rather than a
+# hard-coded call so the choice can be a sensitivity-grid dimension (portfolio/sensitivity.py).
+OPTIMIZER_SIGMA_ESTIMATOR = "constant_correlation"
+
+OPTIMIZER_NEMENYI = OPTIMIZER_DIR / "optimizer_nemenyi.csv"            # Demsar rank test
+OPTIMIZER_NEMENYI_BLOCK = 12               # OOS months per ranking block (Friedman "dataset")
+OPTIMIZER_PLACEBO = OPTIMIZER_DIR / "optimizer_placebo.csv"            # M32 random-regime
+OPTIMIZER_PLACEBO_REPORT = OPTIMIZER_DIR / "REPORT_placebo.md"
+OPTIMIZER_PLACEBO_B = 40                   # scrambled-label replicates per shuffle mode
 OPTIMIZER_PBO_S = 16                       # CSCV blocks (Bailey et al. 2017); C(16,8)=12870
 
 # Sharpe inference (Ledoit-Wolf 2008 studentized circular block bootstrap — see
@@ -180,6 +191,11 @@ OPTIMIZER_MOMENTUM_SKIP = 1         # skip the most recent month (avoids short-t
 OPTIMIZER_VOLTARGET_ANN = 0.12      # annual volatility target
 OPTIMIZER_VOLTARGET_WINDOW = 12     # trailing months used to estimate current vol
 OPTIMIZER_VOLTARGET_MAXLEV = 1.0    # 1.0 = unlevered (can only de-risk into cash)
+
+# Trend-following overlays (rules.trend_overlay): Faber's 10-month SMA switch and the
+# absolute-momentum leg of Antonacci's dual momentum. Both binary, unlevered, causal.
+OPTIMIZER_TREND_SMA_MONTHS = 10     # Faber 2007's canonical lookback
+OPTIMIZER_TREND_MOM_MONTHS = 12     # Antonacci's absolute-momentum lookback
 
 # geographic look-through caps (optimizer `geo_cap`): zones are defined on the LOOK-THROUGH
 # country exposures (factsheet country_weights), not on the sleeve's region label — an "EM"

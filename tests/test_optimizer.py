@@ -15,6 +15,7 @@ from portfolio_lab import config as C
 from portfolio_lab.portfolio.shrinkage import shrink_constant_correlation, shrink_identity
 from portfolio_lab.portfolio import anchors
 from portfolio_lab.portfolio import views as bl
+from portfolio_lab.portfolio import optimizer as opt
 
 
 def _toy_returns(seed=0, n=6, T=300):
@@ -391,6 +392,156 @@ def test_vol_managed_is_causal_and_derisks():
     # average leverage in the turbulent half must be below the calm half (it de-risks)
     assert lev.iloc[-40:].mean() < lev.iloc[15:55].mean(), "must cut exposure when vol runs hot"
     assert (extra >= 0).all(), "turnover is non-negative"
+
+
+def test_trend_overlay_is_causal_binary_and_sits_out_bears():
+    """Faber's SMA switch and Antonacci's absolute-momentum gate must be binary, causal, and
+    must actually be OUT during a sustained decline (that is the entire thesis of the family)."""
+    import pandas as pd
+    from portfolio_lab.portfolio import rules
+    rng = np.random.default_rng(2)
+    idx = pd.date_range("2000-01-31", periods=180, freq="ME")
+    g = pd.Series(np.concatenate([rng.normal(0.010, 0.03, 60),      # bull
+                                  rng.normal(-0.020, 0.05, 40),     # bear
+                                  rng.normal(0.010, 0.03, 80)]), index=idx)
+    for mode in ("sma", "absmom"):
+        managed, extra = rules.trend_overlay(g, mode=mode)
+        exposure = (managed / g.replace(0, np.nan)).dropna().round(9)
+        assert set(np.unique(exposure)) <= {0.0, 1.0}, f"{mode}: exposure must be binary"
+        assert (extra >= 0).all(), f"{mode}: turnover is non-negative"
+        deep = lambda s: float((((1 + s).cumprod() / (1 + s).cumprod().cummax()) - 1).min())
+        assert deep(managed) > deep(g), f"{mode}: the overlay must cut the drawdown"
+        # fully out through the back half of the bear stretch
+        assert exposure.loc[idx[75]:idx[98]].mean() < 0.2, f"{mode}: should be in cash by then"
+    # causality: changing only the LAST month's return cannot change any earlier exposure
+    g2 = g.copy()
+    g2.iloc[-1] = -0.5
+    a = rules.trend_overlay(g, mode="sma")[0] / g.replace(0, np.nan)
+    b = rules.trend_overlay(g2, mode="sma")[0] / g2.replace(0, np.nan)
+    assert np.allclose(a.iloc[:-1].fillna(0), b.iloc[:-1].fillna(0)), "overlay peeked ahead"
+
+
+def test_nonlinear_shrinkage_recovers_a_known_identity():
+    """LW-2020 analytical nonlinear shrinkage must beat the sample covariance when the truth is
+    known, and must dispatch through the config switch like the linear variants."""
+    from portfolio_lab.portfolio import shrinkage as sk
+    rng = np.random.default_rng(3)
+    p, n = 30, 90
+    X = rng.normal(0, 1, (n + 1, p))
+    S_nl, adj = sk.shrink_nonlinear(X)
+    S_samp = np.cov(X, rowvar=False)
+    loss = lambda S: np.linalg.norm(S - np.eye(p), "fro")
+    assert loss(S_nl) < loss(S_samp) / 2, "must be far closer to the truth than the sample matrix"
+    ev = np.linalg.eigvalsh(S_nl)
+    assert (ev > 0).all(), "must stay positive definite"
+    assert ev.max() / ev.min() < np.linalg.cond(S_samp), "spectrum must be pulled together"
+    assert adj >= 0
+    assert np.allclose(sk.estimate_covariance(X, "nonlinear")[0], S_nl)
+    assert np.allclose(sk.estimate_covariance(X, "constant_correlation")[0],
+                       sk.shrink_constant_correlation(X)[0])
+    try:
+        sk.estimate_covariance(X, "no_such_estimator")
+        raise AssertionError("unknown estimator must raise")
+    except ValueError:
+        pass
+    # p > n is an explicit error, not a silent wrong branch
+    try:
+        sk.shrink_nonlinear(rng.normal(0, 1, (20, 40)))
+        raise AssertionError("p > n must raise")
+    except ValueError:
+        pass
+
+
+def test_brodie_hits_its_target_return_and_is_sparser_than_1N():
+    """Brodie 2009 long-only form: the two equality constraints must bind exactly, and the
+    solution must be at least as low-variance as 1/N at the SAME mean return (it is the
+    minimum-variance point of that constraint set, and 1/N is feasible in it)."""
+    import pandas as pd
+    from portfolio_lab.portfolio import rules
+    X = _toy_returns(seed=11, T=300)
+    r = pd.DataFrame(X, index=pd.date_range("1990-01-31", periods=len(X), freq="ME"))
+    w = rules.brodie_weights(r)
+    mu, S = X.mean(axis=0), np.cov(X, rowvar=False)
+    w_n = np.ones(len(mu)) / len(mu)
+    assert abs(w.sum() - 1.0) < 1e-8, "must be fully invested"
+    assert (w >= -1e-9).all(), "long-only"
+    assert abs(w @ mu - mu.mean()) < 1e-8, "must hit 1/N's trailing mean return exactly"
+    assert w @ S @ w <= w_n @ S @ w_n + 1e-12, "1/N is feasible, so it cannot be beaten on risk"
+    # an explicit target is honoured too (feasible: between the min and max sleeve mean)
+    tgt = float(np.percentile(mu, 60))
+    assert abs(rules.brodie_weights(r, target=tgt) @ mu - tgt) < 1e-8
+
+
+def test_herc_is_erc_on_the_hierarchy():
+    """HERC must be a valid long-only allocation, and on a block-structured menu it must put
+    materially more weight on the small isolated block than 1/N does — that is what allocating
+    down a hierarchy means. Both linkages must produce valid portfolios."""
+    from portfolio_lab.portfolio import anchors as A
+    rng = np.random.default_rng(4)
+    T = 600
+    # 8 sleeves that move together + 2 that do not: the hierarchy should notice
+    common = rng.normal(0, 0.04, T)
+    cols = [0.9 * common + rng.normal(0, 0.015, T) for _ in range(8)]
+    cols += [rng.normal(0, 0.04, T) for _ in range(2)]
+    X = np.column_stack(cols)
+    sigma = np.cov(X, rowvar=False)
+    for method in ("ward", "single"):
+        w, k = A.herc_weights(sigma, rets=X, method=method)
+        assert abs(w.sum() - 1.0) < 1e-9 and (w >= -1e-12).all(), f"{method}: invalid weights"
+        assert 1 <= k <= len(sigma)
+        assert w[8:].sum() > 2.0 / 10, (f"{method}: the two independent sleeves should get more "
+                                        f"than their 1/N share, got {w[8:].sum():.3f}")
+    # a fixed cluster count is honoured
+    assert A.herc_weights(sigma, n_clusters=3)[1] == 3
+
+
+def test_friedman_nemenyi_ranks_and_thresholds():
+    """Demšar protocol: a deliberately dominant series must take average rank 1, the Friedman
+    test must reject on it, and identical series must yield tied ranks with no rejection."""
+    import pandas as pd
+    from portfolio_lab.portfolio import inference as inf
+    rng = np.random.default_rng(5)
+    idx = pd.date_range("2000-01-31", periods=240, freq="ME")
+    noise = {f"c{i}": rng.normal(0.004, 0.04, len(idx)) for i in range(4)}
+    strong = pd.Series(rng.normal(0.02, 0.01, len(idx)), index=idx)   # obviously better
+    m = pd.DataFrame({**{k: pd.Series(v, index=idx) for k, v in noise.items()},
+                      "winner": strong})
+    res = inf.friedman_nemenyi(m, block=12)
+    assert res["table"].iloc[0].portfolio == "winner"
+    assert abs(res["table"].iloc[0].avg_rank - 1.0) < 1e-9, "a dominant series ranks 1 everywhere"
+    assert res["p_friedman"] < 0.01, "Friedman must reject when one contestant dominates"
+    assert res["critical_difference"] > 0
+    # five copies of the same series: no ranking signal
+    same = pd.DataFrame({f"d{i}": pd.Series(rng.normal(0.004, 0.04, len(idx)), index=idx)
+                         for i in range(5)})
+    assert inf.friedman_nemenyi(same, block=12)["p_friedman"] > 0.05
+
+
+def test_diversification_ratio_endpoints_and_menu_diagnostics():
+    """DR² (Choueifaty-Coignard) must hit its two known endpoints exactly: N independent bets
+    for N uncorrelated equal-vol sleeves, and 1 bet when everything is perfectly correlated.
+    menu_diagnostics must agree with DR² on which menu holds more bets."""
+    N = 10
+    var = 0.04
+    indep = np.eye(N) * var
+    perfect = np.full((N, N), var)
+    w = np.ones(N) / N
+    assert abs(opt.diversification_ratio(w, indep) ** 2 - N) < 1e-9
+    assert abs(opt.diversification_ratio(w, perfect) ** 2 - 1.0) < 1e-9
+    # a two-block menu (correlated within, uncorrelated across) sits strictly between
+    block = np.full((N, N), 0.9 * var)
+    block[: N // 2, N // 2:] = 0.0
+    block[N // 2:, : N // 2] = 0.0
+    np.fill_diagonal(block, var)
+    dr2_block = opt.diversification_ratio(w, block) ** 2
+    assert 1.0 < dr2_block < N
+    # menu_diagnostics reads the same structure off the same matrix
+    mk = lambda s: dict(sigma=s)
+    assert opt.menu_diagnostics(mk(indep))["entropy_effective_bets"] > \
+        opt.menu_diagnostics(mk(block))["entropy_effective_bets"] > \
+        opt.menu_diagnostics(mk(perfect + np.eye(N) * 1e-9))["entropy_effective_bets"]
+    assert opt.menu_diagnostics(mk(block))["n_sleeves"] == N
+    assert abs(opt.menu_diagnostics(mk(indep))["dr2_equal_weight"] - N) < 1e-9
 
 
 def test_gmv_combo_shrinks_to_1N_when_estimation_error_dominates():
