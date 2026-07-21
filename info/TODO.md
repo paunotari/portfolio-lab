@@ -252,6 +252,20 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         subsection (reporting the test that attacks our own signature feature is a
         credibility gain, not a loss); the abstract's third claim gets the shrinkage
         re-interpretation. Blocked on the estimator placebo above.
+  - [ ] **Read Gelmini-Uberti (2024) in full and verify the positioning claim.**
+        *International Economics* 179, 100525 (DOI 10.1016/j.inteco.2024.100525) — the
+        declared replication of DeMiguel 2009 with +20 years of data, ERC added, and a
+        window/holding-period grid; same verdict as ours. Deep dive written from the
+        ABSTRACT ONLY (`literature/frontier/gelmini-uberti-replication.md`) because
+        ScienceDirect served a CAPTCHA and the repository preprint is bot-blocked; owner may
+        have institutional access. **Two things to verify before anything from it enters the
+        draft:** (1) do they run a Sharpe-DIFFERENCE significance test? If not, our
+        "we attach p-values to every ranking sentence" positioning holds against the most
+        recent replication, not just against a 2009 paper — a much stronger sentence, and
+        exactly the kind that must not be written on an inference. (2) Is their "more
+        strategies beat 1/N because volatility rose" claim quantified? If so it is a
+        testable prediction on our own data (2009-2026 OOS vs the 1998-2008 warmup) and a
+        cheap referee-pleasing extra. Also mine their 27 references.
   - [ ] **Multiplicity honesty pass on the contestant table (M34).** The 17 rows are ~4
         distinct strategies: HRP vs ERC correlate **0.998** OOS, Brodie vs min-variance
         **0.975** (and both live off USA Quality, 47% vs 52%). State this in the results
