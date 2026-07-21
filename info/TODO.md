@@ -199,10 +199,33 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         Delta +0.104 vs 1/N at p_boot 0.149, i.e. NOT significant.** Their "significantly and
         consistently" does not survive the Sharpe test and the cost charge they never ran.
         They are an ally, not a challenge: same family as our measured winner.
-  - [~] **Random-regime placebo — BUILT 2026-07-21 (`portfolio/placebo.py`), permutation
-        test RUNNING** (40 replicates x 2 shuffle modes: circular rotation, which preserves
-        marginals/run-lengths/transitions exactly, and iid permutation). Verdict lands as
-        M32.
+  - [x] **Random-regime placebo — BUILT + MEASURED 2026-07-21 (M32). THE LABELS DO NOT
+        SURVIVE IT.** 80 scrambled-label walk-forwards (40 circular + 40 iid), two metrics
+        (net Sharpe AND the realized worst-REAL-quadrant floor, the maximin's actual
+        objective). **Nothing reaches significance in any of 12 cells; best p = 0.195; the
+        real labels are BELOW the scrambled mean in 7 of 12**, including the flagship's own
+        objective (random-label all-weather floor +0.005%/mo vs the real one's -0.090%).
+        Harness verified (1/N sd 1.1e-16) and deterministic (Sharpe column reproduced
+        exactly on the re-run). Untouched: M1/M2/M3/M13/M14/M25/M31 and every NUMBER in
+        M6/M7/M10. Overturned: the ATTRIBUTION — the flagship's record is the MENU (M6/M27),
+        not the labels.
+  - [ ] **THE DECISIVE FOLLOW-UP — estimator placebo A/B (do this before the paper's v0.2).**
+        M32 leaves one question open and it is the one the contribution rests on: is the
+        era-agreement-gated estimator a REGIME-INFORMATION device or just a SHRINKAGE
+        device? Test: re-run the `OPTIMIZER_ANCHOR_LONG` off/on A/B under SCRAMBLED labels
+        (B~20 per mode is enough — it is a difference of differences). **If the estimator
+        still improves the maximin variants with random labels, it is shrinkage** and the
+        paper says so plainly; if it only improves under real labels, the conditioning
+        matters after all and M32's re-interpretation of M5/M10/M16 must be withdrawn.
+        Declared in advance, before running: expect it STILL improves (the M10 corrections
+        it produced — gold-in-bust +1.20 -> +0.71 — are exactly what a shrinkage reading
+        predicts).
+  - [ ] **Paper/THESIS re-framing after M32** — the flagship's numbers stand, its
+        explanation changes. Every "regime-aware portfolio" becomes "a capped worst-case
+        objective over a regime-DIVERSE MENU"; the placebo becomes a §6 referee's-checklist
+        subsection (reporting the test that attacks our own signature feature is a
+        credibility gain, not a loss); the abstract's third claim gets the shrinkage
+        re-interpretation. Blocked on the estimator placebo above.
   - [x] **Nemenyi — BUILT + MEASURED 2026-07-21 (M31).** `inference.friedman_nemenyi`, a
         standing report section. **Friedman rejects (chi2 46.6, p 0.0001) — the ordering is
         not noise — but the Nemenyi critical difference is 5.99 rank units and NOTHING

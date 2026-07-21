@@ -8,8 +8,15 @@ device, and a referee will ask whether four RANDOM partitions would have done th
 
 This module answers it the only way that settles it — a permutation test. The identical
 walk-forward is re-run B times with the state labels SCRAMBLED, and the real record is placed
-in the resulting null distribution. Empirical p = share of placebo replicates whose net OOS
-Sharpe reaches the real one.
+in the resulting null distribution. Empirical p = share of placebo replicates reaching the real
+value.
+
+**Two metrics, deliberately.** Scoring the placebo on Sharpe alone would test the maximin on a
+target it never claimed — its objective is max_w min_q w'mu_q, the worst-quadrant FLOOR. So
+every arm is also scored on its ``floor``: the realized worst mean monthly OOS return across
+the four **REAL** quadrants, for whatever weights that arm chose. Real labels always — grading a
+scrambled-label portfolio against its own scrambled quadrants would be circular, and would
+guarantee the placebo looks good by construction.
 
 Two shuffle modes, because they destroy different things:
 
@@ -34,6 +41,9 @@ Honest caveats, stated not hidden:
   precisely what makes it unexploitable. Turning it off would test a portfolio we do not ship.
 - 1/N is carried through every replicate as an invariance check: it consumes no labels, so its
   Sharpe MUST be identical in every arm. If it ever moves, the harness is leaking.
+- The test is about the LABELS' contribution to ALLOCATION. It says nothing about the
+  classifier's descriptive value (which quadrant we are in, per-state performance) — that is a
+  different claim, measured elsewhere.
 
 Run:  python -m portfolio_lab.portfolio.placebo              # both modes, config B replicates
       python -m portfolio_lab.portfolio.placebo --b 10 --mode circular
@@ -80,7 +90,7 @@ def _regime_walk_forward(states: pd.DataFrame = None, warmup: int = None, refit:
     Same expanding window, same estimation-on-train-only discipline, same cost charge as
     `validation.walk_forward` — just fewer contestants, because a permutation test needs the
     run repeated dozens of times. `states=None` runs the REAL labels.
-    Returns {contestant: net OOS Sharpe}.
+    Returns {"<contestant> | sharpe": ..., "<contestant> | floor": ...}.
     """
     warmup = warmup or C.OPTIMIZER_WF_WARMUP_MONTHS
     refit = refit or C.OPTIMIZER_WF_REFIT_MONTHS
@@ -135,6 +145,7 @@ def _regime_walk_forward(states: pd.DataFrame = None, warmup: int = None, refit:
 
     oos_index = rets.index[warmup:]
     cost = C.OPTIMIZER_TC_BPS / 10_000.0
+    real_labels = opt._load_states(rets.index)               # ALWAYS the real ones — see below
     out = {}
     for name, chunks in gross_chunks.items():
         g = np.concatenate(chunks)
@@ -142,9 +153,26 @@ def _regime_walk_forward(states: pd.DataFrame = None, warmup: int = None, refit:
                         index=oos_index[:len(g)])
         lvl = pd.concat([pd.Series([100.0], index=[net.index[0] - pd.offsets.MonthEnd(1)]),
                          100.0 * (1 + net).cumprod()])
-        out[name] = _perf_stats(lvl)["sharpe_rf0"]
+        out[f"{name} | sharpe"] = _perf_stats(lvl)["sharpe_rf0"]
+        # The maximin does not optimize Sharpe — it maximizes the WORST per-quadrant mean. So
+        # scoring the placebo on Sharpe alone tests it on a metric it never claimed. The fair
+        # score is the realized floor: for the weights each arm CHOSE, the worst mean monthly
+        # OOS return across the four REAL quadrants. Real labels always, so the floor means the
+        # same thing in every arm — scoring a scrambled-label portfolio against its own
+        # scrambled quadrants would be circular.
+        out[f"{name} | floor"] = _realized_floor(net, real_labels)
     out["_n_refits"] = n_refits
     return out
+
+
+def _realized_floor(net: pd.Series, real_labels: pd.DataFrame) -> float:
+    """Worst mean monthly OOS return across the four REAL macro quadrants (min 3 months)."""
+    if real_labels is None:
+        return np.nan
+    lab = real_labels.state.reindex(net.index)
+    means = net.groupby(lab).agg(["mean", "size"])
+    means = means[means["size"] >= 3]["mean"]
+    return float(means.min()) if len(means) else np.nan
 
 
 def run(b: int = None, modes: tuple = ("circular", "iid"), seed: int = 12345) -> pd.DataFrame:
@@ -179,21 +207,26 @@ def run(b: int = None, modes: tuple = ("circular", "iid"), seed: int = 12345) ->
 
 
 def verdicts(df: pd.DataFrame) -> pd.DataFrame:
-    """Per (contestant, mode): the real Sharpe against the scrambled-label null."""
+    """Per (contestant, metric, mode): the real value against the scrambled-label null."""
     real = df[df.arm == "real"].iloc[0]
+    cols = [c for c in df.columns if " | " in c]
     rows = []
     for mode in sorted(df[df.arm == "placebo"]["mode"].unique()):
         sub = df[(df.arm == "placebo") & (df["mode"] == mode)]
-        for name in REGIME_CONTESTANTS + [CONTROL]:
-            if name not in df.columns or not np.isfinite(real[name]):
+        for col in cols:
+            name, metric = col.split(" | ")
+            if not np.isfinite(real[col]):
                 continue
-            null = sub[name].dropna().values
+            null = sub[col].dropna().values
             if not len(null):
                 continue
-            # one-sided permutation p, with the real arm counted in the reference set
-            p = (1 + int((null >= real[name]).sum())) / (1 + len(null))
-            rows.append(dict(portfolio=name, mode=mode, real_sharpe=float(real[name]),
-                             placebo_mean=float(null.mean()), placebo_sd=float(null.std(ddof=1)),
+            # one-sided permutation p (bigger is better for BOTH metrics: Sharpe, and the
+            # realized floor, which is least-negative-is-best); real arm in the reference set
+            p = (1 + int((null >= real[col]).sum())) / (1 + len(null))
+            rows.append(dict(portfolio=name, metric=metric, mode=mode,
+                             real=float(real[col]),
+                             placebo_mean=float(null.mean()),
+                             placebo_sd=float(null.std(ddof=1)),
                              placebo_p05=float(np.percentile(null, 5)),
                              placebo_p95=float(np.percentile(null, 95)),
                              n_placebo=len(null), p_perm=p))
@@ -213,17 +246,32 @@ def _write_report(df: pd.DataFrame, b: int, modes: tuple):
          "returns is destroyed. The primary null.",
          "- **iid** — rows permuted: persistence destroyed too. The gap between the modes says "
          "how much of any edge is alignment versus regime-shaped structure.", "",
-         "`p_perm` is the one-sided share of scrambled replicates reaching the real Sharpe "
-         "(the real arm is counted in the reference set, so the smallest attainable p is "
-         f"1/{b + 1} = {1 / (b + 1):.3f}).", ""]
-    L += ["| portfolio | mode | real Sharpe | placebo mean | placebo sd | placebo p5–p95 | p_perm |",
-          "|---|---|---|---|---|---|---|"]
-    for _, r in v.iterrows():
-        L.append(f"| {r.portfolio} | {r['mode']} | {r.real_sharpe:.3f} | {r.placebo_mean:.3f} | "
-                 f"{r.placebo_sd:.3f} | {r.placebo_p05:.3f} – {r.placebo_p95:.3f} | "
-                 f"{r.p_perm:.3f} |")
-    ctrl = v[v.portfolio == CONTROL]
-    L += ["", "## Invariance check", ""]
+         "**Two metrics, because Sharpe alone would test the maximin on a target it never "
+         "claimed.** `sharpe` is the net OOS Sharpe. `floor` is the realized worst mean monthly "
+         "return across the four **REAL** quadrants, for whatever weights each arm chose — the "
+         "quantity the maximin actually optimizes. The floor is always scored on real labels: "
+         "grading a scrambled-label portfolio against its own scrambled quadrants would be "
+         "circular.", "",
+         "`p_perm` is the one-sided share of scrambled replicates reaching the real value "
+         "(bigger is better for both metrics; the real arm counts in the reference set, so the "
+         f"smallest attainable p is 1/{b + 1} = {1 / (b + 1):.3f}).", ""]
+    for metric, title, fmt in (("sharpe", "Net OOS Sharpe", "{:.3f}"),
+                               ("floor", "Realized floor — worst REAL-quadrant mean monthly "
+                                         "return (the maximin's actual objective)", "{:+.4%}")):
+        sub = v[v.metric == metric]
+        if not len(sub):
+            continue
+        L += [f"## {title}", "",
+              "| portfolio | mode | real | placebo mean | placebo sd | placebo p5–p95 | p_perm |",
+              "|---|---|---|---|---|---|---|"]
+        for _, r in sub.iterrows():
+            L.append(f"| {r.portfolio} | {r['mode']} | {fmt.format(r.real)} | "
+                     f"{fmt.format(r.placebo_mean)} | {fmt.format(r.placebo_sd)} | "
+                     f"{fmt.format(r.placebo_p05)} – {fmt.format(r.placebo_p95)} | "
+                     f"{r.p_perm:.3f} |")
+        L += [""]
+    ctrl = v[(v.portfolio == CONTROL) & (v.metric == "sharpe")]
+    L += ["## Invariance check", ""]
     if len(ctrl):
         ok = bool(np.allclose(ctrl.placebo_sd.values, 0.0, atol=1e-12))
         L.append(f"- **{CONTROL}** consumes no labels, so its Sharpe must be identical in every "
@@ -232,16 +280,17 @@ def _write_report(df: pd.DataFrame, b: int, modes: tuple):
     L += ["", "## Verdict", ""]
     for _, r in v[v.portfolio != CONTROL].iterrows():
         if r.p_perm <= 0.05:
-            verdict = ("the real labels carry information the scrambled ones do not")
-        elif r.real_sharpe >= r.placebo_p95:
+            verdict = "the real labels carry information the scrambled ones do not"
+        elif r.real >= r.placebo_p95:
             verdict = "in the null's top 5% but short of the permutation threshold"
-        elif r.real_sharpe <= r.placebo_mean:
-            verdict = ("**indistinguishable from random labels — this contestant's record is the "
-                       "menu and the caps, not the regime signal**")
+        elif r.real <= r.placebo_mean:
+            verdict = ("**indistinguishable from random labels — and BELOW the scrambled mean**")
         else:
             verdict = "above the scrambled mean but inside the null distribution"
-        L.append(f"- **{r.portfolio}** ({r['mode']}): real {r.real_sharpe:.3f} vs null "
-                 f"{r.placebo_mean:.3f} ± {r.placebo_sd:.3f}, p = {r.p_perm:.3f} — {verdict}.")
+        fmt = "{:.3f}" if r.metric == "sharpe" else "{:+.4%}"
+        L.append(f"- **{r.portfolio}** · {r.metric} ({r['mode']}): real {fmt.format(r.real)} vs "
+                 f"null {fmt.format(r.placebo_mean)} ± {fmt.format(r.placebo_sd)}, "
+                 f"p = {r.p_perm:.3f} — {verdict}.")
     L += ["", "_Conservative by construction: the rotation is applied once to the full history, "
           "so a placebo training window can receive labels from months after its own end. That "
           "can only help the placebo._", ""]

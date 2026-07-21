@@ -80,6 +80,11 @@ storms". **Code:** `ingest/asset_classes.py`, `portfolio/optimizer.py`
 gold LBMA mirror; FF rf).
 **Status:** floor/vol numbers **in-sample**; shape century-scale (stress + proxy race).
 ~~The specific flagship weights lack an OOS verdict~~ → see M7.
+**Reinforced by M32 (2026-07-21):** the placebo shows the labels are NOT what produces this —
+which makes M6 the surviving explanation rather than a companion to it. The floor transformation
+is a property of the MENU (holding assets that behave differently), not of knowing the regime.
+Read together with M27's menu-level measurement (adding the proxies takes minimum pairwise
+correlation 0.53 → −0.14), M6 is now the load-bearing claim it was always closest to being.
 
 ## M7 — The all-weather flagship SURVIVES out of sample
 **Claim:** as a walk-forward contestant on its own extended universe (choosing
@@ -97,6 +102,13 @@ additionally century-scale via M6's stress/proxy evidence. Caveat: 2009–2026 c
 prolonged bear market; the proxy race (M2/M3) is the longer-track complement.
 **Update (M10):** with the long-anchored objective the flagship improves further — OOS Sharpe
 0.954, vol 8.7%, maxDD −16.7%.
+**Attribution corrected by M32 (2026-07-21):** every number above stands — it was measured and
+re-measured. What does NOT stand is the implied explanation. Under 40 scrambled-label replicates
+the flagship's Sharpe null mean is **1.006** (real 0.933, p 0.659) and its realized worst-real-
+quadrant floor null mean is **+0.005%/mo** (real −0.090%, p 0.756). The flagship survives out of
+sample because of WHAT IT HOLDS (M6/M27), not because of what the classifier knew. Everywhere
+this entry is cited, the sentence must be "a capped worst-case objective over a regime-diverse
+MENU", never "a regime-aware portfolio".
 
 ## M10 — Anchoring the maximin OBJECTIVE on long history improves every variant OOS
 **Claim:** blending the maximin's per-quadrant means toward long-history values (proxy sleeves:
@@ -113,6 +125,14 @@ of flight-to-quality).
 reporting keeps the empirical `mu_q`). **Data:** `asset_class_monthly.csv` (1962+),
 `ff_factors_monthly.csv`, macro states. **Status:** OOS modern (walk-forward, net of costs);
 prior clipped to each training window (no look-ahead).
+**Interpretation revised by M32 (2026-07-21):** the A/B improvement is untouched — the estimator
+still helps every variant on three universes including the pre-registered one. But since the
+labels themselves are placebo-equivalent (M32), the mechanism cannot be "better regime
+information": it is **shrinkage of noisy conditional means toward a long sample**, which reduces
+estimation error regardless of whether the conditioning variable informs. The decisive
+disambiguation — re-run this A/B under scrambled labels — is recorded in TODO. Note the concrete
+corrections quoted above (gold-in-bust +1.20→+0.71) are exactly what a shrinkage reading
+predicts: the modern cell was an artifact and the long sample tempered it.
 **Re-measured 2026-07 after the B2 menu expansion (+USA Enhanced Value, Japan Momentum, EM
 Quality via `msci_api`):** flagship OOS Sharpe 0.93 on the 24-sleeve menu — numbers shift by
 ~0.01-0.02 with the menu, every ranking and conclusion unchanged.
@@ -600,3 +620,80 @@ attributing to grid dimensions a conclusion (C4) that had become false in the SH
 purely because the contestant field grew. Fixed: the report now separates *stale conclusions*
 from *sensitivity flips*, and says explicitly that a stale conclusion must be restated or
 retired, never re-thresholded to make it pass. M17 corrected accordingly.
+
+## M32 — THE PLACEBO KILLS THE REGIME SIGNAL'S ALLOCATION CLAIM: scrambled labels do as well, on both metrics, under both nulls
+**Claim (a negative result, and the most consequential entry in this ledger):** the macro-state
+labels contribute **nothing measurable** to what the maximin family achieves out of sample. The
+mechanism — "maximize the worst of four partitions of history" — works. The macro information
+that was supposed to define those four partitions does not.
+**Protocol:** the identical walk-forward re-run **80 times** with the state labels scrambled,
+40 replicates under each of two nulls. **circular** (primary) rotates the whole label frame by a
+random offset: marginal frequencies, run lengths and the transition matrix are preserved
+EXACTLY, so the ONLY thing destroyed is the correspondence between a month's label and that
+month's returns. **iid** permutes the rows, destroying persistence too. Two scores, because
+grading on Sharpe alone would test the maximin on a target it never claimed: `sharpe` (net OOS)
+and **`floor`** — the realized worst mean monthly return across the four **REAL** quadrants for
+whatever weights each arm chose, i.e. the quantity `max_w min_q w'μ_q` actually optimizes.
+Always real labels for scoring: grading a scrambled-label portfolio against its own scrambled
+quadrants would be circular and would hand the placebo the result by construction.
+
+| contestant | metric | real | placebo mean ± sd (circular) | p | placebo mean (iid) | p |
+|---|---|---|---|---|---|---|
+| Maximin (worst quadrant) | Sharpe | 0.713 | 0.784 ± 0.127 | 0.610 | 0.711 | 0.488 |
+| Maximin (diversified) | Sharpe | 0.837 | 0.856 ± 0.041 | 0.659 | 0.840 | 0.463 |
+| Maximin (all-weather div) | Sharpe | 0.933 | **1.006** ± 0.140 | 0.659 | 0.930 | 0.512 |
+| Maximin (worst quadrant) | floor | −0.813% | −0.615% ± 0.377% | 0.659 | −0.812% | 0.537 |
+| Maximin (diversified) | floor | −0.455% | −0.528% ± 0.156% | 0.341 | −0.595% | **0.195** |
+| Maximin (all-weather div) | floor | −0.090% | **+0.005%** ± 0.194% | 0.756 | −0.121% | 0.488 |
+
+**Nothing comes close to significance. The best p in twelve cells is 0.195**, and with twelve
+comparisons one p at 0.195 is exactly what noise produces. The real labels sit BELOW the
+scrambled mean in **7 of the 12 cells**, including the flagship's own objective: the average
+RANDOMLY-labelled all-weather portfolio achieved a **positive** worst-real-quadrant floor
+(+0.005%/mo) against the real-labelled one's −0.090%.
+**Harness verified:** 1/N consumes no labels, so its score must be bit-identical across all 81
+arms — placebo sd **1.1e-16**. And the Sharpe column reproduced EXACTLY when the whole study was
+re-run with the floor metric added (same seed), so the experiment is deterministic.
+**Why "worse than the placebo" is mechanically sensible, not a paradox:** real labels correlate
+with returns, so "maximize the worst quadrant" becomes "maximize performance in this particular
+set of historically bad months" — a specific bet on the past. Rotated labels give four
+persistent-but-arbitrary slices of time, and "do least badly across four arbitrary slices" is a
+PURER robustness device — closer to diversifying across time, less prone to fitting what
+happened to be bad. A second reading points the same way: the diversified variants' null
+distributions are half as wide as the unconstrained one's (sd 0.13–0.16pp vs 0.25–0.38pp) —
+**the caps, not the labels, are what stabilize the floor.**
+
+### What this does and does not overturn
+- **UNTOUCHED — M1, M2, M3, M13, M14, M25, M31 and everything about 1/N, min-variance, ERC, HRP
+  and the caps.** None of those consume labels. The humility result and the
+  structure-beats-estimation result stand exactly as measured.
+- **UNTOUCHED — every NUMBER in M6/M7/M10.** The flagship really did deliver Sharpe 0.95 at 8.7%
+  vol and −16.7% maxDD; its floor really is −0.09%/mo against 1/N's −0.61%. What changes is the
+  EXPLANATION, not the measurement.
+- **OVERTURNED — the attribution.** We can no longer say the flagship's record comes from knowing
+  which regime we were in. The explanation that survives is the one M6 and M27 already measured
+  independently: **it comes from HOLDING assets that behave differently** (bonds and gold take
+  the menu's minimum pairwise correlation from 0.53 to −0.14, M27), and any four-way partition
+  pushes a worst-case objective toward them. The labels do not select; the menu offers.
+- **RE-INTERPRETED — the candidate contribution (M5/M10/M16).** The estimator's measured A/B
+  improvement is untouched: it still improves every regime-dependent construction on three
+  universes including the pre-registered virgin one. But its INTERPRETATION shifts from "better
+  regime information transfers across eras" to "**shrinking noisy conditional means toward a
+  long sample reduces estimation error**" — which is true whether or not the conditioning
+  variable carries information. That is a more modest but still real and still measured claim.
+  **The decisive test is recorded in TODO: re-run the estimator's on/off A/B under scrambled
+  labels.** If the estimator still improves things there, it is a shrinkage device and the paper
+  should say so; if it only improves under real labels, the conditioning matters after all and
+  this entry needs revisiting.
+- **NOT TESTED HERE — the classifier's DESCRIPTIVE value.** Which quadrant we are in now,
+  per-state performance, the dashboard's regime tab: different claims, not in scope. The placebo
+  asks only whether the labels should move WEIGHTS.
+
+**Power, stated:** 40 replicates put the smallest attainable p at 0.024, so only a large effect
+was detectable. But there is no effect to detect in the point estimates either — the real arm is
+not consistently on one side of the null, which is a stronger reading than a null result at low
+power.
+**See:** `REPORT_placebo.md` + `optimizer_placebo.csv`. **Code:** `portfolio/placebo.py`
+(`scramble_states`, `_regime_walk_forward`, `_realized_floor`); `optimizer.build_inputs(states=)`
+exists solely to feed it. **Data:** 28-sleeve MSCI menu + the extended 31-sleeve universe, 81
+full walk-forwards. **Status:** `OOS modern`, permutation-tested, harness-verified.
