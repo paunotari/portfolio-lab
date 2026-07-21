@@ -297,10 +297,178 @@ def _write_report(df: pd.DataFrame, b: int, modes: tuple):
     C.OPTIMIZER_PLACEBO_REPORT.write_text("\n".join(L))
 
 
+# ------------------------------------- the estimator A/B under scrambled labels (M35)
+
+def estimator_ab(b: int = None, mode: str = "circular", seed: int = 777) -> pd.DataFrame:
+    """Is the era-agreement-gated estimator a REGIME-INFORMATION device or a SHRINKAGE device?
+
+    M32 settled that the LABELS add nothing to allocation. This settles what the ESTIMATOR is,
+    which is a different mechanism with its own switch (`config.OPTIMIZER_ANCHOR_LONG`): when
+    ON, each per-quadrant mean is pulled toward its 66-year Fama-French counterpart, weighted by
+    months of evidence, only in cells where both eras agree on that factor's sign.
+
+    Design — a paired DIFFERENCE OF DIFFERENCES:
+
+        Delta_real     = score(anchor ON) - score(anchor OFF)   under the real labels
+        Delta_placebo  = score(anchor ON) - score(anchor OFF)   under scrambled labels
+
+    Both switch positions are run on the SAME scrambled labels within a replicate, so the noise
+    of that particular shuffle cancels in the difference. That is where the power comes from: an
+    unpaired design would drown Delta (~0.002-0.016 Sharpe) in a null with sd ~0.14.
+
+    Reading:
+      Delta_placebo ~ Delta_real  => SHRINKAGE. Pulling noisy cell means toward a long sample
+                                    reduces estimation error whether or not the conditioning
+                                    variable means anything. The paper says exactly that.
+      Delta_placebo ~ 0 < Delta_real => the conditioning matters for the ESTIMATOR even though
+                                    it does not for allocation, and M32's re-interpretation of
+                                    M5/M10/M16 must be withdrawn.
+
+    **What this design does NOT test, stated because it is easy to assume otherwise:** the
+    agreement GATE is not degraded by scrambling. The gate compares sign(long-era mean) with
+    sign(modern-era mean) OF THE FAMA-FRENCH FACTOR ITSELF (`long_history.msci_factor_prior`),
+    computed from the real classifier over the real FF history — by design, per `info/
+    estimator.md` ("era sign-agreement of j's own record", j = the long series). It is a
+    property of that factor's two eras, not of our menu's labelling, so it opens exactly the
+    same cells in every arm. What IS scrambled is the modern per-quadrant means being shrunk.
+    So the question this answers is precisely "does pulling arbitrary-subset means toward real
+    long-run quadrant values still help?" — the shrinkage question, cleanly.
+
+    Only the `circular` null is used (the referee-grade one: marginals, run lengths and the
+    transition matrix preserved exactly).
+    """
+    C.ensure_dirs()
+    b = C.OPTIMIZER_ESTIMATOR_AB_B if b is None else b
+    states_real = opt._load_states(opt.load_returns().index)
+    if states_real is None:
+        print("[estimator-ab] macro-state labels absent — skipped")
+        return pd.DataFrame()
+
+    shipped = C.OPTIMIZER_ANCHOR_LONG
+    t0 = time.time()
+    rows = []
+
+    def _pair(states, arm, replicate):
+        out = {}
+        for anchor in (False, True):
+            try:
+                C.OPTIMIZER_ANCHOR_LONG = anchor
+                res = _regime_walk_forward(states=states)
+            finally:
+                C.OPTIMIZER_ANCHOR_LONG = shipped
+            res.pop("_n_refits", None)
+            out[anchor] = res
+        row = dict(arm=arm, replicate=replicate)
+        for k in out[True]:
+            row[f"{k} | OFF"] = out[False].get(k, np.nan)
+            row[f"{k} | ON"] = out[True][k]
+            row[f"{k} | delta"] = out[True][k] - out[False].get(k, np.nan)
+        return row
+
+    real = _pair(None, "real", 0)
+    rows.append(real)
+    print(f"[estimator-ab] real arm ({time.time() - t0:.0f}s): "
+          + "  ".join(f"{k.split(' | ')[0]} {v:+.4f}"
+                      for k, v in real.items() if k.endswith("| delta") and "sharpe" in k))
+
+    rng = np.random.default_rng(seed)
+    for i in range(b):
+        row = _pair(scramble_states(states_real, mode, rng), "placebo", i + 1)
+        rows.append(row)
+        print(f"[estimator-ab] {mode} {i + 1}/{b}  "
+              + "  ".join(f"{k.split(' | ')[0]} {v:+.4f}"
+                          for k, v in row.items() if k.endswith("| delta") and "sharpe" in k))
+
+    df = pd.DataFrame(rows)
+    df.to_csv(C.OPTIMIZER_ESTIMATOR_AB, index=False)
+    _write_estimator_report(df, b, mode)
+    print(f"[estimator-ab] wrote {C.OPTIMIZER_ESTIMATOR_AB} and "
+          f"{C.OPTIMIZER_ESTIMATOR_AB_REPORT} ({time.time() - t0:.0f}s)")
+    return df
+
+
+def estimator_verdicts(df: pd.DataFrame) -> pd.DataFrame:
+    real = df[df.arm == "real"].iloc[0]
+    sub = df[df.arm == "placebo"]
+    rows = []
+    for col in [c for c in df.columns if c.endswith("| delta")]:
+        name, metric, _ = col.split(" | ")
+        if not np.isfinite(real[col]):
+            continue
+        null = sub[col].dropna().values
+        if not len(null):
+            continue
+        rows.append(dict(portfolio=name, metric=metric,
+                         delta_real=float(real[col]),
+                         delta_placebo_mean=float(null.mean()),
+                         delta_placebo_sd=float(null.std(ddof=1)),
+                         share_placebo_positive=float((null > 0).mean()),
+                         p_real_exceeds=(1 + int((null >= real[col]).sum())) / (1 + len(null)),
+                         n_placebo=len(null)))
+    return pd.DataFrame(rows)
+
+
+def _write_estimator_report(df: pd.DataFrame, b: int, mode: str):
+    v = estimator_verdicts(df)
+    L = ["# Is the estimator a shrinkage device or a regime-information device? (M35)", "",
+         "M32 showed the macro LABELS add nothing to allocation. This asks what the "
+         "**estimator** is — a different mechanism with its own switch "
+         "(`OPTIMIZER_ANCHOR_LONG`): per-quadrant means pulled toward their 66-year "
+         "Fama-French counterparts, month-weighted, only where both eras agree on that "
+         "factor's sign.", "",
+         "Paired difference of differences: within each replicate the switch is run OFF and ON "
+         "on the **same** scrambled labels, so that shuffle's noise cancels in the delta. "
+         f"{b} replicates, `{mode}` null.", "",
+         "- **Δ_placebo ≈ Δ_real** ⇒ SHRINKAGE: the gain does not need the labels to mean "
+         "anything.",
+         "- **Δ_placebo ≈ 0 < Δ_real** ⇒ the conditioning matters for the estimator after all, "
+         "and M32's re-interpretation of M5/M10/M16 must be withdrawn.", "",
+         "_Not tested here: the agreement GATE is not degraded by scrambling — it compares the "
+         "two eras of the Fama-French factor's OWN record (`long_history.msci_factor_prior`), "
+         "so it opens the same cells in every arm by design. What is scrambled is the modern "
+         "per-quadrant means being shrunk._", ""]
+    for metric, title, fmt in (("sharpe", "Net OOS Sharpe", "{:+.4f}"),
+                               ("floor", "Realized floor (worst REAL-quadrant mean monthly "
+                                         "return)", "{:+.4%}")):
+        sub = v[v.metric == metric]
+        if not len(sub):
+            continue
+        L += [f"## Δ (anchor ON − OFF) — {title}", "",
+              "| portfolio | Δ real | Δ placebo mean | Δ placebo sd | % of placebo replicates "
+              "where the estimator HELPS | p (real ≥ placebo) |", "|---|---|---|---|---|---|"]
+        for _, r in sub.iterrows():
+            L.append(f"| {r.portfolio} | {fmt.format(r.delta_real)} | "
+                     f"{fmt.format(r.delta_placebo_mean)} | {fmt.format(r.delta_placebo_sd)} | "
+                     f"{r.share_placebo_positive:.0%} | {r.p_real_exceeds:.3f} |")
+        L += [""]
+    L += ["## Verdict", ""]
+    for _, r in v[v.portfolio != CONTROL].iterrows():
+        fmt = "{:+.4f}" if r.metric == "sharpe" else "{:+.4%}"
+        if r.delta_placebo_mean > 0 and r.share_placebo_positive >= 0.6:
+            verdict = ("**SHRINKAGE — the estimator still helps with meaningless labels** "
+                       f"({r.share_placebo_positive:.0%} of replicates)")
+        elif r.delta_real > 0 and r.delta_placebo_mean <= 0:
+            verdict = ("**the estimator helps ONLY with real labels — the conditioning "
+                       "matters**")
+        else:
+            verdict = "inconclusive on this contestant"
+        L.append(f"- **{r.portfolio}** · {r.metric}: Δ_real {fmt.format(r.delta_real)} vs "
+                 f"Δ_placebo {fmt.format(r.delta_placebo_mean)} ± "
+                 f"{fmt.format(r.delta_placebo_sd)} — {verdict}.")
+    L += ["", "_1/N is carried through as the invariance control: it consumes neither labels "
+          "nor the estimator, so every Δ on its row must be exactly zero._", ""]
+    C.OPTIMIZER_ESTIMATOR_AB_REPORT.write_text("\n".join(L))
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Random-regime placebo (permutation test)")
     ap.add_argument("--b", type=int, default=None, help="replicates per mode")
     ap.add_argument("--mode", choices=["circular", "iid"], default=None,
                     help="only this shuffle mode (default: both)")
+    ap.add_argument("--estimator", action="store_true",
+                    help="run the estimator A/B under scrambled labels (M35) instead")
     args = ap.parse_args()
-    run(b=args.b, modes=(args.mode,) if args.mode else ("circular", "iid"))
+    if args.estimator:
+        estimator_ab(b=args.b, mode=args.mode or "circular")
+    else:
+        run(b=args.b, modes=(args.mode,) if args.mode else ("circular", "iid"))

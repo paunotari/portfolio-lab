@@ -136,6 +136,18 @@ predicts: the modern cell was an artifact and the long sample tempered it.
 **Re-measured 2026-07 after the B2 menu expansion (+USA Enhanced Value, Japan Momentum, EM
 Quality via `msci_api`):** flagship OOS Sharpe 0.93 on the 24-sleeve menu — numbers shift by
 ~0.01-0.02 with the menu, every ranking and conclusion unchanged.
+**SIGN CORRECTION 2026-07-21 (found while setting up the M35 estimator A/B): the claim
+"improves EVERY maximin variant" no longer holds on the shipped 28-sleeve menu.** Re-measured
+Δ (anchor ON − OFF) in net OOS Sharpe: worst-quadrant **+0.0050**, diversified **+0.0014**,
+**all-weather −0.0036** (0.9362 → 0.9326). The magnitude sits inside the ±0.01–0.02 menu-shift
+band this entry already acknowledged, but "improves every variant" is a claim about SIGNS, and
+on the flagship the sign flipped. 1/N's Δ is exactly 0.0000 (invariance control). The honest
+restatement pending M35: *the estimator's effect on the current menu is within noise of zero on
+the flagship and mildly positive on the equity variants* — which, note, is itself more
+consistent with a shrinkage reading (a variance-reduction device has no reason to help a
+portfolio whose cells are already dominated by the proxy sleeves' long records) than with a
+regime-information one. Do NOT quote M10's "+0.012 on the flagship" in the paper without this
+correction.
 
 ## M8 — The price of preferences is measurable (profiles)
 **Claim:** preference bundles cost measurable CAGR vs their unrestricted twins: the owner's

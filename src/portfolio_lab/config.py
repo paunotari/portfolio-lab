@@ -152,6 +152,9 @@ OPTIMIZER_NEMENYI_BLOCK = 12               # OOS months per ranking block (Fried
 OPTIMIZER_PLACEBO = OPTIMIZER_DIR / "optimizer_placebo.csv"            # M32 random-regime
 OPTIMIZER_PLACEBO_REPORT = OPTIMIZER_DIR / "REPORT_placebo.md"
 OPTIMIZER_PLACEBO_B = 40                   # scrambled-label replicates per shuffle mode
+OPTIMIZER_ESTIMATOR_AB = OPTIMIZER_DIR / "optimizer_estimator_ab.csv"   # M35 shrinkage-vs-signal
+OPTIMIZER_ESTIMATOR_AB_REPORT = OPTIMIZER_DIR / "REPORT_estimator_ab.md"
+OPTIMIZER_ESTIMATOR_AB_B = 20              # paired anchor-off/on replicates
 OPTIMIZER_PBO_S = 16                       # CSCV blocks (Bailey et al. 2017); C(16,8)=12870
 
 # Sharpe inference (Ledoit-Wolf 2008 studentized circular block bootstrap — see
