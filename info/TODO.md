@@ -215,7 +215,16 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         p_boot 0.034 = SIGNIFICANTLY WORSE than 1/N.** The overlay-family verdict is now
         complete and one-directional. Still to read on the FF-intl universe (two bears) —
         the fair arena for a rule whose payoff is sidestepping prolonged bears.
-  - [~] **Sigma-estimator grid column — BUILT 2026-07-21, grid re-run pending.**
+  - [x] **Sigma-estimator grid column — BUILT + MEASURED 2026-07-21 (M33). The declared
+        expectation ("no material change at N<<T") was WRONG, and usefully so: nonlinear
+        shrinkage costs MIN-VARIANCE 1.031 -> 0.947 (-0.084), the largest single move any
+        sensitivity cell has produced here; HRP -0.019, ERC -0.001, HERC +0.008/+0.018,
+        every mu_q/rule contestant bit-identical.** Mechanism: at p/n=0.085 nonlinear
+        shrinkage correctly barely shrinks, and min-variance is the one Sigma^-1-driven rule,
+        so it is the one that notices — our headline winner's edge is partly the crude
+        estimator's doing. C1 does not flip but its margin collapses 0.098 -> 0.014.
+        Same run exposed and fixed a reporting bug (stale conclusion vs sensitivity flip);
+        M17's C4 corrected. Original entry:
         `shrinkage.shrink_nonlinear` (Ledoit-Wolf 2020 ANALYTICAL nonlinear shrinkage,
         closed-form Epanechnikov kernel; unit-tested to beat the sample matrix 4x on a known
         identity) + `shrinkage.estimate_covariance` dispatcher +

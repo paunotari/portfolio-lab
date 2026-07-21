@@ -170,21 +170,42 @@ def _write_report(rows, blocks):
     L += ["| block b | p_boot min-var vs 1/N | p_boot HRP vs 1/N |", "|---|---|---|"]
     for b, cell in blocks.items():
         L += [f"| {b} | {cell['Min-variance']:.4f} | {cell['HRP']:.4f} |"]
-    flips = []
-    for r in grid_rows:
-        if r["c1_minvar_rank"] != 1:
-            flips.append(f"C1 flips at {r['dimension']}={r['cell']} "
-                         f"(min-var rank #{r['c1_minvar_rank']})")
-        if r["c3_capped_minus_unconstrained"] < 0:
-            flips.append(f"C3 flips at {r['dimension']}={r['cell']} "
-                         f"(capped < unconstrained)")
-        if r["c4_allweather_rank"] and r["c4_allweather_rank"] > 3:
-            flips.append(f"C4 flips at {r['dimension']}={r['cell']} "
-                         f"(all-weather rank #{r['c4_allweather_rank']})")
+    # A conclusion that already fails in the SHIPPED cell is not a sensitivity flip — it is a
+    # stale conclusion, and conflating the two would let a grid take the blame for something
+    # the baseline did on its own (e.g. a newly fielded contestant changing a rank).
+    shipped = next((r for r in grid_rows
+                    if r["dimension"] == "cost_bps"
+                    and r["cell"] == str(int(C.OPTIMIZER_TC_BPS))), grid_rows[0])
+    checks = {
+        "C1": ("min-variance is the OOS winner",
+               lambda r: r["c1_minvar_rank"] == 1,
+               lambda r: f"min-var rank #{r['c1_minvar_rank']}"),
+        "C3": ("capping does not cost OOS performance",
+               lambda r: r["c3_capped_minus_unconstrained"] >= 0,
+               lambda r: f"capped − uncapped {r['c3_capped_minus_unconstrained']:+.3f}"),
+        "C4": ("the all-weather flagship stays on the podium",
+               lambda r: r["c4_allweather_rank"] is None or r["c4_allweather_rank"] <= 3,
+               lambda r: f"all-weather rank #{r['c4_allweather_rank']}"),
+    }
+    stale, flips = [], []
+    for key, (text, ok, describe) in checks.items():
+        if not ok(shipped):
+            stale.append(f"**{key} — '{text}' — is FALSE IN THE SHIPPED CELL ITSELF** "
+                         f"({describe(shipped)}). Not a robustness failure: the conclusion is "
+                         f"stale and must be restated or retired in the ledger, never "
+                         f"re-thresholded to make it pass.")
+            continue
+        for r in grid_rows:
+            if not ok(r):
+                flips.append(f"{key} flips at {r['dimension']}={r['cell']} ({describe(r)})")
     for b, cell in blocks.items():
         if cell["Min-variance"] < 0.05:
             flips.append(f"C2 flips at block={b} (p={cell['Min-variance']:.4f} < 0.05)")
     L += ["", "## Verdict", ""]
+    if stale:
+        L += ["### Conclusions that no longer hold at the shipped configuration", ""]
+        L += [f"- {t}" for t in stale] + [""]
+        L += ["### Sensitivity flips (among conclusions the shipped cell still satisfies)", ""]
     L += ([f"- {f}" for f in flips] if flips else
           ["- **No ledger conclusion flips in any grid cell.**"])
     L += ["", "Full per-contestant Sharpes per cell: `optimizer_sensitivity.csv`.", ""]

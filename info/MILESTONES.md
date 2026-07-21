@@ -277,6 +277,14 @@ cost-independent). **Data:** MSCI menu walk-forward (5 full runs + re-netting).
 **Status:** OOS modern across the declared grid. Out of scope by design: the agreement-rule
 variant grid (estimator specification, not result robustness — post-M16 it would need a
 fresh confirmatory universe).
+**CORRECTION 2026-07-21 (M33 re-run): C4 as originally worded no longer holds, and not because
+of any grid dimension.** The contestant field grew 12 → 17 (M26/M28/M29/M30) and Brodie 2009
+landed at 0.9335 against the all-weather's 0.9326 — **a 0.0009 Sharpe margin** — so the flagship
+is rank #4 in the SHIPPED cell itself. C4 is restated, not re-thresholded: *"the all-weather
+flagship stays within 0.001 Sharpe of the podium in every grid cell, at two-thirds of the
+volatility of everything above it."* C1, C2 and C3 are unchanged, and `sensitivity.py` now
+separates "false in the shipped cell" (a stale conclusion) from "flips in a grid cell" (a
+robustness failure) so this cannot be misattributed again.
 
 ## M18 — The 28-sleeve equity menu contains ~3 real bets (the KISS verdict, measured)
 **Claim:** the full MSCI menu's monthly returns have mean pairwise correlation 0.76 (min
@@ -557,3 +565,38 @@ one, which is the stronger statement.
 **Code:** `portfolio/inference.py::friedman_nemenyi` / `::block_ranks`. **Data:** the walk-forward
 net OOS returns (common panel — rows with any NaN dropped, so all contestants face the same
 months). **Status:** `OOS modern`.
+
+## M33 — The covariance estimator IS load-bearing, for exactly one contestant: nonlinear shrinkage costs min-variance 0.084 Sharpe
+**Claim:** every risk number in the engine rides on one matrix, so the covariance estimator is
+now a sensitivity dimension rather than a hard-coded assumption (`config.OPTIMIZER_SIGMA_ESTIMATOR`
+→ `shrinkage.estimate_covariance`). **Declared expectation, recorded in TODO before the run: "no
+material change at N≪T". That expectation was WRONG, and the way it is wrong is the finding.**
+**Measured (full walk-forward per estimator, 17 contestants):** swapping our constant-correlation
+Ledoit-Wolf for **Ledoit-Wolf 2020 analytical NONLINEAR shrinkage costs min-variance
+1.031 → 0.947 (−0.084)** — the largest single move any sensitivity cell has ever produced here,
+five times the next largest — and its vol-target overlay −0.085, HRP −0.019, ERC −0.001. The
+scaled-identity LW variant moves min-variance only −0.008. HERC *improves* (+0.008 Ward,
++0.018 single). Every μ_q-driven and rule-based contestant is bit-identical, as it must be
+(they never touch Σ except through the caps) — a free correctness check on the harness.
+**The mechanism, and why it is not a defect in either estimator:** at p/n = 0.085 nonlinear
+shrinkage correctly does almost nothing (measured directly: smallest eigenvalue 3.4e-7 against
+the sample matrix's 2.8e-7 — on 28 sleeves at 0.76 mean correlation the near-null direction is
+real structure, not noise). Nonlinear shrinkage is built for p/n near 1 and, out of that regime,
+it faithfully declines to shrink. **Min-variance is the contestant that wanted the shrinking**:
+it is the only Σ⁻¹-driven rule in the table, so it is the only one that notices. So the correct
+statement is not "nonlinear shrinkage is worse" but **"our headline winner's edge is partly the
+crude estimator's doing, and the more sophisticated estimator withholds the help"** — which is
+Jagannathan-Ma's constraints-as-shrinkage lesson (M3) arriving through a third door.
+**C1 does NOT flip:** min-variance is still rank #1 under all three estimators — but its margin
+over the next contestant collapses from 0.098 to **0.014**, one more reason the humility verdict
+(M14/M31) is the right headline.
+**See:** `REPORT_sensitivity.md` §"sigma_estimator" + `optimizer_sensitivity.csv`.
+**Code:** `portfolio/shrinkage.py::shrink_nonlinear` (closed-form Epanechnikov kernel + Hilbert
+transform, p ≤ n enforced; unit-tested to cut Frobenius loss to the true identity by 4× against
+the sample matrix) + `::estimate_covariance` dispatcher; grid in `portfolio/sensitivity.py`.
+**Data:** MSCI menu walk-forward, 3 full runs. **Status:** `OOS modern`.
+**Second finding, from the same run — a reporting bug this grid exposed:** `sensitivity.py` was
+attributing to grid dimensions a conclusion (C4) that had become false in the SHIPPED cell,
+purely because the contestant field grew. Fixed: the report now separates *stale conclusions*
+from *sensitivity flips*, and says explicitly that a stale conclusion must be restated or
+retired, never re-thresholded to make it pass. M17 corrected accordingly.
