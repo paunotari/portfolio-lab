@@ -86,7 +86,13 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         make their look-through exact instead of approximated.
       **Explicitly NOT needed for research: S&P 500** (≈0.99 correlated with MSCI USA — pure
       redundancy). May still enter the ETF catalog later for mapping convenience.
-- [ ] **B1b — broad commodities (energy-weighted)** as the next asset class: gold alone
+- [ ] **B1b — broad commodities (energy-weighted)** — **RE-SCOPED 2026-07-21: this is now
+      PAPER 2's data, not paper 1's.** Do not add it to the menu until paper 1 ships (see the
+      sequencing decision in the Paper track). Extra motivation measured today: the
+      all-weather flagship draws **33% of its OOS return from gold alone** and another 32%
+      from EM Enhanced Value (M21 attribution) — two sleeves carrying 65% of the record over
+      210 months is a concentration of EVIDENCE, not just of weights, and a second
+      mechanically different stagflation asset is the direct fix. Original entry: gold alone
       carries the stagflation quadrant and energy was the actual OPEC-era winner — a second,
       mechanically different stagflation asset is the highest-value menu extension left.
       Free long-history sources are poor (GSCI licensed; BCOM ~1991) — needs a sourcing
@@ -209,23 +215,62 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         exactly on the re-run). Untouched: M1/M2/M3/M13/M14/M25/M31 and every NUMBER in
         M6/M7/M10. Overturned: the ATTRIBUTION — the flagship's record is the MENU (M6/M27),
         not the labels.
-  - [ ] **THE DECISIVE FOLLOW-UP — estimator placebo A/B (do this before the paper's v0.2).**
-        M32 leaves one question open and it is the one the contribution rests on: is the
-        era-agreement-gated estimator a REGIME-INFORMATION device or just a SHRINKAGE
-        device? Test: re-run the `OPTIMIZER_ANCHOR_LONG` off/on A/B under SCRAMBLED labels
-        (B~20 per mode is enough — it is a difference of differences). **If the estimator
-        still improves the maximin variants with random labels, it is shrinkage** and the
-        paper says so plainly; if it only improves under real labels, the conditioning
-        matters after all and M32's re-interpretation of M5/M10/M16 must be withdrawn.
-        Declared in advance, before running: expect it STILL improves (the M10 corrections
-        it produced — gold-in-bust +1.20 -> +0.71 — are exactly what a shrinkage reading
-        predicts).
+  - [ ] **THE DECISIVE FOLLOW-UP — estimator placebo A/B. Run this BEFORE anything else;
+        it decides what the paper's headline is.**
+        *What it is, and why it is NOT the test already run.* M32 barbecued the LABELS: with
+        the state labels scrambled, the maximin family performs the same (12 cells, best
+        p 0.195). That says the labels add nothing to ALLOCATION. It does **not** say
+        anything about the ESTIMATOR, which is a separate mechanism with its own on/off
+        switch (`OPTIMIZER_ANCHOR_LONG`): when ON, each per-quadrant mean is shrunk toward
+        its 66-year Fama-French counterpart, month-weighted, **only in cells where both eras
+        agree on the sign**. That A/B is measured and POSITIVE on three universes including
+        the pre-registered virgin one (M10/M16). The open question is *why* it works.
+        *The test.* Re-run the same `OPTIMIZER_ANCHOR_LONG` off/on A/B **under scrambled
+        labels** — a difference of differences. B~20 per shuffle mode is enough (~25 min:
+        ~40 walk-forwards). Reuse `portfolio/placebo.py`'s harness; the only new moving part
+        is flipping the config flag inside each replicate.
+        *The two outcomes, both publishable, decided in advance:*
+        - **Still improves with random labels ⇒ it is a SHRINKAGE device.** Pooling noisy
+          conditional means toward a long sample reduces estimation error whether or not the
+          conditioning variable informs. The paper says exactly that, plainly. More modest
+          headline, still novel (nobody has proposed a cross-era sign-agreement pretest), and
+          it survives M32 intact.
+        - **Only improves with real labels ⇒ the conditioning matters after all.** Then M32's
+          re-interpretation of M5/M10/M16 must be WITHDRAWN from the ledger, and the regime
+          layer is vindicated at the estimator level even though it failed at the allocation
+          level. That is a subtle and interesting result in its own right.
+        *Prediction, declared before running (2026-07-21): it STILL improves.* Reason: the
+        concrete corrections the estimator produced are exactly what a shrinkage reading
+        predicts — gold-in-deflationary-bust tempered +1.20 -> +0.71%/mo because the modern
+        cell was a 2008-11 artifact, which the long sample fixes without the label "bust"
+        needing to mean anything.
+        *Do NOT expand the menu before this runs* — adding sleeves changes every number in
+        the paper and would force a full re-run mid-write (see the sequencing note below).
   - [ ] **Paper/THESIS re-framing after M32** — the flagship's numbers stand, its
         explanation changes. Every "regime-aware portfolio" becomes "a capped worst-case
         objective over a regime-DIVERSE MENU"; the placebo becomes a §6 referee's-checklist
         subsection (reporting the test that attacks our own signature feature is a
         credibility gain, not a loss); the abstract's third claim gets the shrinkage
         re-interpretation. Blocked on the estimator placebo above.
+  - [ ] **Multiplicity honesty pass on the contestant table (M34).** The 17 rows are ~4
+        distinct strategies: HRP vs ERC correlate **0.998** OOS, Brodie vs min-variance
+        **0.975** (and both live off USA Quality, 47% vs 52%). State this in the results
+        section rather than letting the row count imply breadth, and note that Brodie
+        inflates the deflated-Sharpe trial count without adding an independent test. A
+        referee will find this; better that we find it first.
+
+  > **SEQUENCING DECISION (owner call, 2026-07-21): finish and ship THIS paper on the frozen
+  > 28-sleeve menu; the menu-design question becomes PAPER 2.** Rationale recorded so it is
+  > not relitigated: (1) paper 1 is complete and self-consistent — it answers "which
+  > weighting rule should an investor at this data scale trust?" with "none demonstrably,
+  > and here is the full apparatus proving it"; (2) paper 2 needs data we do not have (B1/B1b)
+  > and waiting would block paper 1 indefinitely; (3) the menu findings (M18/M27/M34) are
+  > currently DESCRIPTIVE and full-sample — turning "selection beats weighting" into a claim
+  > needs an out-of-sample protocol for menu SELECTION, which is a real research-design
+  > problem and precisely what makes it a separate paper rather than an appendix;
+  > (4) expanding the menu now invalidates every number already measured and would break the
+  > pre-registration discipline (M16 was frozen against THIS menu). In paper 1 the menu
+  > result stays where it now is: a limitation paragraph that also motivates the sequel.
   - [x] **Nemenyi — BUILT + MEASURED 2026-07-21 (M31).** `inference.friedman_nemenyi`, a
         standing report section. **Friedman rejects (chi2 46.6, p 0.0001) — the ordering is
         not noise — but the Nemenyi critical difference is 5.99 rank units and NOTHING
