@@ -184,13 +184,15 @@ Check items off as completed. Add new ones as they come up; keep entries short a
 - [ ] **Frontier follow-ups (from the 2026-07 literature sweep — `literature/frontier/`).**
       Candidate tests, each cheap and referee-motivated; any design change they suggest
       needs the M16-style pre-registration discipline:
-  - [ ] **Yuan-Zhou combination contestant (the priority one; paper READ IN FULL, exact
-        formulas in frontier/beating-1N-yuan-zhou.md)**: field the GMV combo w = lambda*
-        Sigma^-1*1 + (1-lambda)*1/N with their closed-form lambda* (eq. 29) as a
-        walk-forward contestant, LW p vs 1/N, net of costs. Their own theory PREDICTS no
-        significant win on our menu (one-factor-dominated per their Prop 3; our warmup
-        T=120 < their required 360) — either outcome is a publishable sentence, and the
-        prediction is declared in advance.
+  - [x] **Yuan-Zhou combination contestant — FIELDED + MEASURED 2026-07-21 (M26). The
+        prediction held.** `rules.gmv_combo_weights` (λ* re-derived from their five stated
+        scalars; derivation in the docstring) is now a standing walk-forward contestant:
+        **net Sharpe 0.735 vs 1/N 0.830, Δ −0.095, LW p_boot 0.449** — no win, and
+        significantly worse than min-variance (p 0.016). λ* = 0 at the first three refits
+        (their own formula refusing the GMV at η≈0.2), then 0.61 mean with a **13.4× gross
+        exposure**. Sensitivity reported, not fielded: with our LW Σ, λ* 0.296, exposure
+        1.6×, net Sharpe 0.825 — a dead heat with 1/N, so the verdict is not a handicap
+        artifact.
   - [ ] **Brodie-2009 rule as contestant** (owner-spotted claim, paper read in full —
         frontier/asset-selection-menu-design.md §3): long-only min-variance at the
         trailing-1/N target return (their FF48 winner; the L1 penalty is inert long-only,

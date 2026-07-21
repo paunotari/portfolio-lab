@@ -49,6 +49,25 @@ the humility claim survives its strongest published challenger, adjudicated with
 challenger's own mathematics; if the combo DOES win significantly, the paper reports the
 exception and cites them. Either outcome is a publishable sentence.
 
+## 5. ⇒ RUN 2026-07-21 — the prediction held (MILESTONES M26)
+
+Fielded as a standing walk-forward contestant (`rules.gmv_combo_weights`). 210 OOS months, net
+of 10 bps: **net Sharpe 0.735 vs 1/N's 0.830, Δ −0.095 ann., LW p_boot 0.449** — no win (and
+significantly worse than min-variance, p 0.016). Gross 0.749, so it is the rule losing, not the
+cost charge. The mechanism is visible in λ* itself: **0.000 at the first three refits** (η =
+0.23→0.19 — their own formula refusing the GMV and returning pure 1/N), rising to a 0.61 mean as
+T grows, at which point the unconstrained plug-in runs a **13.4× mean gross exposure** (peak
+23.3×, 9–14 shorts) on 28 correlated equity sleeves. Sensitivity, reported not fielded: with our
+Ledoit-Wolf Σ in place of their plug-in S, λ* → 0.296, exposure → 1.6×, net Sharpe → **0.825**,
+still a dead heat with 1/N — the verdict is not an artifact of handicapping them with the raw
+sample covariance.
+
+Caveat stated for the paper: their eq. (29) was not transcribed into this note, so λ* is
+**re-derived** from the five scalars the note does record (η, σ_g, σ_{1/N}, SR_g, SR_{1/N}) plus
+the standard large-dimensional plug-in-GMV results; the derivation sits in the function's
+docstring and reproduces their qualitative limits (η→0 ⇒ classic two-fund combination, η→1 ⇒
+λ*→0). If the PDF is re-opened, check the formula against eq. (29) before submission.
+
 **Lineage to cite:** Kan & Zhou (2007) three-fund; Tu & Zhou (2011) "Markowitz meets
 Talmud"; Frahm & Memmel (2010); Pflug-Pichler-Wozabal (2012, 1/N under ambiguity);
 Yan & Zhang (2017, 1/N optimality under CAPM). [SSRN 4281138](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4281138)

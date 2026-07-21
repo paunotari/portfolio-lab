@@ -49,14 +49,22 @@ from portfolio_lab.portfolio import rules
 VOLTARGET_BASES = ["1/N", "Min-variance"]
 
 
-def _contestants(inp: dict, n_starts: int, seed: int) -> dict:
-    """name -> weight vector, all estimated from the training-window inputs only."""
+GMV_COMBO_NAME = "GMV combo (Yuan-Zhou)"
+
+
+def _contestants(inp: dict, n_starts: int, seed: int, diag: dict = None) -> dict:
+    """name -> weight vector, all estimated from the training-window inputs only.
+    diag: optional dict the rules can write scalar diagnostics into (e.g. the GMV combo's λ*)."""
     out = dict(inp["anchors"])                              # 1/N, ERC (anchor), HRP, Min-variance
     out["Balanced sliders (5/5/5)"] = opt.optimize(
         prefs={"return": 5, "risk": 5, "diversification": 5},
         inputs=inp, n_starts=n_starts, seed=seed)["w"]
     out[f"Momentum {C.OPTIMIZER_MOMENTUM_LOOKBACK}-{C.OPTIMIZER_MOMENTUM_SKIP} "
         f"(top {C.OPTIMIZER_MOMENTUM_K})"] = rules.momentum_weights(inp["rets"])
+    w_gmv, lam = rules.gmv_combo_weights(inp["rets"])       # the Yuan-Zhou challenger
+    out[GMV_COMBO_NAME] = w_gmv
+    if diag is not None:
+        diag["gmv_lambda"] = lam
     if inp["mu_q"] is not None and len(inp["mu_q"]) >= 2:
         out["Maximin (worst quadrant)"] = opt.optimize(
             maximin=True, inputs=inp, n_starts=n_starts, seed=seed)["w"]
@@ -118,12 +126,15 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
     prev_w: dict[str, np.ndarray] = {}
     whist: dict[str, list] = {}                             # (oos_start, weights) per refit
     refit_dates = []
+    diags: dict[str, dict] = {}                             # refit date -> rule diagnostics
     for t in range(warmup, T, refit):
         inp = opt.build_inputs(rets.iloc[:t])
         refit_dates.append(str(rets.index[t - 1].date()))
         oos = rets.iloc[t:t + refit].values
+        diag: dict = {}
         entries = [(name, w, oos, rets.columns)
-                   for name, w in _contestants(inp, n_starts, seed).items()]
+                   for name, w in _contestants(inp, n_starts, seed, diag).items()]
+        diags[refit_dates[-1]] = diag
         if rets_aw is not None:                             # flagship on its own universe
             train_aw = rets_aw.loc[:rets.index[t - 1]]
             oos_aw = rets_aw.loc[rets.index[t]:rets.index[min(t + refit, T) - 1]]
@@ -186,7 +197,9 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
                 # without re-running the optimization (weights never depend on costs)
                 _gross=pd.DataFrame(gross), _turnover=pd.DataFrame(turn),
                 # per-refit weights (overlays excluded — they scale a base), for attribution
-                _weights={n: pd.DataFrame({d: s for d, s in ws}).T for n, ws in whist.items()})
+                _weights={n: pd.DataFrame({d: s for d, s in ws}).T for n, ws in whist.items()},
+                # per-refit rule diagnostics (currently the GMV combo's λ*)
+                _rule_diagnostics=pd.DataFrame(diags).T)
     return summary, meta, pd.DataFrame(monthly)
 
 

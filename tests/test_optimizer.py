@@ -393,6 +393,31 @@ def test_vol_managed_is_causal_and_derisks():
     assert (extra >= 0).all(), "turnover is non-negative"
 
 
+def test_gmv_combo_shrinks_to_1N_when_estimation_error_dominates():
+    """Yuan-Zhou GMV combo (M26): fully invested, λ* in [0,1], and — the property their whole
+    theory rests on — λ* collapses toward 0 as η = N/T grows, i.e. the rule refuses the
+    plug-in GMV precisely where estimation error would eat it."""
+    import pandas as pd
+    from portfolio_lab.portfolio import rules
+    rng = np.random.default_rng(7)
+    N = 12
+    lo, hi = None, None
+    for T in (20, 800):                      # η = 0.60 (hopeless) vs η = 0.015 (plenty of data)
+        X = rng.normal(0.006, 0.045, size=(T, N))
+        r = pd.DataFrame(X, index=pd.date_range("1960-01-31", periods=T, freq="ME"))
+        w, lam = rules.gmv_combo_weights(r)
+        assert abs(w.sum() - 1.0) < 1e-9, "combination must stay fully invested"
+        assert 0.0 <= lam <= 1.0, "λ* is clipped to the unit interval"
+        lo, hi = (lam, hi) if T == 20 else (lo, lam)
+    assert lo == 0.0, "at η=0.6 the rule must return pure 1/N"
+    assert lo <= hi, "λ* must not increase with estimation error"
+    # degenerate window (T <= N) falls back to 1/N rather than raising
+    tiny = pd.DataFrame(rng.normal(0, 0.05, size=(N - 2, N)),
+                        index=pd.date_range("1960-01-31", periods=N - 2, freq="ME"))
+    w0, lam0 = rules.gmv_combo_weights(tiny)
+    assert lam0 == 0.0 and np.allclose(w0, 1.0 / N)
+
+
 def test_risk_budgeted_erc():
     """budgets=None reproduces classic ERC; custom budgets land the contribution shares."""
     X = _toy_returns(seed=3, T=400)

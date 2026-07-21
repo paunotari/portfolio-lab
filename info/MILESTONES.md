@@ -407,3 +407,34 @@ if a future universe makes the HRP-ERC gap significant.
 one-liner on the cached walk-forward returns). **Code:** decision — no code change.
 **Data:** all accumulated walk-forward evidence. **Status:** design decision grounded in
 OOS measurements + significance test; closes the standing TODO item.
+
+## M26 — The strongest published challenger to the humility claim, fielded: it loses, as its own theory predicted
+**Claim:** Yuan & Zhou (2023, *JFQA*) is the direct attack on "nothing beats 1/N" — they give
+the humility result a THEORY (the plug-in Sharpe haircut τ = √((1−η)/(1+η/SR²)), η = N/T) and
+then beat 1/N with a closed-form combination rule ŵ_λ = λ·Σ̂⁻¹1/(1'Σ̂⁻¹1) + (1−λ)·1_N/N. We
+fielded it. **Pre-registered prediction, declared in `literature/frontier/beating-1N-yuan-zhou.md`
+and TODO before the run: no significant win on our menu**, because their own Proposition 3 makes
+1/N asymptotically optimal on a one-factor-dominated menu (ours: first PC 77%, M18) and their
+empirics require T = 360 ("smaller is not sufficient") against our T = 120 warmup.
+**Measured (walk-forward, 210 OOS months, net of 10 bps):** GMV combo **net Sharpe 0.735 vs
+1/N's 0.830** — Δ = **−0.095** annualized, LW p_boot **0.449** (p_hac 0.442): it does not beat
+1/N, and it is significantly WORSE than min-variance (Δ −0.296, p_boot 0.016). Gross Sharpe
+0.749, so **the loss is the rule, not the cost charge**.
+**The mechanism, visible in λ\*:** λ\* = 0.000 at the first three refits (η = 0.23→0.19 — their
+formula itself refuses the GMV and returns pure 1/N), then rises to a 0.61 mean as T grows.
+Where it does trust the GMV, the unconstrained plug-in produces a **13.4× mean gross exposure**
+(up to 23.3×, 9–14 short sleeves) — what an unconstrained GMV does to 28 correlated equity
+sleeves. **Sensitivity (reported, not fielded — one contestant, one specification):** re-run with
+our Ledoit-Wolf Σ instead of their plug-in S, i.e. the version a practitioner would actually
+trade, λ\* drops to a 0.296 mean, gross exposure to 1.6×, and net Sharpe rises to **0.825 — a
+dead heat with 1/N (0.830), still not a win.** So the verdict is not an artifact of handicapping
+them with the raw sample covariance.
+**⇒ the humility claim survives its strongest published challenger, adjudicated with the
+challenger's own mathematics** — and C2 ("nothing beats 1/N significantly") is now a statement
+about a table that CONTAINS the rule designed to break it.
+**See:** `outputs/analytics/optimizer/optimizer_walkforward.csv` + `optimizer_inference.csv`
+(row "GMV combo (Yuan-Zhou)"), `REPORT_optimizer.md`. **Code:** `portfolio/rules.py::
+gmv_combo_weights` (λ\* re-derived from their five stated scalars — the derivation is in the
+docstring, their eq. 29 was not transcribable from the deep dive), fielded in
+`portfolio/validation.py::_contestants`. **Data:** the 28-sleeve MSCI menu, 1998-12→2026-06.
+**Status:** `OOS modern`, with the outcome PRE-DICTED by the challenger's theory before the run.
