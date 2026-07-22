@@ -236,21 +236,26 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         from noise — here is the power post-mortem (M16)". No longer blocked — the estimator
         placebo is done. See the HEADLINE DECISION block below for the framing choice this
         depends on.
-  - [ ] **Read Gelmini-Uberti (2024) in full and verify the positioning claim.**
-        *International Economics* 179, 100525 (DOI 10.1016/j.inteco.2024.100525) — the
-        declared replication of DeMiguel 2009 with +20 years of data, ERC added, and a
-        window/holding-period grid; same verdict as ours. Deep dive written from the
-        ABSTRACT ONLY (`literature/frontier/gelmini-uberti-replication.md`) because
-        ScienceDirect served a CAPTCHA and the repository preprint is bot-blocked; owner may
-        have institutional access. **Two things to verify before anything from it enters the
-        draft:** (1) do they run a Sharpe-DIFFERENCE significance test? If not, our
-        "we attach p-values to every ranking sentence" positioning holds against the most
-        recent replication, not just against a 2009 paper — a much stronger sentence, and
-        exactly the kind that must not be written on an inference. (2) Is their "more
-        strategies beat 1/N because volatility rose" claim quantified? If so it is a
-        testable prediction on our own data (2009-2026 OOS vs the 1998-2008 warmup) and a
-        cheap referee-pleasing extra. Also mine their 27 references.
-  - [ ] **Multiplicity honesty pass on the contestant table (M34).** The 17 rows are ~4
+  - [x] **Gelmini-Uberti (2024) READ IN FULL 2026-07-22** (owner supplied the PDF;
+        `literature/frontier/gelmini-uberti-replication.md` rewritten from it). The
+        abstract-only positioning guess was WRONG and is corrected: **they DO run a Sharpe
+        significance test** (Jobson-Korkie 1981, p-values in every table). The real, stronger
+        positioning that replaces it: (1) JK-1981 is the non-robust precursor — we use its
+        HAC+bootstrap successor Ledoit-Wolf 2008, which matters for the non-normal monthly
+        returns both papers use; (2) they run ~300 tests and adjudicate by eyeballing for a
+        "bold line spanning all datasets" — our DSR/PBO/Nemenyi are the formal multiplicity
+        control they lack; (3) BEST — their dispersed datasets DO yield frequent significant
+        beats and they explain it by idiosyncratic dispersion, which is our DR² argument
+        (M27/M34) in someone else's paper: optimization wins where there is dispersion to
+        exploit, and our one-factor menu has none. Turns our menu limitation into a
+        positioned finding and bridges to paper 2.
+  - [ ] **Read Kritzman-Page-Turkington (2010) "In defense of optimization: the fallacy of
+        1/N" and Kirby-Ostdiek (2012) "It's all in the timing"** — the two pro-optimization
+        papers our intro currently ignores; both cited by Gelmini-Uberti as the "1/N can be
+        beaten" side. Add Pflug-Pichler-Wozabal (2012) as the model-ambiguity theory for why
+        1/N is hard to beat. These are the honest counter-literature the paper must engage,
+        not omit.
+  - [ ] **Multiplicity honesty pass on the contestant table (M34).**  - [ ] **Multiplicity honesty pass on the contestant table (M34).** The 17 rows are ~4
         distinct strategies: HRP vs ERC correlate **0.998** OOS, Brodie vs min-variance
         **0.975** (and both live off USA Quality, 47% vs 52%). State this in the results
         section rather than letting the row count imply breadth, and note that Brodie
