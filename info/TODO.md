@@ -234,7 +234,16 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         a finding). Horizon stays a MEASURED price-of-preference (A4/M8/M23), never a
         recommendation. **DONE so far: title + abstract rewritten to v0.2, section-skeleton
         note added to draft.md.** Still to do below.
-  - [ ] **Paper re-framing — remaining sections (from the v0.2 skeleton in draft.md):**
+  - [~] **Paper re-framing — remaining sections (from the v0.2 skeleton in draft.md):**
+        DONE 2026-07-22: §1 intro rewritten to open with the five-lever debate + the
+        opportunity-set resolution; §2 given a new "the debate and its five levers" opening
+        that engages the pro-optimization side (Kritzman-Page-Turkington 2010, Kirby-Ostdiek
+        2012, Pflug-Pichler-Wozabal 2012) at thesis altitude; §4.2/§4.3/§5.1/§5.4/§5.5/§5.6/
+        §6.3/§7/§8 rewritten; figures F0 (dispersion pillar) + F7 (placebo nulls) built;
+        6 new references added (a referee-style cited-vs-listed audit caught Gelmini-Uberti
+        missing from the list — fixed). STILL PENDING: (1) read KPT + Kirby-Ostdiek full
+        text and deepen §2 beyond thesis-altitude; (2) format tables T1-T4 from the CSVs;
+        (3) the multiplicity honesty pass (below); (4) owner read-through of v0.2.
         The flagship's NUMBERS stand; both its explanation and the paper's contribution
         change. Concretely: (1) every "regime-aware portfolio" becomes "a capped worst-case
         objective over a regime-DIVERSE MENU"; (2) the abstract's THIRD claim — the estimator

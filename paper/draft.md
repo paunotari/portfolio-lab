@@ -77,47 +77,88 @@ ratio, backtest overfitting, replication, 1/N. **JEL:** G11, C58.
 
 ## 1. Introduction
 
-An individual investor who assembles the best data realistically available — a few decades
-of monthly index returns — faces an estimation regime the literature has mapped precisely:
-errors in expected returns cost roughly eleven times errors in covariances (Chopra & Ziemba
-1993); optimizers amplify exactly those errors (Michaud 1989); and sample-based mean-variance
-needs on the order of 3,000 months to reliably beat naive equal weight (DeMiguel, Garlappi &
-Uppal 2009). Most practitioner responses either ignore this arithmetic or bury it under
-backtests whose robustness the reader cannot inspect.
+Whether portfolio optimization beats naive equal weight is one of the longest-running
+unresolved questions in asset allocation, and the disagreement is unusually sharp. DeMiguel,
+Garlappi & Uppal (2009) found that across fourteen models and seven datasets nothing
+consistently beats 1/N out of sample, and the most recent replication, on the original
+datasets extended twenty years through the global financial crisis and the pandemic, reaches
+the same verdict (Gelmini-Uberti, 2024). Yet an equally serious literature insists the result
+is an artifact: that 1/N wins only because the optimizers were fed short-window sample means
+(Kritzman, Page & Turkington, 2010) or were tested in high-turnover forms that transaction
+costs destroy (Kirby & Ostdiek, 2012), and that properly specified optimization does beat
+equal weight. Both sides show real out-of-sample evidence. The debate has stayed open because
+it has been argued as though it had a single answer.
 
-This paper does the opposite. We field the canonical construction rules against each other
-under one honesty protocol, we attach a p-value to every ranking sentence, and we publish the
-apparatus: every number below regenerates from public data by running a named module. Our
-contributions are:
+We argue it does not, and we locate the answer. Whether optimization can beat 1/N turns on
+five things: the dispersion of the asset menu, the length and quality of the estimation
+inputs, how much turnover the strategy generates, whether short sales and leverage are
+permitted, and how demanding a bar "beat" must clear. Fix those five at the position a real
+retail investor occupies — a **long-only, index-based, factor-tilted equity menu**, realistic
+data length, transaction costs charged, statistical significance required — and the question
+has a clean and, we show, *inevitable* answer. On that menu no weighting rule beats 1/N, and
+the reason is not any optimizer's weakness: the menu itself holds only about one independent
+bet, so there is no dispersion for any scheme to exploit. The literature's optimization
+defenders are right on their datasets, where dispersion is high; we are right on ours, where
+it is not; and the two are not in conflict once the opportunity set is named. This is the
+paper's spine, and it is a measurement, not an assertion (Figure F0).
 
-1. **A fully-instrumented adjudication.** Beyond the standard walk-forward, we run — as
-   standing diagnostics, not one-off appendices — sub-period splits, per-region exposure
-   correlations, leave-one-region-out re-races, per-sleeve return attribution, Ledoit-Wolf
-   (2008) bootstrap inference, deflated Sharpe ratios (Bailey & López de Prado 2014),
-   CSCV backtest-overfitting probability (Bailey, Borwein, López de Prado & Zhu 2017), and
-   sensitivity grids over costs, refit cadence, constraint levels and bootstrap block
-   length.
-2. **A transparent estimator for regime-conditioned inputs.** Regime-dependent allocation
-   needs per-regime expected returns — the noisiest objects in finance (30–90 monthly
-   observations per cell). We propose **era-agreement-gated long-history shrinkage**: pool
-   each modern regime cell with its 66-year counterpart, weighted by months of evidence,
-   *only where the two eras agree on the cell's sign*; translate academic long-short factors
-   into long-only sleeve space with a single regression coefficient; exclude on principle
-   cells whose long-run "behavior" is a policy level (cash). The estimator is two lines of
-   arithmetic, ships with a 16-cell agreement table anyone can audit, and — critically — was
-   frozen and then validated on a pre-registered universe it had never touched.
-3. **An honest headline.** With inference attached, the correct summary of the horse race is
-   that *nothing beats equal weight demonstrably*, several fashionable overlays lose to it
-   demonstrably, and the practical edge available at this data scale comes from structure
-   (risk-balanced weights), constraints (caps as shrinkage), and menu design (assets that
-   win in different macro regimes) — not from estimation.
+We reach it by fielding the canonical construction rules — and the three most-cited rules
+built specifically to beat 1/N — against each other under one honesty protocol, attaching a
+p-value to every ranking sentence, and publishing the apparatus: every number below
+regenerates from public data by running a named module. Our contributions are:
 
-Section 2 places the paper in the literature. Section 3 describes the data, including the
-virgin confirmatory universe. Section 4 specifies the classifier, the estimator, the
-contestants and the protocol. Section 5 reports the races with inference. Section 6 runs the
-referee's checklist. Section 7 states limitations; Section 8 concludes.
+1. **The reconciling finding: dispersion, not method.** We measure why 1/N is unbeatable on
+   an investable factor menu — a diversification ratio of 1.31 independent bets, long-only
+   factor tilts co-moving at 0.885, a near-singular covariance — and confirm the mechanism
+   with the contrast that adding three asset classes moves the menu's minimum pairwise
+   correlation from 0.53 to −0.14. This places the twenty-year 1/N debate on a single axis:
+   the opportunity set.
+2. **A fully-instrumented adjudication.** As standing diagnostics, not one-off appendices,
+   we run sub-period splits, per-region exposure correlations, leave-one-region-out re-races,
+   per-sleeve attribution, Ledoit-Wolf (2008) bootstrap inference (the robust successor to
+   the Jobson-Korkie test the prior replication uses), deflated Sharpe ratios (Bailey &
+   López de Prado 2014), a Friedman-Nemenyi joint test, CSCV backtest-overfitting probability
+   (Bailey et al. 2017), and sensitivity grids over costs, refit cadence, constraints,
+   bootstrap block length and the covariance estimator. Under it, the three published
+   "beat-1/N" rules we field all fail: Yuan-Zhou's (2023) combination loses outright,
+   Brodie et al.'s (2009) sparse portfolio reaches only p = 0.149, and HERC lands below both
+   its parents.
+3. **Two null results, reported not buried.** We build, freeze and pre-register a
+   regime-conditioned shrinkage estimator, and we attack it — and the macro regime signal it
+   depends on — with two placebo tests aimed at our own signature feature. Both return
+   nothing resolvable at this sample size. We report the negative result with a power
+   post-mortem rather than a positive spin, because a paper whose thesis is *run the full
+   checklist honestly* cannot hide the answers the checklist returns.
+
+Section 2 places the paper in the five-lever debate. Section 3 describes the data, including
+the virgin confirmatory universe. Section 4 specifies the classifier, the pre-registered
+estimator, the contestants and the protocol. Section 5 reports the races, the dispersion
+mechanism, and the two nulls. Section 6 runs the referee's checklist. Section 7 states
+limitations; Section 8 concludes.
 
 ## 2. Related literature
+
+**The debate, and its five levers.** The question of whether optimization beats equal weight
+has two camps that rarely engage on the same terms. On one side, DeMiguel et al. (2009) and,
+most recently, Gelmini-Uberti (2024) find 1/N is not systematically beaten out of sample; on
+the other, Kritzman, Page & Turkington (2010) — titling their rebuttal "the fallacy of 1/N" —
+and Kirby & Ostdiek (2012) show optimization *can* win. Read together, their disagreement is
+not about optimization in the abstract but about experimental conditions, and it resolves into
+five levers. (i) *Menu dispersion*: DeMiguel's own explanation, quoted approvingly by
+Gelmini-Uberti, is that optimization improves relative to 1/N when idiosyncratic volatility is
+high and the covariance is far from singular. (ii) *Estimation inputs*: Kritzman et al. locate
+1/N's edge in short-window sample means and report that longer or more plausible inputs reverse
+it — a lever Gelmini-Uberti test directly, finding that a growing estimation window helps the
+optimizers but still does not produce a systematic win. (iii) *Turnover*: Kirby & Ostdiek
+attribute the result to the extreme turnover of the strategies DeMiguel tested and propose
+low-turnover "timing" rules that survive transaction costs. (iv) *Short sales and leverage*:
+much of the optimization advantage in these studies requires positions a long-only investor
+cannot take. (v) *The significance bar*: some pro-optimization evidence is point-estimate or
+single-dataset, whereas the humility side demands significance across datasets. Pflug, Pichler
+& Wozabal (2012) supply the theory the humility side otherwise lacks — 1/N is optimal under
+sufficient model ambiguity — which is exactly the regime a retail investor with a few decades
+of data inhabits. Our contribution is to fix all five levers at that retail position and report
+the result, rather than to argue one lever in isolation.
 
 **Estimation error and 1/N.** Markowitz (1952) optimality collides with sampling error
 (Michaud 1989; Chopra & Ziemba 1993); DeMiguel et al. (2009) quantify the collision: across
@@ -568,6 +609,8 @@ Management* 9(4).
 Frazzini, A. & Pedersen, L. (2014). Betting Against Beta. *JFE* 111(1).
 Frost, P. & Savarino, J. (1986). An Empirical Bayes Approach to Efficient Portfolio
 Selection. *JFQA* 21(3).
+Gelmini, M. & Uberti, P. (2024). The Equally Weighted Portfolio Still Remains a Challenging
+Benchmark. *International Economics* 179, 100525.
 Guidolin, M. & Timmermann, A. (2007). Asset Allocation under Multivariate Regime
 Switching. *JEDC* 31(11).
 Hurst, B., Ooi, Y. H. & Pedersen, L. (2017). A Century of Evidence on Trend-Following
@@ -579,9 +622,15 @@ Stock Portfolios. *JPM* 17(3).
 Jagannathan, R. & Ma, T. (2003). Risk Reduction in Large Portfolios: Why Imposing the Wrong
 Constraints Helps. *JF* 58(4).
 Jegadeesh, N. & Titman, S. (1993). Returns to Buying Winners and Selling Losers. *JF* 48(1).
+Jobson, J. & Korkie, B. (1981). Performance Hypothesis Testing with the Sharpe and Treynor
+Measures. *JF* 36(4).
 Jorion, P. (1986). Bayes-Stein Estimation for Portfolio Analysis. *JFQA* 21(3).
 Judge, G. & Bock, M. (1978). *The Statistical Implications of Pre-test and Stein-rule
 Estimators in Econometrics.* North-Holland.
+Kirby, C. & Ostdiek, B. (2012). It's All in the Timing: Simple Active Portfolio Strategies
+that Outperform Naïve Diversification. *JFQA* 47(2).
+Kritzman, M., Page, S. & Turkington, D. (2010). In Defense of Optimization: The Fallacy of
+1/N. *FAJ* 66(2).
 Ledoit, O. & Wolf, M. (2004). Honey, I Shrunk the Sample Covariance Matrix. *JPM* 30(4).
 Ledoit, O. & Wolf, M. (2008). Robust Performance Hypothesis Testing with the Sharpe Ratio.
 *Journal of Empirical Finance* 15(5).
@@ -594,6 +643,8 @@ Contribution Portfolios. *JPM* 36(4).
 Markowitz, H. (1952). Portfolio Selection. *JF* 7(1).
 Michaud, R. (1989). The Markowitz Optimization Enigma: Is 'Optimized' Optimal? *FAJ* 45(1).
 Moreira, A. & Muir, T. (2017). Volatility-Managed Portfolios. *JF* 72(4).
+Pflug, G., Pichler, A. & Wozabal, D. (2012). The 1/N Investment Strategy Is Optimal under
+High Model Ambiguity. *Journal of Banking & Finance* 36(2).
 Politis, D. & Romano, J. (1994). The Stationary Bootstrap. *JASA* 89(428).
 Raffinot, T. (2018). The Hierarchical Equal Risk Contribution Portfolio. SSRN 3237540.
 Swinkels, L. (2019). Treasury Bond Return Data Starting in 1962. *Data* 4(3).
