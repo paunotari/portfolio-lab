@@ -442,19 +442,37 @@ def _write_estimator_report(df: pd.DataFrame, b: int, mode: str):
                      f"{r.share_placebo_positive:.0%} | {r.p_real_exceeds:.3f} |")
         L += [""]
     L += ["## Verdict", ""]
+    # A directional label ("shrinkage" / "conditioning matters") is only meaningful once there
+    # IS an effect to attribute. Both deltas are therefore first tested against the null's own
+    # dispersion: Delta_real against the placebo sd (it is a single draw), and the placebo MEAN
+    # against its standard error sd/sqrt(B). When neither clears, the honest verdict is that the
+    # question is unanswerable on this menu — not a coin-flip reading of noise. (Same failure
+    # mode as the sensitivity report's stale-vs-flip conflation, fixed the same way.)
     for _, r in v[v.portfolio != CONTROL].iterrows():
         fmt = "{:+.4f}" if r.metric == "sharpe" else "{:+.4%}"
-        if r.delta_placebo_mean > 0 and r.share_placebo_positive >= 0.6:
-            verdict = ("**SHRINKAGE — the estimator still helps with meaningless labels** "
-                       f"({r.share_placebo_positive:.0%} of replicates)")
-        elif r.delta_real > 0 and r.delta_placebo_mean <= 0:
-            verdict = ("**the estimator helps ONLY with real labels — the conditioning "
-                       "matters**")
+        sd, n = r.delta_placebo_sd, max(1, int(r.n_placebo))
+        se = sd / np.sqrt(n) if sd > 0 else 0.0
+        real_detectable = sd > 0 and abs(r.delta_real) > sd
+        placebo_detectable = se > 0 and abs(r.delta_placebo_mean) > 2 * se
+        if not real_detectable and not placebo_detectable:
+            verdict = (f"**NO MEASURABLE EFFECT IN EITHER ARM** — |Δ_real| = "
+                       f"{abs(r.delta_real / sd):.2f} null sd, and the placebo mean is "
+                       f"{abs(r.delta_placebo_mean / se) if se else 0:.1f} standard errors from "
+                       f"zero. There is nothing to attribute, so shrinkage-vs-signal is "
+                       f"unanswerable here")
+        elif placebo_detectable and r.delta_placebo_mean > 0:
+            verdict = ("**SHRINKAGE — the estimator measurably helps even with meaningless "
+                       f"labels** ({r.share_placebo_positive:.0%} of replicates)")
+        elif real_detectable and r.delta_real > 0 and not placebo_detectable:
+            verdict = "**helps only with real labels — the conditioning matters**"
         else:
-            verdict = "inconclusive on this contestant"
+            verdict = "directionally mixed; see the columns"
         L.append(f"- **{r.portfolio}** · {r.metric}: Δ_real {fmt.format(r.delta_real)} vs "
-                 f"Δ_placebo {fmt.format(r.delta_placebo_mean)} ± "
-                 f"{fmt.format(r.delta_placebo_sd)} — {verdict}.")
+                 f"Δ_placebo {fmt.format(r.delta_placebo_mean)} ± {fmt.format(sd)} — "
+                 f"{verdict}.")
+    L += ["", f"_With B = {int(v.n_placebo.max())} replicates a 'helps in X% of replicates' "
+          "share carries a 95% interval of roughly ±22 points, so anything between ~28% and "
+          "~72% is a coin flip and must not be read as a direction._", ""]
     L += ["", "_1/N is carried through as the invariance control: it consumes neither labels "
           "nor the estimator, so every Δ on its row must be exactly zero._", ""]
     C.OPTIMIZER_ESTIMATOR_AB_REPORT.write_text("\n".join(L))

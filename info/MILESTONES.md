@@ -125,7 +125,13 @@ of flight-to-quality).
 reporting keeps the empirical `mu_q`). **Data:** `asset_class_monthly.csv` (1962+),
 `ff_factors_monthly.csv`, macro states. **Status:** OOS modern (walk-forward, net of costs);
 prior clipped to each training window (no look-ahead).
-**Interpretation revised by M32 (2026-07-21):** the A/B improvement is untouched — the estimator
+**SUPERSEDED BY M35 (2026-07-22): the A/B improvement is NOT resolvable at this sample size.**
+Paired placebo test: every real-arm Δ is under half a null standard deviation, and the estimator
+"helps" in 45-60% of replicates. The +0.012 claimed below was always smaller than this entry's
+own acknowledged ±0.01-0.02 menu-shift band — read that caveat as the warning it was. Do not cite
+this entry's deltas as evidence of anything without M35 next to them. The paragraph below is kept
+verbatim as the record of what was claimed and when.
+**Interpretation once revised by M32 (2026-07-21), now moot:** the A/B improvement is untouched — the estimator
 still helps every variant on three universes including the pre-registered one. But since the
 labels themselves are placebo-equivalent (M32), the mechanism cannot be "better regime
 information": it is **shrinkage of noisy conditional means toward a long sample**, which reduces
@@ -290,6 +296,15 @@ pre-registration commit precedes the results commit in git history),
 `data/raw/ff_intl/ff_intl_monthly_snapshot_2026-07-19.csv` (the library restates history —
 the snapshot is what this verdict was computed on). **Status:** OOS on a pre-registered
 virgin universe, net of costs — the strongest validation level in this ledger.
+**POWER POST-MORTEM, added 2026-07-22 (M35).** This test is not falsified — its declared
+thresholds were met on the virgin universe exactly as measured, and the pre-registration
+discipline stands as an example. But M35 now shows that a Δ of +0.002/+0.016 sits INSIDE the
+noise band of menu composition (paired placebo null sd 0.03-0.10 on the MSCI menu). **The
+thresholds were set below the noise floor**, so clearing them was not evidence of much. The
+honest description is: a correctly-run pre-registered test of a question it did not have the
+power to answer. Any future confirmatory test in this project must declare its thresholds
+against a MEASURED null, not against a hoped-for effect size — recorded as the methodological
+lesson.
 
 ## M17 — The sensitivity grids: a plateau, with one honestly-reported frontier
 **Claim:** varying one dimension at a time around the shipped configuration (MSCI menu),
@@ -750,3 +765,62 @@ labels**, and the paper must say so rather than let the row count imply breadth.
 `validation.sleeve_attribution`. **Data:** 28-sleeve common window; 210 OOS months.
 **Status:** descriptive, full-sample — a property of the opportunity set and of the contestant
 field, not a backtested claim.
+
+## M35 — The candidate contribution has no measurable effect on the shipped menu — in EITHER arm
+**Claim (the hardest entry in this ledger to write, and the one it exists for):** the
+era-agreement-gated estimator's benefit on the 28-sleeve MSCI menu is **indistinguishable from
+zero**, and so is the placebo's. M32 asked whether the LABELS matter; this asked what the
+ESTIMATOR is. The answer is neither of the two outcomes declared in advance — **there is no
+effect to attribute.**
+**Protocol:** paired difference of differences. Within each replicate the `OPTIMIZER_ANCHOR_LONG`
+switch is run OFF and ON on the SAME labels, so that replicate's noise cancels in the Δ.
+20 replicates, circular null, both metrics (net OOS Sharpe and the realized worst-REAL-quadrant
+floor). Pairing is what makes it readable at all: an unpaired design would drown a ±0.01 Δ in a
+null with sd 0.09.
+
+| contestant | metric | Δ_real | Δ_placebo mean ± sd | \|Δ_real\| in null sd | placebo mean in SE |
+|---|---|---|---|---|---|
+| Maximin (worst quadrant) | Sharpe | +0.0050 | +0.0156 ± 0.0866 | 0.06 | 0.8 |
+| Maximin (diversified) | Sharpe | +0.0014 | −0.0028 ± 0.0276 | 0.05 | 0.5 |
+| Maximin (all-weather div) | Sharpe | −0.0036 | +0.0053 ± 0.0991 | 0.04 | 0.2 |
+| Maximin (worst quadrant) | floor | −0.154% | +0.095% ± 0.318% | 0.48 | 1.3 |
+| Maximin (diversified) | floor | +0.060% | +0.015% ± 0.129% | 0.46 | 0.5 |
+| Maximin (all-weather div) | floor | −0.027% | +0.078% ± 0.195% | 0.14 | 1.8 |
+
+**Every real-arm Δ is under half a null standard deviation; no placebo mean clears two standard
+errors of zero. The estimator "helps" in 45–60% of replicates, and with B = 20 that share carries
+a ±22-point interval — a coin flip in every cell.** 1/N's Δ is exactly 0.0000 (invariance
+control).
+
+### The reading that matters, and it was always visible in this ledger
+M10 claimed +0.012 on the flagship and simultaneously carried the note that *"numbers shift by
+~0.01–0.02 with the menu"*. **The claimed effect was never larger than the acknowledged
+menu-composition noise.** The 24→28 sleeve expansion then flipped the flagship's sign (−0.0036,
+corrected in M10 on 2026-07-21), and this test shows the whole thing sits inside a null with
+sd 0.03–0.10. So the honest statement is not "the estimator stopped working" — it is **"the
+estimator's measured benefit was never resolvable at this sample size, and we should have read
+our own caveat as the warning it was."**
+### Consequences, stated without softening
+- **The paper's candidate headline contribution does not survive.** It cannot be presented as an
+  estimator that improves regime-conditioned allocation, because on the shipped menu it does not
+  measurably do anything. Nor can M32's "it is really a shrinkage device" re-interpretation be
+  asserted — that also requires an effect.
+- **M16 (the pre-registered confirmatory test) is not falsified, but its POWER is now known to
+  have been inadequate.** Its declared thresholds (every Δ ≥ 0, at least one > +0.005) were met on
+  the FF-international universe as measured. We now know Δ of that size is inside the noise band
+  of menu composition, so passing them was not evidence of much. **This is the correct
+  post-mortem: a pre-registered test with thresholds below the noise floor is a well-run test of
+  a question it could not answer.** Recorded here rather than quietly dropped.
+- **What survives is unaffected:** M1/M2/M3/M13/M14/M25/M27/M31/M34 and everything about 1/N,
+  min-variance, ERC, HRP, caps, and the menu measurements. None involve the estimator.
+- **The paper's spine becomes the negative results + the adjudication apparatus + the menu
+  measurement** (see the re-framing item in TODO). Four published or in-house claims that do not
+  survive proper testing — Yuan-Zhou (M26), Brodie (M28), HERC (M29), and our own regime layer
+  (M32) and estimator (M35) — is a contribution, and a rarer one than another positive result.
+**See:** `REPORT_estimator_ab.md` + `optimizer_estimator_ab.csv`. **Code:**
+`portfolio/placebo.py::estimator_ab` / `::estimator_verdicts`. Note the report's verdict logic was
+FIXED in the same session: it was assigning directional labels ("shrinkage" / "conditioning
+matters") to differences well inside the null, the same failure mode caught in `sensitivity.py`
+the day before; it now tests both Δs against the null's dispersion first and says "no measurable
+effect" when neither clears. **Data:** 42 full walk-forwards on the 28-sleeve menu + the extended
+universe. **Status:** `OOS modern`, paired permutation design, harness-verified.

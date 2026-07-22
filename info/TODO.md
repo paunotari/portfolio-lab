@@ -215,43 +215,27 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         exactly on the re-run). Untouched: M1/M2/M3/M13/M14/M25/M31 and every NUMBER in
         M6/M7/M10. Overturned: the ATTRIBUTION — the flagship's record is the MENU (M6/M27),
         not the labels.
-  - [ ] **THE DECISIVE FOLLOW-UP — estimator placebo A/B. Run this BEFORE anything else;
-        it decides what the paper's headline is.**
-        *What it is, and why it is NOT the test already run.* M32 barbecued the LABELS: with
-        the state labels scrambled, the maximin family performs the same (12 cells, best
-        p 0.195). That says the labels add nothing to ALLOCATION. It does **not** say
-        anything about the ESTIMATOR, which is a separate mechanism with its own on/off
-        switch (`OPTIMIZER_ANCHOR_LONG`): when ON, each per-quadrant mean is shrunk toward
-        its 66-year Fama-French counterpart, month-weighted, **only in cells where both eras
-        agree on the sign**. That A/B is measured and POSITIVE on three universes including
-        the pre-registered virgin one (M10/M16). The open question is *why* it works.
-        *The test.* Re-run the same `OPTIMIZER_ANCHOR_LONG` off/on A/B **under scrambled
-        labels** — a difference of differences. B~20 per shuffle mode is enough (~25 min:
-        ~40 walk-forwards). Reuse `portfolio/placebo.py`'s harness; the only new moving part
-        is flipping the config flag inside each replicate.
-        *The two outcomes, both publishable, decided in advance:*
-        - **Still improves with random labels ⇒ it is a SHRINKAGE device.** Pooling noisy
-          conditional means toward a long sample reduces estimation error whether or not the
-          conditioning variable informs. The paper says exactly that, plainly. More modest
-          headline, still novel (nobody has proposed a cross-era sign-agreement pretest), and
-          it survives M32 intact.
-        - **Only improves with real labels ⇒ the conditioning matters after all.** Then M32's
-          re-interpretation of M5/M10/M16 must be WITHDRAWN from the ledger, and the regime
-          layer is vindicated at the estimator level even though it failed at the allocation
-          level. That is a subtle and interesting result in its own right.
-        *Prediction, declared before running (2026-07-21): it STILL improves.* Reason: the
-        concrete corrections the estimator produced are exactly what a shrinkage reading
-        predicts — gold-in-deflationary-bust tempered +1.20 -> +0.71%/mo because the modern
-        cell was a 2008-11 artifact, which the long sample fixes without the label "bust"
-        needing to mean anything.
-        *Do NOT expand the menu before this runs* — adding sleeves changes every number in
-        the paper and would force a full re-run mid-write (see the sequencing note below).
-  - [ ] **Paper/THESIS re-framing after M32** — the flagship's numbers stand, its
-        explanation changes. Every "regime-aware portfolio" becomes "a capped worst-case
-        objective over a regime-DIVERSE MENU"; the placebo becomes a §6 referee's-checklist
-        subsection (reporting the test that attacks our own signature feature is a
-        credibility gain, not a loss); the abstract's third claim gets the shrinkage
-        re-interpretation. Blocked on the estimator placebo above.
+  - [x] **Estimator placebo A/B — RUN 2026-07-22 (M35). Neither declared outcome: THERE IS
+        NO EFFECT TO ATTRIBUTE.** Paired difference of differences, 20 replicates: every
+        real-arm Delta is under half a null standard deviation, no placebo mean clears two
+        standard errors of zero, and the estimator "helps" in 45-60% of replicates (a coin
+        flip at B=20). The +0.012 M10 claimed was always smaller than M10's own acknowledged
+        +/-0.01-0.02 menu-shift band. **The candidate headline contribution does not
+        survive.** M10 superseded, M16 given a power post-mortem, the report's verdict logic
+        fixed (it was labelling noise directionally).
+  - [ ] **Paper/THESIS re-framing after M32 + M35 — now the biggest single writing task.**
+        The flagship's NUMBERS stand; both its explanation and the paper's contribution
+        change. Concretely: (1) every "regime-aware portfolio" becomes "a capped worst-case
+        objective over a regime-DIVERSE MENU"; (2) the abstract's THIRD claim — the estimator
+        as the methodological contribution — must be REMOVED as a positive result and
+        rewritten as a negative one (M35: no measurable effect on the shipped menu, in either
+        arm); (3) both placebos (M32 labels, M35 estimator) become §6 referee's-checklist
+        subsections — reporting the two tests that attack our own signature feature is the
+        credibility spine, not a loss; (4) the estimator sections (method §4.2, results §5.4)
+        shrink to "a transparent construction we pre-registered and then could not resolve
+        from noise — here is the power post-mortem (M16)". No longer blocked — the estimator
+        placebo is done. See the HEADLINE DECISION block below for the framing choice this
+        depends on.
   - [ ] **Read Gelmini-Uberti (2024) in full and verify the positioning claim.**
         *International Economics* 179, 100525 (DOI 10.1016/j.inteco.2024.100525) — the
         declared replication of DeMiguel 2009 with +20 years of data, ERC added, and a
@@ -272,6 +256,17 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         section rather than letting the row count imply breadth, and note that Brodie
         inflates the deflated-Sharpe trial count without adding an independent test. A
         referee will find this; better that we find it first.
+
+  > **HEADLINE DECISION PENDING (2026-07-22, after M35).** The estimator was the paper's
+  > candidate contribution and it has no measurable effect on the shipped menu. The spine that
+  > remains, and it is a real one: **four claims that do not survive proper testing — Yuan-Zhou
+  > (M26), Brodie (M28), HERC (M29), our own regime layer (M32) and our own estimator (M35) —
+  > plus the adjudication apparatus that killed them, plus the menu measurement (M18/M27/M34).**
+  > A paper whose contribution is "here is the checklist, and here is what it destroys,
+  > including ours" is publishable and rarer than another positive result. Owner call needed on
+  > whether to reframe around that or to hold the draft until paper 2's data can rescue a
+  > positive claim. Recommendation: reframe — the negative paper is finished today; the
+  > positive one depends on data we do not have.
 
   > **SEQUENCING DECISION (owner call, 2026-07-21): finish and ship THIS paper on the frozen
   > 28-sleeve menu; the menu-design question becomes PAPER 2.** Rationale recorded so it is
