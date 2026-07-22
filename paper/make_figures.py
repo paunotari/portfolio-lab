@@ -131,6 +131,67 @@ def f0_dispersion():
     save(fig, "F0_dispersion.pdf")
 
 
+def f0b_frontier_cloud():
+    """The dispersion pillar, dramatized (the figure discussed with the owner). Two risk-return
+    panels: the achievable set of long-only portfolios (a Dirichlet cloud) with the fielded
+    rules on top. LEFT the 28-sleeve equity menu — a thin sliver, every rule piled together;
+    RIGHT the menu extended with Treasuries/gold/cash — the set opens up and the rules spread.
+    'Dispersion, not method' in one image: on a one-bet menu there is nowhere for weighting to
+    go. Honest construction (our own note, mean-variance-and-estimation-error.md §6.1): the
+    cloud is the BACKGROUND achievable set; we do not read a frontier off it (Dirichlet
+    under-samples the high-return corners as N grows). Full-sample geometry, illustrative."""
+    from portfolio_lab.portfolio import optimizer as opt
+    ANN = np.sqrt(12.0)
+    rng = np.random.default_rng(0)
+
+    def panel(ax, inp, title, rules):
+        R = inp["rets"].values
+        mu = R.mean(0) * 12.0
+        cov = np.cov(R, rowvar=False) * 12.0
+        n = R.shape[1]
+        W = rng.dirichlet(np.ones(n), 40000)
+        pr = W @ mu
+        pv = np.sqrt(np.einsum("ij,jk,ik->i", W, cov, W))
+        ax.scatter(pv * 100, pr * 100, s=2, c="#D8D8DE", alpha=0.5, edgecolors="none",
+                   rasterized=True)
+        for name, w, col, mk, off in rules:
+            v = float(np.sqrt(w @ cov @ w)) * 100
+            r = float(w @ mu) * 100
+            ax.scatter(v, r, s=52, c=col, edgecolors="white", lw=0.8, marker=mk, zorder=5)
+            ax.annotate(name, (v, r), textcoords="offset points", xytext=off,
+                        fontsize=7.2, color=INK, zorder=6)
+        ax.set_xlabel("annualized volatility (%)", fontsize=9)
+        ax.set_title(title, fontsize=9, loc="left", color=INK)
+        style(ax)
+        return pv.min() * 100, pv.max() * 100
+
+    inp = opt.build_inputs()
+    a = inp["anchors"]
+    eq_rules = [("1/N", a["1/N"], "#8E8E93", "o", (6, 4)),
+                ("Min-var", a["Min-variance"], "#2E9E68", "D", (-40, -2)),
+                ("ERC", a["ERC (anchor)"], "#3B6FD4", "s", (6, 5)),
+                ("HRP", a["HRP"], "#7A5FD0", "^", (6, -10))]
+
+    # share BOTH axes: on a common scale the equity cloud is a narrow sliver at high vol while
+    # the extended cloud fills the space to its left — the dispersion difference, made honest.
+    fig, (axL, axR) = plt.subplots(1, 2, figsize=(8.4, 4.0), sharex=True, sharey=True)
+    panel(axL, inp, "A · 28-sleeve equity menu — one bet, rules piled together", eq_rules)
+    axL.set_ylabel("annualized return (%)", fontsize=9)
+
+    try:
+        inp_aw = opt.build_inputs(include_asset_classes=True)
+        aw = inp_aw["anchors"]
+        aw_rules = [("1/N", aw["1/N"], "#8E8E93", "o", (6, 4)),
+                    ("Min-var", aw["Min-variance"], "#2E9E68", "D", (8, 6)),
+                    ("ERC", aw["ERC (anchor)"], "#3B6FD4", "s", (8, -2)),
+                    ("HRP", aw["HRP"], "#7A5FD0", "^", (8, -12))]
+        panel(axR, inp_aw, "B · + Treasuries / gold / cash — the set opens up", aw_rules)
+    except Exception as e:
+        axR.text(0.5, 0.5, f"(extended menu unavailable: {e})", ha="center", fontsize=8)
+
+    save(fig, "F0b_frontier_cloud.pdf")
+
+
 def f1_race():
     m = pd.read_csv(C.OPTIMIZER_WALKFORWARD_RETURNS, index_col=0, parse_dates=True)
     growth = 100.0 * (1.0 + m).cumprod()
@@ -191,19 +252,29 @@ def f4_virgin():
     rest = sh.drop(index=mx).sort_values("anchored", ascending=False).index.tolist()
     order = mx + rest
     x = np.arange(len(order))
-    fig, ax = plt.subplots(figsize=(7.2, 3.8))
+    fig, ax = plt.subplots(figsize=(7.2, 3.9))
     ax.bar(x - 0.2, sh.loc[order, "modern"], 0.38, color=[pc(p) for p in order], alpha=0.35,
            label="estimator OFF (modern-only)")
     ax.bar(x + 0.2, sh.loc[order, "anchored"], 0.38, color=[pc(p) for p in order],
            label="estimator ON (66y anchored)")
     for xi, p in enumerate(order):
         d = sh.loc[p, "anchored"] - sh.loc[p, "modern"]
-        if abs(d) >= 0.002:
-            ax.text(xi + 0.2, sh.loc[p, "anchored"] + 0.012, f"Δ{d:+.3f}", ha="center",
-                    fontsize=7.3, color=MUT)
+        ax.text(xi, max(sh.loc[p, "modern"], sh.loc[p, "anchored"]) + 0.012,
+                f"Δ{d:+.3f}", ha="center", fontsize=6.8, color=MUT)
+    if "1/N" in sh.index:
+        y1n = float(sh.loc["1/N", "anchored"])
+        ax.axhline(y1n, color=INK, lw=1.0, ls="--")
+        ax.text(len(order) - 0.5, y1n + 0.008, "1/N", color=INK, fontsize=7.5,
+                ha="right", va="bottom")
     ax.set_xticks(x, order, rotation=28, ha="right", fontsize=7.6)
+    # HONEST AXIS: bars start at zero, so the ±0.002–0.016 A/B deltas read as the noise band
+    # they are (M35) — never a truncated axis that magnifies them.
+    ax.set_ylim(0, max(sh.max().max() * 1.18, 0.8))
     ax.set_ylabel("net OOS Sharpe (virgin universe, 2000–2026)", fontsize=9)
-    ax.legend(fontsize=8, frameon=False)
+    ax.set_title("Estimator ON vs OFF on the pre-registered virgin universe: everything "
+                 "clusters, and the Δ is within the noise band (M35)",
+                 fontsize=8.2, loc="left", color=INK)
+    ax.legend(fontsize=8, frameon=False, loc="lower left")
     style(ax)
     save(fig, "F4_virgin_universe_ab.pdf")
 
@@ -298,8 +369,8 @@ def f7_placebo():
 
 
 if __name__ == "__main__":
-    for fn in (f0_dispersion, f1_race, f2_inference, f3_loro, f4_virgin, f5_sensitivity,
-               f6_attribution, f7_placebo):
+    for fn in (f0_dispersion, f0b_frontier_cloud, f1_race, f2_inference, f3_loro, f4_virgin,
+               f5_sensitivity, f6_attribution, f7_placebo):
         try:
             fn()
         except Exception as e:

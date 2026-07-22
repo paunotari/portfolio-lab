@@ -689,13 +689,26 @@ dataset and the pre-registration commit that precedes its single run in the git 
 
 ## Appendix B — Figure and table plan (to be exported from the cached CSVs)
 
-**F0 (the pillar) — the dispersion figure**: Panel A, mean pairwise correlation by menu cut
-(same-region/different-factors 0.885 the highest, vs Treasuries −0.115 and gold −0.007);
-Panel B, independent risk bets (DR²) across the equity menu (1.31), minimum variance's four
-sleeves (1.28) and the asset-class-extended menu (1.43). This is Section 5.4 in one image and
-opens the results. F1 walk-forward cumulative race · F2 Sharpe-edge bars with bootstrap p
-labels (now including the three defeated challengers) · F3 leave-one-region-out rank paths ·
-F4 virgin-universe A/B bars · F5 sensitivity grid lines + block-length p panel · F6
-attribution stacked bars · **F7 (to build) the two placebo null distributions** (real value
-inside the scrambled-label histogram, both metrics) · T1 modern race with inference columns ·
-T2 90-year race and window dispersion · T3 grids · T4 confirmatory protocol and outcome.
+**Lead figures (the pillar).** **F0b — the risk-return achievable set**: two panels on a
+shared scale, the Dirichlet cloud of long-only portfolios with the rules on top. Left, the
+28-sleeve equity menu is a narrow sliver at high volatility with every rule piled together and
+two-thirds of the plane empty; right, adding Treasuries/gold/cash fills the plane and the rules
+spread apart. Dispersion, not method, in one image — this opens the results. **F0 — the numbers
+behind it**: Panel A, mean pairwise correlation by menu cut (same-region/different-factors 0.885
+the highest, vs Treasuries −0.115, gold −0.007); Panel B, independent risk bets (DR²) across the
+equity menu (1.31), minimum variance's four sleeves (1.28), the extended menu (1.43).
+
+**Evidence + checklist.** Table 1 modern race with inference columns · F2 Sharpe-edge bars with
+bootstrap p labels (the two significantly-worse overlays in red) · F6 attribution stacked bars
+(min-variance = 82% Quality) · F7 the two-placebo null histograms (real regime labels inside the
+scrambled-label distribution) · F4 virgin-universe A/B on an honest full-height axis (everything
+clusters; Δ within the M35 noise band, 1/N line marked).
+
+**Needs rework before submission (see TODO):** F1 walk-forward cumulative race — 17-line
+spaghetti, redundant with F2/Table 1; cut or demote to appendix, or rebuild highlighting 3–4
+series against a gray cloud. F3 leave-one-region-out — 17-line bump chart; rebuild highlighting
+only the maximin family (the lines that move), graying the stable rules. F5 left panel — plots
+heterogeneous grid dimensions on one connected axis (misleading); rebuild as small multiples and
+add the σ-estimator column (M33, the one dimension that actually moved a number). Consistent
+contestant colors across all figures. T2 90-year race + window dispersion · T3 grids · T4
+confirmatory protocol.

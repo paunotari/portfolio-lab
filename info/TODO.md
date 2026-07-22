@@ -283,6 +283,19 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         IS what min-variance harvests (M2/M21). Frame as a limitation that CONFIRMS the
         dispersion mechanism, not a hole. Note the menu is extensible via the msci_api branch
         if a referee insists.
+  - [ ] **Figure rework before submission (critical review 2026-07-22).** DONE: built F0b
+        (the risk-return achievable-set cloud — the pillar dramatized, shared axes so the
+        equity sliver vs extended spread is honest); FIXED F4 (was a truncated axis
+        magnifying 0.002 A/B deltas AND foregrounding the M35-dead estimator — now
+        full-height from zero with a 1/N line and an "everything clusters, Δ within the noise
+        band" title). REMAINING: (a) F1 walk-forward race is 17-line spaghetti and redundant
+        with F2/Table 1 — cut, demote to appendix, or rebuild highlighting 3-4 series over a
+        gray cloud; (b) F3 LORO is a 17-line bump chart — rebuild highlighting only the
+        maximin family (the lines that move); (c) F5 left panel connects heterogeneous grid
+        dimensions on one axis (misleading) — rebuild as small multiples AND add the
+        sigma-estimator column (M33, the only dimension that moved a number); (d) F7 add the
+        realized-floor metric as a second row (the maximin's actual objective); (e)
+        consistent contestant colors across all figures.
   - [ ] **Multiplicity honesty pass on the contestant table (M34).**  - [ ] **Factor-coverage limitations paragraph (referee will ask "what about growth/size/
         low-vol?").** Answer, measured: (1) growth is anti-value, no positive premium — the
         weakest such objection; (2) DR²/M18 says more long-only tilts on the same market beta
@@ -291,6 +304,19 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         IS what min-variance harvests (M2/M21). Frame as a limitation that CONFIRMS the
         dispersion mechanism, not a hole. Note the menu is extensible via the msci_api branch
         if a referee insists.
+  - [ ] **Figure rework before submission (critical review 2026-07-22).** DONE: built F0b
+        (the risk-return achievable-set cloud — the pillar dramatized, shared axes so the
+        equity sliver vs extended spread is honest); FIXED F4 (was a truncated axis
+        magnifying 0.002 A/B deltas AND foregrounding the M35-dead estimator — now
+        full-height from zero with a 1/N line and an "everything clusters, Δ within the noise
+        band" title). REMAINING: (a) F1 walk-forward race is 17-line spaghetti and redundant
+        with F2/Table 1 — cut, demote to appendix, or rebuild highlighting 3-4 series over a
+        gray cloud; (b) F3 LORO is a 17-line bump chart — rebuild highlighting only the
+        maximin family (the lines that move); (c) F5 left panel connects heterogeneous grid
+        dimensions on one axis (misleading) — rebuild as small multiples AND add the
+        sigma-estimator column (M33, the only dimension that moved a number); (d) F7 add the
+        realized-floor metric as a second row (the maximin's actual objective); (e)
+        consistent contestant colors across all figures.
   - [ ] **Multiplicity honesty pass on the contestant table (M34).** The 17 rows are ~4
         distinct strategies: HRP vs ERC correlate **0.998** OOS, Brodie vs min-variance
         **0.975** (and both live off USA Quality, 47% vs 52%). State this in the results
