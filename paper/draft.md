@@ -240,9 +240,13 @@ the classifier is deterministic and identical across eras; and its per-quadrant 
 patterns are *structural* — 15 of 16 factor×quadrant sign cells agree between 1960–2026 and
 the modern window, the single flip being the market factor in stagflation (M4).
 
-### 4.2 The estimator (the candidate contribution)
+### 4.2 A pre-registered regime-conditioned estimator
 
-Full formal treatment in the repository's `estimator.md`; the two operative lines, for a
+We build, freeze and pre-register a transparent estimator for the noisiest objects in the
+whole exercise — per-regime conditional means (30–90 monthly observations per cell). We
+describe it here because §5.6 reports, honestly, that it has **no effect resolvable at this
+sample size**; the construction and its null result are inseparable and both belong in the
+record. Full formal treatment in the repository's `estimator.md`; the two operative lines, for a
 factor sleeve i in state s with modern conditional excess ê_is over its region Reference,
 long counterpart j with 66-year state mean f̄_js, modern-window restriction f̄'_js, sample
 sizes n_s (modern) and m_s (long), and mapping coefficient β_j:
@@ -267,11 +271,16 @@ intensity and a binary, auditable pooling decision.
 Equal weight (1/N); minimum variance; ERC; HRP (all on Ledoit-Wolf 2004 shrunk
 covariances); a mean-variance-derived balanced blend around a Black-Litterman posterior;
 cross-sectional momentum (Jegadeesh & Titman 1993, 12-1, top-6); unlevered volatility
-targeting (Moreira & Muir 2017) overlaid on two bases; worst-quadrant maximin,
-unconstrained and under the diversified caps (per-sleeve ≤25%, look-through geographic ≤40%,
-factor ≤40%); and the all-weather diversified maximin on the menu extended with
-Treasury/gold/cash proxies. Raw full-sample mean returns are forbidden as objective inputs
-throughout.
+targeting (Moreira & Muir 2017) and binary trend overlays (Faber 2007 10-month SMA;
+Antonacci dual momentum); worst-quadrant maximin, unconstrained and under the diversified
+caps (per-sleeve ≤25%, look-through geographic ≤40%, factor ≤40%); and the all-weather
+diversified maximin on the menu extended with Treasury/gold/cash proxies. We also field the
+three most-cited "beat-1/N" rules as contestants, to test them rather than cite them: the
+**Yuan-Zhou (2023) GMV combination** (their closed-form shrinkage of the plug-in
+global-minimum-variance portfolio toward 1/N), the **Brodie et al. (2009) sparse portfolio**
+(which in its long-only form reduces exactly to minimum variance at a target return, the L1
+penalty being inert), and **HERC** (Raffinot 2018, ERC on HRP's topology, both linkages).
+Raw full-sample mean returns are forbidden as objective inputs throughout.
 
 ### 4.4 Protocol
 
@@ -297,12 +306,32 @@ excess-over-T-bill in this paper (rankings identical; the headline p-value moves
 Minimum variance tops the table (net OOS Sharpe 1.03 vs 1/N's 0.83, 2009–2026) — and no
 contestant's edge over 1/N is significant at 5% (min-variance p_boot = 0.055; every other
 p ≥ 0.14). The downside *is* detectable: 1/N + volatility targeting is significantly worse
-than plain 1/N (p = 0.009), and four contestants lose significantly to the winner. Deflated
-Sharpes ≥ 0.98 clear the multiplicity bar; the CSCV probability that the in-sample-selected
-contestant is no better than the OOS median is 33% — real selection information, far from
-certainty. Attribution completes the picture: minimum variance earns **82% of its
-out-of-sample return in Quality sleeves** (USA 52%, World 30%) — the low-volatility-anomaly
-mechanism made visible; it is a defensive factor bet wearing an optimizer's name.
+than plain 1/N (p = 0.009), and four contestants lose significantly to the winner. This
+holds under a joint test as well as the pairwise ones: a Friedman test on 12-month block
+ranks rejects the null that the ordering is noise (χ² = 46.6, p = 0.0001), yet the Nemenyi
+critical difference clears no contestant past 1/N — the ranking is real, the gap to equal
+weight is not. Deflated Sharpes ≥ 0.98 clear the multiplicity bar; the CSCV probability that
+the in-sample-selected contestant is no better than the OOS median is 33% — real selection
+information, far from certainty.
+
+The three most-cited rules designed to beat 1/N do not, on this menu. The **Yuan-Zhou (2023)
+combination loses outright** (0.74 vs 0.83, p = 0.45) — its own theory predicts this where
+the estimation window is short and the menu one-factor-dominated, and we declared the
+prediction before running. **Brodie et al.'s (2009) sparse portfolio** reaches third place
+(0.93) but only p = 0.149 — their "significantly and consistently" does not survive the
+Sharpe-difference test and transaction charge they never applied. **HERC** lands below both
+its parents. Two mechanical facts explain why nothing separates: the contestants' out-of-
+sample returns are 0.93–0.998 correlated with one another (HRP and ERC at 0.998 are one
+portfolio under two names; Brodie and minimum variance at 0.975 earn from the same USA
+Quality sleeve), so the 17-row table is roughly four distinct strategies — a Sharpe test
+cannot pull apart series that move together this closely. Attribution completes the picture:
+minimum variance earns **82% of its out-of-sample return in Quality sleeves** (USA 52%,
+World 30%) — the low-volatility-anomaly mechanism made visible; it is a defensive factor bet
+wearing an optimizer's name. This concurs with the most recent published replication of
+DeMiguel et al.: Gelmini-Uberti (2024), on the original datasets extended twenty years, also
+find no strategy that beats 1/N across datasets and metrics, and note that the strategies
+that do win individual cells owe it to higher idiosyncratic dispersion — the mechanism
+Section 5.4 makes central.
 
 ### 5.2 Nine decades: structure generalizes, the modern winner does not (M2)
 
@@ -320,19 +349,82 @@ cell (+0.115 to +0.132 Sharpe across costs 0/10/25 bps, refits 6/12/24m, cap lev
 ranking conclusion; the single frontier is the headline p-value's block-length sensitivity
 (0.042/0.055/0.066), which we report as such.
 
-### 5.4 Regime structure pays only with a regime-diverse menu (M4, M6, M7, M10)
+### 5.4 The reason is the opportunity set, not the optimizer (M18, M27, M34)
 
-Within equities, the stagflation floor *was* the concentrated Value bet — forcing
-diversification collapses it (+0.31→+0.02%/month). Extending the menu with Treasuries and
-gold restores the floor almost free (+0.59%/month diversified) at half the volatility;
-century-scale shape evidence: a static all-weather archetype returned +9.8% through OPEC
-1973-74 while 60/40 lost 28.5%. As a walk-forward contestant, the all-weather diversified
-maximin scores 0.94; anchoring its per-quadrant inputs with the estimator lifts every
-maximin variant — the flagship reaches **0.95 at 8.7% volatility, maxDD −16.7%** — while
-concrete corrections show the mechanism working (gold-in-bust tempered from the 2008-11
-artifact +1.20 to +0.71%/month; Treasuries-in-bust raised toward six decades of
-flight-to-quality). The flagship is statistically indistinguishable from the era-flagged
-winner (p = 0.70) at two-thirds of its volatility — which is precisely its case.
+Why does no weighting rule beat 1/N here, when the literature's optimization defenders show
+that it can? Because on an investable long-only factor menu there is almost nothing to
+optimize. We measure it three ways (Figure F0). **First, correlation structure:** the
+highest-correlated cut of the entire menu is *same region, different factors* — value,
+momentum and quality within one country co-move at 0.885, higher than the same factor across
+regions (0.786) or pure market beta across regions (0.821). Long-only factor tilts do not
+decorrelate, because each index is roughly its parent market plus a small tilt; the market
+beta dominates. The three non-equity proxies are the only genuinely different bets on the
+menu: Treasuries correlate −0.115 with the 28 equity sleeves, gold −0.007. **Second,
+independent bets:** the Choueifaty-Coignard diversification ratio squared — the effective
+number of independent risk bets — is **1.31** for the equal-weighted equity menu, and **1.28**
+for the four-sleeve minimum-variance portfolio. The engine whose entire job is to exploit
+correlations to cancel risk, holding a quarter as many sleeves, finds no more independent
+bets than naive diversification does. Twenty-four extra equity sleeves buy 0.03 of a bet;
+the first principal component alone explains 77% of variance and the covariance matrix is
+near-singular (smallest eigenvalue 3×10⁻⁷). **Third, the contrast that proves the
+mechanism:** adding the three asset-class proxies moves the menu's minimum pairwise
+correlation from 0.53 to −0.14 and its diversification ratio to 1.43 — three sleeves buying
+more independent-bet content than twenty-eight equity sleeves did.
+
+This is the paper's central claim, and it reconciles the twenty-year debate. Optimization
+beats 1/N exactly where there is dispersion to exploit — on the industry and factor-portfolio
+datasets of its defenders, where idiosyncratic volatility is high and the covariance is
+well-conditioned (Gelmini-Uberti's own explanation, §2). An investable factor menu is the
+opposite regime: one dominant bet, near-singular covariance, no dispersion for any weighting
+scheme to convert into an edge. The disagreement in the literature is not about method; it is
+about the opportunity set, and the retail factor investor sits squarely in the region where
+1/N cannot be beaten.
+
+### 5.5 A worst-case objective over a regime-diverse menu (M6, M7, M32, M35)
+
+The one construction that measurably changes the risk profile does so through the *menu*, not
+through regime information. Within equities alone, the stagflation floor *was* a concentrated
+Value bet — forcing diversification collapses it (+0.31→+0.02%/month). Extending the menu with
+Treasuries and gold restores the floor at half the volatility (century-scale shape evidence: a
+static all-weather archetype returned +9.8% through OPEC 1973-74 while 60/40 lost 28.5%). As a
+walk-forward contestant the resulting flagship — a capped worst-quadrant portfolio over
+equities, Treasuries and gold — delivers **Sharpe 0.95 at 8.7% volatility, maxDD −16.7%**, is
+statistically indistinguishable from the era-flagged winner (p = 0.70) at two-thirds of its
+volatility, and holds the lowest drawdown in the table.
+
+Those numbers stand; their *explanation* is where we correct ourselves, using two placebo
+tests on our own signature feature (§5.6). The worst-quadrant objective maximizes the mean of
+the worst of four macro partitions of history — but that objective is a robustness device even
+when the partitions are meaningless. A capped worst-case allocation over a menu that contains
+genuinely negatively-correlated assets is pushed toward those assets under *any* four-way
+partition, because they are what a worst-case floor rewards. The flagship's record is the
+regime-*diverse menu* (M6, and the dispersion of §5.4), not knowledge of the regime. The
+practical statement survives fully: to buy a shallow-drawdown floor at this data scale, change
+what you hold, not how you time it.
+
+### 5.6 Two null results, reported not buried (M32, M35)
+
+The regime layer is this paper's most attackable feature, so we attack it ourselves with
+permutation tests and report what they return. **The labels (M32):** re-running the entire
+walk-forward 80 times with the macro-state labels scrambled — a circular rotation that
+preserves marginal frequencies, run lengths and the transition matrix exactly, destroying only
+the alignment between a month's label and its returns — the maximin family performs no better
+with real labels than with random ones. On both metrics (net Sharpe and the realized
+worst-real-quadrant floor the objective actually optimizes), across twelve cells, the best
+permutation p is 0.195 and the real labels sit *below* the scrambled mean in seven of twelve;
+the average randomly-labelled flagship achieved a *better* worst-quadrant floor than the real
+one. Equal weight, which consumes no labels, is bit-identical across all 81 runs (a leak
+check). **The estimator (M35):** a paired difference-of-differences — the anchor switched off
+and on within each replicate on the same labels — finds every real-arm effect under half a
+null standard deviation and the estimator "helping" in 45–60% of replicates, a coin flip. The
+pre-registered improvement of §6.3 turns out to sit inside the noise band of menu composition
+that the same ledger entry had always acknowledged (±0.01–0.02 Sharpe).
+
+We report these because a checklist paper that ran the tests and hid the answers would refute
+its own thesis. The regime classifier's *descriptive* value — which quadrant we occupy, how
+factors have behaved per state — is a different claim, not tested here. What the placebos
+settle is narrow and clean: the macro signal does not earn its place in the *allocation*, and
+the honest contribution is the negative result plus the apparatus that produced it.
 
 ## 6. The referee's checklist
 
@@ -364,11 +456,17 @@ With protocol and thresholds committed before the first run — CONFIRMS if ever
 variant's anchored-minus-modern ΔSharpe ≥ 0 with at least one > +0.005; REFUTES if any
 < −0.02 — the frozen estimator improves both variants on the nine international sleeves:
 worst-quadrant +0.002, diversified **+0.016**, over 307 out-of-sample months (2000-11–
-2026-05) containing the dot-com bust and the global financial crisis. Verdict: **CONFIRMS**.
-Secondary readouts, reported ungated: nothing beats 1/N significantly there either (best
-p = 0.246); the equity-only maximin family ranks last through the two bears — consistent
-with Section 5.4's core claim that regime robustness must be bought with a regime-diverse
-menu, not within equities.
+2026-05) containing the dot-com bust and the global financial crisis. Verdict on its own
+terms: **CONFIRMS**. But we owe the reader the power post-mortem that §5.6 forces: those
+declared thresholds (+0.002, +0.016) sit *inside* the ±0.01–0.02 noise band that menu
+composition alone produces, as the scrambled-label distribution later measured (null standard
+deviation 0.03–0.10). The pre-registration discipline was sound and we keep it as an example;
+the lesson we draw against ourselves is that its thresholds were set below the noise floor, so
+clearing them was a correctly-run test of a question it did not have the power to answer. Any
+future confirmatory test in this program must declare thresholds against a *measured* null,
+not a hoped-for effect size. Secondary readouts, reported ungated: nothing beats 1/N
+significantly there either (best p = 0.246); the equity-only maximin family ranks last through
+the two bears — consistent with Section 5.4.
 
 ## 7. Limitations
 
@@ -401,22 +499,43 @@ of 1.31 independent risk bets, and the four-sleeve minimum-variance portfolio ca
 Adding three non-equity proxy sleeves moves the menu's minimum pairwise correlation from 0.53
 to −0.14 and its first principal component from 77% to 69% — three slots buying more than
 twenty-eight. A study of weighting rules on a menu of roughly one bet is, by construction,
-a study of small differences, and readers should discount our effect sizes accordingly. Nothing here is fitted or machine-learned; the flip side is that
-nothing exploits information beyond counting, shrinking and constraining.
+a study of small differences, and readers should discount our effect sizes accordingly.
+
+Our factor menu is also the set with liquid, long-only MSCI indices — market, value,
+momentum and quality — not the full factor zoo; a referee will ask about growth, size or low
+volatility. The diversification-ratio result answers the class of objection directly: more
+long-only tilts on the same market beta would land at the same ~0.88 correlation as the ones
+we hold and add no independent bets, so the verdict is coverage-robust. Growth is the weakest
+such case, being the low-premium short leg of value rather than a separate premium; size *is*
+tested, in the 90-year proxy race on Fama-French size×value portfolios; and low volatility is
+precisely what the minimum-variance contestant harvests. What changes the menu's character is
+not another equity factor but another asset class — which is the finding, and the bridge to a
+sequel on selection rather than weighting. Nothing here is fitted or machine-learned; the flip
+side is that nothing exploits information beyond counting, shrinking and constraining.
 
 ## 8. Conclusion
 
-At retail data scale the enemy is estimation error, and everything above is a corollary.
-What survives nine decades, three universes, pre-registration, real-time discipline, region
-removal and sensitivity grids is not cleverness but discipline: risk-structure engines over
-return estimation; hard caps as built-in shrinkage; a menu spanning assets that win in
-different regimes; every regime-conditioned input shrunk toward the longest history whose
-sign agrees; and a standing equal-weight benchmark. The flagship this selects is not the
-highest-returning portfolio in any era — it is the construction that never needed to know
-which era it was in. And the apparatus's last word is a p-value: even the best construction's
-edge over equal weight is not statistically demonstrable at this data scale. That is not a
-failure of the method; it is the central fact the method is built around — and, we argue,
-the fact any honest adjudication at this data scale must lead with.
+Two decades of argument over whether optimization beats equal weight have a resolution this
+paper can state precisely: it depends on the opportunity set, and on an investable long-only
+factor menu — where a real retail investor lives — the set holds one dominant bet, so no
+weighting rule can beat 1/N and, tested properly, none does. That is not a limitation of any
+optimizer; it is a property of the menu, which we measure (a diversification ratio of 1.31,
+factor tilts co-moving at 0.885, a near-singular covariance) rather than assert. The
+optimization defenders are right on their own datasets, where dispersion is high; both can be
+true because they are describing different opportunity sets, and we say which one the retail
+factor investor occupies.
+
+What survives our full checklist — nine decades, three universes, pre-registration, real-time
+discipline, region removal, sensitivity grids, and two placebos aimed at our own signature
+feature — is disciplined and modest: risk-structure engines edge return-estimation ones but
+not significantly; hard caps help; and a menu holding genuinely different asset classes, not
+another equity factor, is what buys a shallow-drawdown floor. What does *not* survive is
+equally part of the record: neither the macro-regime signal nor the pre-registered estimator
+built on it has an effect resolvable at this sample size, and we report that with a power
+post-mortem rather than a positive spin. The apparatus's last word is a p-value on our own
+best idea as much as on the literature's. At retail data scale, the honest contribution is
+not a better portfolio — it is knowing, and being able to prove, that the menu is where the
+question actually lives.
 
 ## References
 
@@ -495,7 +614,13 @@ dataset and the pre-registration commit that precedes its single run in the git 
 
 ## Appendix B — Figure and table plan (to be exported from the cached CSVs)
 
-F1 walk-forward cumulative race · F2 Sharpe-edge bars with bootstrap p labels · F3
-leave-one-region-out rank paths · F4 virgin-universe A/B bars · F5 sensitivity grid lines +
-block-length p panel · F6 attribution stacked bars · T1 modern race with inference columns ·
+**F0 (the pillar) — the dispersion figure**: Panel A, mean pairwise correlation by menu cut
+(same-region/different-factors 0.885 the highest, vs Treasuries −0.115 and gold −0.007);
+Panel B, independent risk bets (DR²) across the equity menu (1.31), minimum variance's four
+sleeves (1.28) and the asset-class-extended menu (1.43). This is Section 5.4 in one image and
+opens the results. F1 walk-forward cumulative race · F2 Sharpe-edge bars with bootstrap p
+labels (now including the three defeated challengers) · F3 leave-one-region-out rank paths ·
+F4 virgin-universe A/B bars · F5 sensitivity grid lines + block-length p panel · F6
+attribution stacked bars · **F7 (to build) the two placebo null distributions** (real value
+inside the scrambled-label histogram, both metrics) · T1 modern race with inference columns ·
 T2 90-year race and window dispersion · T3 grids · T4 confirmatory protocol and outcome.

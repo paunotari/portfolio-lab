@@ -51,6 +51,86 @@ def save(fig, name):
     print(f"[figures] wrote figures/{name}")
 
 
+def f0_dispersion():
+    """THE PILLAR FIGURE (v0.2). Two panels:
+      A — long-only factor tilts do NOT decorrelate (within-region cross-factor corr is the
+          HIGHEST cut of the menu), while three asset classes do; the DR² mechanism made visual.
+      B — independent risk bets (DR²) barely move across 28 equity sleeves, and a 4-sleeve
+          min-variance portfolio holds as many as the whole menu; adding 3 asset classes buys
+          more than 24 equity sleeves.
+    All numbers recomputed from the same cached inputs the ledger cites (M27/M34)."""
+    import itertools
+    from portfolio_lab.portfolio import optimizer as opt
+
+    lv = pd.read_csv(C.LEVELS_WIDE, index_col=0, parse_dates=True).sort_index()
+    r = lv.pct_change().dropna()
+    cols = list(r.columns)
+    corr = r.corr()
+    reg = lambda c: c.split(" | ")[0]
+    fac = lambda c: c.split(" | ")[1]
+    within = [corr.loc[a, b] for a, b in itertools.combinations(cols, 2) if reg(a) == reg(b)]
+    same_fac = [corr.loc[a, b] for a, b in itertools.combinations(cols, 2)
+                if fac(a) == fac(b) and reg(a) != reg(b)]
+    cross_ref = [corr.loc[a, b] for a, b in
+                 itertools.combinations([c for c in cols if fac(c) == "Reference"], 2)]
+
+    ac = pd.read_csv(C.ASSET_CLASS_MONTHLY, index_col=0, parse_dates=True)
+    j = r.join(ac, how="inner")
+    eq = [c for c in j.columns if not c.startswith("Asset")]
+    ac_corr = {c.split(" | ")[1]: float(np.mean([j[c].corr(j[e]) for e in eq]))
+               for c in j.columns if c.startswith("Asset")}
+
+    labels = ["Same region,\ndiff. factors", "Same factor,\ndiff. regions",
+              "Market beta,\nacross regions", "Treasuries\nvs equity", "Gold\nvs equity"]
+    vals = [np.mean(within), np.mean(same_fac), np.mean(cross_ref),
+            ac_corr.get("US Treasury 10y", np.nan), ac_corr.get("Gold", np.nan)]
+    colors = ["#C94F4F", "#C97A4F", "#C9A24F", "#2E9E68", "#8C6D1F"]
+
+    inp = opt.build_inputs()
+    inp_aw = opt.build_inputs(include_asset_classes=True)
+    dr2_eq = opt.diversification_ratio(np.ones(len(inp["series"])) / len(inp["series"]),
+                                       inp["sigma"]) ** 2
+    dr2_mv = opt.diversification_ratio(inp["anchors"]["Min-variance"], inp["sigma"]) ** 2
+    dr2_aw = opt.diversification_ratio(np.ones(len(inp_aw["series"])) / len(inp_aw["series"]),
+                                       inp_aw["sigma"]) ** 2
+
+    fig, (axA, axB) = plt.subplots(1, 2, figsize=(8.4, 3.8),
+                                   gridspec_kw={"width_ratios": [1.7, 1.0]})
+
+    # ---- Panel A: correlation cuts
+    xA = np.arange(len(vals))
+    axA.axhline(0, color=INK, lw=0.8)
+    axA.bar(xA, vals, 0.62, color=colors, edgecolor="white", lw=0.5)
+    for xi, v in zip(xA, vals):
+        axA.text(xi, v + (0.035 if v >= 0 else -0.035), f"{v:+.2f}",
+                 ha="center", va="bottom" if v >= 0 else "top", fontsize=8, color=INK)
+    axA.set_xticks(xA, labels, fontsize=7.4)
+    axA.set_ylabel("mean pairwise correlation", fontsize=9)
+    axA.set_ylim(-0.32, 1.05)
+    axA.set_title("A · Factor tilts don't decorrelate; asset classes do",
+                  fontsize=9, loc="left", color=INK)
+    style(axA)
+
+    # ---- Panel B: independent bets (DR²)
+    bl = ["28 equity\nsleeves (1/N)", "Min-variance\n(4 sleeves)", "+ 3 asset\nclasses (1/N)"]
+    bv = [dr2_eq, dr2_mv, dr2_aw]
+    bc = ["#8E8E93", "#2E9E68", "#1F8A99"]
+    xB = np.arange(len(bv))
+    axB.bar(xB, bv, 0.6, color=bc, edgecolor="white", lw=0.5)
+    for xi, v in zip(xB, bv):
+        axB.text(xi, v + 0.02, f"{v:.2f}", ha="center", va="bottom", fontsize=8.6, color=INK)
+    axB.axhline(1.0, color=MUT, lw=0.9, ls=":")
+    axB.text(2.4, 1.02, "1 bet", color=MUT, fontsize=7.5, ha="right", va="bottom")
+    axB.set_xticks(xB, bl, fontsize=7.6)
+    axB.set_ylabel("independent risk bets  (DR$^2$)", fontsize=9)
+    axB.set_ylim(0, 1.7)
+    axB.set_title("B · The menu is ~1 bet, however you weight it", fontsize=8.8,
+                  loc="left", color=INK)
+    style(axB)
+
+    save(fig, "F0_dispersion.pdf")
+
+
 def f1_race():
     m = pd.read_csv(C.OPTIMIZER_WALKFORWARD_RETURNS, index_col=0, parse_dates=True)
     growth = 100.0 * (1.0 + m).cumprod()
@@ -184,8 +264,42 @@ def f6_attribution():
     save(fig, "F6_attribution.pdf")
 
 
+def f7_placebo():
+    """The two null results in one figure (M32 labels). For each maximin contestant, the
+    scrambled-label null distribution of net OOS Sharpe with the real value marked — the
+    permutation test that attacks our own signature feature, shown honestly."""
+    fp = C.OPTIMIZER_PLACEBO
+    if not fp.exists():
+        raise FileNotFoundError(fp)
+    df = pd.read_csv(fp)
+    real = df[df.arm == "real"].iloc[0]
+    circ = df[(df.arm == "placebo") & (df["mode"] == "circular")]
+    ports = ["Maximin (worst quadrant)", "Maximin (diversified)", "Maximin (all-weather div)"]
+    fig, axes = plt.subplots(1, 3, figsize=(8.4, 3.0), sharey=True)
+    for ax, p in zip(axes, ports):
+        col = f"{p} | sharpe"
+        if col not in df.columns:
+            continue
+        null = circ[col].dropna().values
+        ax.hist(null, bins=12, color="#C9C9CE", edgecolor="white", lw=0.5)
+        ax.axvline(float(real[col]), color="#C94F4F", lw=1.8)
+        ax.axvline(float(null.mean()), color=INK, lw=1.0, ls=":")
+        ax.text(float(real[col]), ax.get_ylim()[1] * 0.96, " real", color="#C94F4F",
+                fontsize=7.5, ha="left", va="top")
+        p_perm = (1 + int((null >= float(real[col])).sum())) / (1 + len(null))
+        ax.set_title(f"{p.replace('Maximin ', '').strip('()')}\np = {p_perm:.2f}",
+                     fontsize=8.2, color=INK)
+        ax.set_xlabel("net OOS Sharpe", fontsize=8.2)
+        style(ax)
+    axes[0].set_ylabel("scrambled-label replicates", fontsize=8.6)
+    fig.suptitle("Real regime labels vs 40 scrambled-label replicates (circular null)",
+                 fontsize=9.2, color=INK, y=1.02)
+    save(fig, "F7_placebo_null.pdf")
+
+
 if __name__ == "__main__":
-    for fn in (f1_race, f2_inference, f3_loro, f4_virgin, f5_sensitivity, f6_attribution):
+    for fn in (f0_dispersion, f1_race, f2_inference, f3_loro, f4_virgin, f5_sensitivity,
+               f6_attribution, f7_placebo):
         try:
             fn()
         except Exception as e:
