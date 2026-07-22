@@ -355,6 +355,30 @@ weight is not. Deflated Sharpes ≥ 0.98 clear the multiplicity bar; the CSCV pr
 the in-sample-selected contestant is no better than the OOS median is 33% — real selection
 information, far from certainty.
 
+**Table 1.** Walk-forward out-of-sample results, 2009–2026 (210 months), net of 10 bps
+transaction costs. Δ Sharpe and p (studentized circular block bootstrap, Ledoit-Wolf 2008) are
+vs 1/N; DSR is the deflated Sharpe against the fielded roster. Sorted by Sharpe.
+
+| Contestant | CAGR | Vol | Sharpe | maxDD | Δ Sharpe vs 1/N | p vs 1/N | DSR |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Min-variance | 13.8% | 13.5% | 1.03 | −28% | +0.20 | 0.055 | 1.00 |
+| Min-variance + vol-target | 10.9% | 11.9% | 0.94 | −24% | +0.11 | 0.304 | 1.00 |
+| Sparse Markowitz (Brodie 2009) | 12.6% | 13.8% | 0.93 | −26% | +0.10 | 0.149 | 1.00 |
+| Maximin (all-weather div.) | 8.0% | 8.7% | 0.93 | −18% | +0.10 | 0.611 | 1.00 |
+| HRP | 12.4% | 14.8% | 0.87 | −27% | +0.04 | 0.142 | 0.99 |
+| ERC | 12.2% | 15.0% | 0.85 | −27% | +0.02 | 0.191 | 0.99 |
+| Maximin (diversified) | 13.1% | 16.3% | 0.84 | −28% | +0.01 | 0.839 | 0.99 |
+| **1/N** | 12.2% | 15.3% | 0.83 | −27% | — | — | 0.99 |
+| HERC (Ward linkage) | 11.5% | 15.0% | 0.80 | −28% | −0.03 | 0.573 | 0.99 |
+| HERC (single linkage) | 10.7% | 14.1% | 0.80 | −27% | −0.03 | 0.576 | 0.99 |
+| GMV combo (Yuan-Zhou 2023) | 9.8% | 14.2% | 0.74 | −30% | −0.10 | 0.449 | 0.98 |
+| Momentum 12-1 (top 6) | 10.8% | 16.0% | 0.72 | −29% | −0.11 | 0.235 | 0.97 |
+| Maximin (worst quadrant) | 12.4% | 18.9% | 0.71 | −28% | −0.12 | 0.235 | 0.98 |
+| Balanced sliders | 11.2% | 17.3% | 0.70 | −27% | −0.13 | 0.070 | 0.97 |
+| 1/N + vol-target | 8.5% | 12.9% | 0.70 | −26% | −0.13 | **0.009** | 0.96 |
+| 1/N + trend (Faber 10m SMA) | 6.8% | 11.0% | 0.66 | −20% | −0.17 | 0.326 | 0.95 |
+| Dual momentum (Antonacci) | 5.4% | 13.3% | 0.46 | −27% | −0.37 | **0.034** | 0.81 |
+
 The three most-cited rules designed to beat 1/N do not, on this menu. The **Yuan-Zhou (2023)
 combination loses outright** (0.74 vs 0.83, p = 0.45) — its own theory predicts this where
 the estimation window is short and the menu one-factor-dominated, and we declared the
