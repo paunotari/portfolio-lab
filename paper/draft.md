@@ -1,47 +1,79 @@
-# Robust Portfolio Construction at Retail Data Scale: Structure, Constraints, and an Era-Agreement-Gated Shrinkage Estimator for Regime-Conditioned Inputs
+# Dispersion, Not Method: When Portfolio Optimization Cannot Beat Equal Weight on an Investable Factor Menu
 
-**Working paper — draft v0.1 (2026-07). Prepared for SSRN; target outlets: *Journal of
+**Working paper — draft v0.2 (2026-07). Prepared for SSRN; target outlets: *Journal of
 Portfolio Management* / *Journal of Asset Management*.**
 
 *Author: [owner]. Full reproducibility: every number in this paper is an entry in the
-project's critical-findings ledger (MILESTONES M1–M28), names the module that produces it,
+project's critical-findings ledger (MILESTONES M1–M35), names the module that produces it,
 and regenerates from public data with one command. Repository: [URL on publication].*
 
 ---
 
 ## Abstract
 
-We ask which portfolio-construction rules an individual investor with realistic data — about
-330 monthly observations of 28 MSCI region×factor indices — should actually trust, and we
-answer with an adjudication that applies, in public, the full checklist a referee would:
-exposure decomposition, leave-one-region-out re-races, statistical significance for every
-Sharpe comparison, backtest-overfitting probability, sensitivity grids, real-time label
-discipline, and a pre-registered confirmatory test on a universe never touched during
-development. Three findings survive everything we throw at them. First, the humility result:
-no estimation-based rule beats equal weight with statistical significance at this data scale
-— the modern winner's edge (minimum variance, +0.20 annualized Sharpe) sits at a bootstrap
-p-value of 0.055, crosses 5% only under the least conservative block length, and attribution
-shows the "optimizer" is in fact a defensive Quality bet (82% of its out-of-sample return);
-meanwhile several popular overlays are *significantly worse* than equal weight. Second,
-structure and constraints beat estimation: equal-risk-contribution and hierarchical risk
-parity beat equal weight in 98–100% of rolling windows and in 100% of shifted-start variants
-of a 90-year proxy race, and hard diversification caps *improve* out-of-sample performance
-in every grid cell (constraints as implicit shrinkage, measured live). Third, our
-methodological contribution — **era-agreement-gated long-history shrinkage** for
-regime-conditioned inputs, a transparent two-line estimator that pools each regime cell with
-66 years of evidence only where both eras agree on the sign — improves every regime-dependent
-construction out of sample on three universes, one of them virgin and pre-registered, never
-hurts, and refuses by construction to act where history disagrees with itself. The flagship
-this machinery selects — a capped worst-quadrant maximin over equities, Treasuries and gold —
-delivers Sharpe 0.95 at 8.7% volatility and −16.7% maximum drawdown (2009–2026), is
-statistically indistinguishable from the era-flagged winner at two-thirds of its volatility,
-and survives lagged regime labels, the live-index era, region removal, and cost/refit/cap
-grids.
+We study portfolio construction for the setting a real retail investor occupies: a
+**long-only, index-based, factor-tilted equity menu** — 28 MSCI region×factor indices, about
+330 monthly observations — and, as a mechanism-revealing contrast, its extension with
+non-equity asset classes. We adjudicate the candidate rules with the full checklist a referee
+would demand, applied in public: statistical significance for every Sharpe comparison
+(Ledoit-Wolf 2008 bootstrap, not the classical Jobson-Korkie test), deflated Sharpe,
+backtest-overfitting probability, a Friedman-Nemenyi joint test, leave-one-region-out
+re-races, sensitivity grids, real-time label discipline, a pre-registered confirmatory test on
+a never-touched universe, and — unusually — two placebo tests aimed at our own signature
+feature. Three results survive. **First, the humility result, strengthened:** no rule beats
+equal weight with statistical significance (minimum variance's +0.20 annualized Sharpe sits at
+p = 0.055), several popular overlays are *significantly worse*, and the three most-cited
+"beat-1/N" rules all fail under proper testing on this menu — the Yuan-Zhou (2023) combination
+loses outright, Brodie et al.'s (2009) sparse portfolio reaches only p = 0.149, and HERC lands
+below both its parents. This concurs with the most recent published replication of DeMiguel et
+al. (Gelmini-Uberti, 2024). **Second, structure beats estimation:** equal-risk-contribution
+and hierarchical risk parity beat equal weight in 98–100% of rolling windows and in 100% of
+window variants of a 90-year proxy race, and hard diversification caps *improve*
+out-of-sample results in every grid cell. **Third — the contribution — the reason is the
+opportunity set, not the optimizer:** the investable factor menu holds only ~1.3 independent
+risk bets (a diversification-ratio-squared of 1.31; long-only factor tilts within a region
+correlate 0.885; the covariance is near-singular), so there is almost no dispersion to
+exploit and no weighting scheme can manufacture any. The multi-asset contrast confirms the
+mechanism: adding Treasuries and gold moves the menu's minimum pairwise correlation from 0.53
+to −0.14 and transforms the worst-regime floor. This reconciles the twenty-year 1/N debate —
+optimization wins where dispersion exists, as on the dispersed academic datasets of its
+defenders, and an investable factor menu has almost none. Finally, we report two **null
+results honestly**: a pre-registered regime-conditioned shrinkage estimator, and the macro
+regime signal it depends on, each turn out to have no effect resolvable at this sample size
+once tested against scrambled-label placebos — published with a power post-mortem rather than
+buried. The flagship the apparatus selects, a capped worst-quadrant portfolio over equities,
+Treasuries and gold (Sharpe 0.95, 8.7% volatility, −16.7% maximum drawdown, 2009–2026), owes
+its record to holding regime-*diverse assets*, not to regime timing.
 
-**Keywords:** portfolio choice, estimation error, regime switching, shrinkage, backtest
-overfitting, 1/N. **JEL:** G11, C58.
+**Keywords:** portfolio choice, estimation error, naive diversification, diversification
+ratio, backtest overfitting, replication, 1/N. **JEL:** G11, C58.
 
 ---
+
+> **STRUCTURE NOTE (v0.2 re-framing, 2026-07-22 — delete before submission).** The spine moved
+> from "our estimator is the contribution" (v0.1) to "the opportunity set, not the optimizer,
+> is why 1/N is hard to beat here — measured, and it reconciles the debate." What each section
+> now does:
+> - **§2 Related literature** — add the reconciliation frame: the 1/N debate turns on five
+>   levers (menu dispersion, estimation inputs/window, turnover, shorting, and the significance
+>   bar). Engage the pro-optimization side we previously ignored — Kritzman-Page-Turkington
+>   (2010) "the fallacy of 1/N" (blames short estimation windows) and Kirby-Ostdiek (2012)
+>   (blames extreme turnover) — and place Gelmini-Uberti (2024) + Yuan-Zhou (2023) as the
+>   modern empirical/theoretical trunk. [⚠ read KPT and Kirby-Ostdiek in full before submission
+>   — cited at thesis altitude only for now.]
+> - **§4.2** the estimator drops from "the contribution" to "a pre-registered construction",
+>   pointing forward to its null result.
+> - **§5 Results** — NEW central subsection: the dispersion mechanism (DR²=1.31; within-region
+>   cross-factor corr 0.885; near-singular covariance; the asset-class contrast 0.53→−0.14).
+>   This is now the paper's core, not an aside.
+> - **§5.4 / §6** the regime layer and the estimator become the TWO placebo/null subsections
+>   (M32 labels, M35 estimator) — reporting the tests that attack our own signature feature is
+>   the credibility spine.
+> - **§7 Limitations** — the factor menu is the liquid-MSCI-long-only set, not the full factor
+>   zoo (no growth/size/low-vol as separate sleeves); DR² predicts more same-beta tilts would
+>   not change the verdict, and growth is anti-value (no positive premium) so it is the weakest
+>   such objection; size is tested in the 90-year proxy race and low-vol is what min-variance
+>   harvests.
 
 ## 1. Introduction
 

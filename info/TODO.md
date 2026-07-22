@@ -223,7 +223,18 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         +/-0.01-0.02 menu-shift band. **The candidate headline contribution does not
         survive.** M10 superseded, M16 given a power post-mortem, the report's verdict logic
         fixed (it was labelling noise directionally).
-  - [ ] **Paper/THESIS re-framing after M32 + M35 — now the biggest single writing task.**
+  - [~] **Paper/THESIS re-framing after M32 + M35 — STARTED 2026-07-22.** Framing DECIDED
+        (owner call): the spine is **"dispersion, not method — the opportunity set is why 1/N
+        is hard to beat on an investable factor menu"**, which reconciles the 20-year debate
+        via five levers (menu dispersion / inputs / turnover / shorting / significance bar).
+        The equity-factor menu is the primary object; the multi-asset menu is the
+        mechanism-confirming contrast — keep BOTH. Personal preference recast as "the retail
+        factor-investor's setting" (general, not idiosyncratic). Factors justified as RETURN
+        PREMIA + investability, NOT as diversifiers (M34 disproves that long-only — stated as
+        a finding). Horizon stays a MEASURED price-of-preference (A4/M8/M23), never a
+        recommendation. **DONE so far: title + abstract rewritten to v0.2, section-skeleton
+        note added to draft.md.** Still to do below.
+  - [ ] **Paper re-framing — remaining sections (from the v0.2 skeleton in draft.md):**
         The flagship's NUMBERS stand; both its explanation and the paper's contribution
         change. Concretely: (1) every "regime-aware portfolio" becomes "a capped worst-case
         objective over a regime-DIVERSE MENU"; (2) the abstract's THIRD claim — the estimator
@@ -255,7 +266,23 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         beaten" side. Add Pflug-Pichler-Wozabal (2012) as the model-ambiguity theory for why
         1/N is hard to beat. These are the honest counter-literature the paper must engage,
         not omit.
-  - [ ] **Multiplicity honesty pass on the contestant table (M34).**  - [ ] **Multiplicity honesty pass on the contestant table (M34).** The 17 rows are ~4
+  - [ ] **Factor-coverage limitations paragraph (referee will ask "what about growth/size/
+        low-vol?").** Answer, measured: (1) growth is anti-value, no positive premium — the
+        weakest such objection; (2) DR²/M18 says more long-only tilts on the same market beta
+        do not add bets (they land at ~0.88 corr like the ones we have), so the verdict is
+        coverage-robust; (3) size IS tested in the 90-year proxy race (FF size×value), low-vol
+        IS what min-variance harvests (M2/M21). Frame as a limitation that CONFIRMS the
+        dispersion mechanism, not a hole. Note the menu is extensible via the msci_api branch
+        if a referee insists.
+  - [ ] **Multiplicity honesty pass on the contestant table (M34).**  - [ ] **Factor-coverage limitations paragraph (referee will ask "what about growth/size/
+        low-vol?").** Answer, measured: (1) growth is anti-value, no positive premium — the
+        weakest such objection; (2) DR²/M18 says more long-only tilts on the same market beta
+        do not add bets (they land at ~0.88 corr like the ones we have), so the verdict is
+        coverage-robust; (3) size IS tested in the 90-year proxy race (FF size×value), low-vol
+        IS what min-variance harvests (M2/M21). Frame as a limitation that CONFIRMS the
+        dispersion mechanism, not a hole. Note the menu is extensible via the msci_api branch
+        if a referee insists.
+  - [ ] **Multiplicity honesty pass on the contestant table (M34).** The 17 rows are ~4
         distinct strategies: HRP vs ERC correlate **0.998** OOS, Brodie vs min-variance
         **0.975** (and both live off USA Quality, 47% vs 52%). State this in the results
         section rather than letting the row count imply breadth, and note that Brodie
