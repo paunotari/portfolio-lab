@@ -347,6 +347,32 @@ Check items off as completed. Add new ones as they come up; keep entries short a
   > (4) expanding the menu now invalidates every number already measured and would break the
   > pre-registration discipline (M16 was frozen against THIS menu). In paper 1 the menu
   > result stays where it now is: a limitation paragraph that also motivates the sequel.
+  >
+  > **PAPER 2's CANDIDATE HEADLINE — the one genuinely novel result the program could reach
+  > (owner-endorsed 2026-07-22, "apunta esa idea para un futuro").** Everything in paper 1 is
+  > honestly incremental: the dispersion MECHANISM is not ours (DeMiguel said it; DR² is
+  > Choueifaty-Coignard; the inference tools are others'). We measure a known mechanism on a
+  > new, practically-relevant menu and debunk one published "significantly" (Brodie, M28). That
+  > is a solid JPM/JAM paper, not a novel law. The upgrade that WOULD be novel: **quantify the
+  > relationship between a menu's DR² and how much optimization can beat 1/N, across many
+  > menus, and find the threshold DR²\* below which no weighting rule beats 1/N.** Right now we
+  > have only TWO points (our equity menu DR²≈1.31 → no edge; Gelmini-Uberti's dispersed
+  > academic datasets → edge). A real finding needs the CURVE.
+  > - **How to build it (menus we already hold, each with a different DR²):** the 28-sleeve
+  >   equity menu (DR² 1.31), the asset-class-extended menu (1.43), the 90-year FF proxy
+  >   universe, the FF-international universe, sub-menus (single-region factor sets; region
+  >   Reference-only). For each: compute DR² (menu property) and the optimization edge
+  >   (best structural rule's net OOS Sharpe minus 1/N, with its LW p). Plot edge vs DR².
+  > - **The claim if it holds:** "below DR²\* ≈ [x], optimization cannot beat 1/N at any
+  >   conventional significance; above it, the edge grows monotonically" — turning a 20-year
+  >   qualitative debate into a measured frontier nobody has put a number on. That is the
+  >   difference between "correct but incremental" and a paper a referee remembers.
+  > - **Honesty guard, declared in advance:** with a handful of menus this is a low-N
+  >   regression; report it as suggestive-with-CI, and if the relationship is noisy or
+  >   non-monotone, say so — a null here is also publishable ("the threshold is not cleanly
+  >   estimable at this menu count"). It needs the M16-style pre-registration before the run.
+  > - **Prereqs:** best done WITH the B1/B1b data expansion (more menus = more DR² points =
+  >   more power), which is why it is paper 2, not a paper-1 appendix.
   - [x] **Nemenyi — BUILT + MEASURED 2026-07-21 (M31).** `inference.friedman_nemenyi`, a
         standing report section. **Friedman rejects (chi2 46.6, p 0.0001) — the ordering is
         not noise — but the Nemenyi critical difference is 5.99 rank units and NOTHING
