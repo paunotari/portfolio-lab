@@ -1,5 +1,19 @@
 # Factor & Geographic Diversification Thesis
 
+> ## ⚠ CORRECTION (2026-07-22, M37) — this document's central claim is overstated
+>
+> This thesis rests on Asness-Moskowitz-Pedersen (2013): value and momentum hedge each other
+> (long-short correlation ≈ −0.5). **Measured on our own sleeves, that hedge largely does not
+> survive the long-only wrapper.** Value–Momentum correlation is **+0.820** as an investor buys
+> them, and only **−0.088** in excess space — a fifth of AMP's figure. The direction is real;
+> the magnitude is not; and in the space you can actually hold, the two move together.
+>
+> **What to keep:** value and momentum as independently documented RETURN PREMIA.
+> **What to drop:** justifying the pairing as a *diversifier* or a regime hedge for a
+> long-only investor. See MILESTONES M37, and M34 for the same mechanism at menu level.
+
+
+
 **Scope of this document.** This is the *conceptual* layer of the portfolio project: why we diversify across equity factors and regions, what the academic evidence says about how those factors *co-move*, and which future regimes each piece is meant to hedge. It deliberately contains **no realized-return / backtest numbers** — those belong in a separate empirical document. The goal here is to have a defensible, source-backed rationale *before* looking at any performance chart, so that the eventual allocation is driven by structural logic rather than by fitting the recent past.
 
 **A necessary caveat.** Nothing here is personalized investment advice; it is a research synthesis. Every claim that rests on empirical work is attributed to a primary source (see [References](#references)). Where a statement is a modeling judgment rather than a documented finding, it is flagged as such.

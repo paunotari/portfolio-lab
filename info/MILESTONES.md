@@ -866,3 +866,38 @@ headline in TODO, deliberately not claimed here on two data points.**
 contestant-correlation reproducible one-liners (M34). **Data:** the 28-sleeve MSCI menu and its
 31-sleeve extension. **Status:** synthesis of measured entries M18/M27/M34 + the cited
 literature; every component number carries its own ledger entry and validation status.
+
+## M37 — The value/momentum hedge, measured: real in excess space, gone in the space you can buy
+**Claim (and it qualifies a PROJECT PREMISE, not just an outside paper):** Asness, Moskowitz &
+Pedersen (2013) report value and momentum long-short returns correlating ≈ **−0.50** within a
+market — the academic basis for holding both, and the stated core of this project's own
+`factor-diversification-thesis.md` ("the reason to hold Enhanced Value *and* Momentum is not
+that both are good, it's that their excess returns hedge each other's regimes"). Measured on our
+six regions with both sleeves, 330 months:
+
+| space | Value–Momentum correlation |
+|---|---|
+| **long-only, as an investor buys them** | **+0.820** |
+| excess over the parent index (market beta stripped) | **−0.088** |
+| AMP (2013), true long-short | ≈ −0.50 |
+
+**Three findings.** (1) The DIRECTION survives — in excess space the correlation is negative, so
+the mechanism is real. (2) The MAGNITUDE does not: we recover about **one fifth** of AMP's −0.50.
+Our "excess" (long-only tilt minus parent) is a diluted proxy for a true long-short, and MSCI's
+index construction carries turnover/capacity constraints academic factor portfolios do not.
+(3) **In the space that can actually be held, the hedge is not merely weakened but reversed:
++0.82.** Regional spread is wide and worth reporting: Europe −0.301 and Japan −0.217 approach
+AMP; EM +0.017 and AC Asia +0.069 are indistinguishable from zero.
+**⇒ Consequence for the project:** `factor-diversification-thesis.md` overstates its case and
+must be corrected — the value/momentum pairing cannot be justified to a retail long-only
+investor as a *hedge*. It remains justifiable as two independently documented RETURN PREMIA
+(M-series factor evidence), which is exactly the ground the v0.2 paper already stands on after
+M34. This is the **third independent instance of the same mechanism**: the long-only wrapper
+keeps the parent market's beta and discards most of what makes factor premia diversifying —
+alongside M34 (within-region cross-factor correlation 0.885, not Ilmanen-Kizer's ≈0) and the
+Quality measurement (beta 0.91, falls in 6/6 regions in the worst decile, cushions only 0.91pt).
+Beta dominance is not an incidental caveat in this paper; it is the finding.
+**See:** reproducible one-liner on `levels_wide.csv` (per region: corr of the two sleeves, and
+corr of each minus its Reference). **Code:** ad-hoc on the cached CSV. **Data:** 6 regions with
+both sleeves, common window 1999-01→2026-06. **Status:** descriptive, full-sample — a property
+of the investable wrapper, not a backtested strategy claim.
