@@ -317,6 +317,27 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         sigma-estimator column (M33, the only dimension that moved a number); (d) F7 add the
         realized-floor metric as a second row (the maximin's actual objective); (e)
         consistent contestant colors across all figures.
+  - [ ] **Rewrite `info/THESIS.md` for the v0.2 framing.** It still carries the v0.1 spine
+        (estimator as contribution, "regime-aware" attribution, M1–M21) and now opens with a
+        stale-warning header listing the three corrections (M32, M35, M36). Rewrite it to
+        mirror `paper/draft.md` v0.2, or retire it and point to the draft — having two
+        synthesis documents disagree is worse than having one.
+  - [ ] **§3 needs a "the investor's setting" paragraph justifying the MENU choice** (owner
+        question 2026-07-22): why long-horizon → equity; why long-only/indexed → what a
+        retail investor can actually buy; why factors → documented RETURN PREMIA (not
+        diversification, which M34 disproves long-only). Measured support now in hand:
+        every factor beats its own Reference in CAGR over the full window (Value +3.70pt,
+        Momentum +2.88pt, Quality +1.47pt; 7/7, 7/7, 6/6 regions) and the premia SHRINK BUT
+        SURVIVE in the backfill-free live era 2015+ (Momentum +3.38, Value +1.76, Quality
+        +1.04; Quality only 4/6 regions) — report BOTH, the shrinkage is the honest part and
+        is consistent with McLean-Pontiff (2016) post-publication decay. Literature base:
+        Fama-French 1993, Jegadeesh-Titman 1993, Asness-Moskowitz-Pedersen 2013 ("Value and
+        Momentum Everywhere" — the anti-data-mining defence), Asness-Frazzini-Pedersen 2019.
+        Counterweight to state: McLean-Pontiff decay, Hou-Xue-Zhang (2020) replication
+        crisis, and our own M34 (long-only tilts are ~95% market beta).
+        M23 belongs here too as the PRICE of the horizon preference — with the caveat that
+        loss-probability convergence at 20y is NOT "risk converges" (terminal-wealth
+        dispersion grows; Samuelson/Bodie vs Siegel is an open debate).
   - [ ] **Multiplicity honesty pass on the contestant table (M34).** The 17 rows are ~4
         distinct strategies: HRP vs ERC correlate **0.998** OOS, Brodie vs min-variance
         **0.975** (and both live off USA Quality, 47% vs 52%). State this in the results

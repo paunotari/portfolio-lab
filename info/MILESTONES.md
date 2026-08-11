@@ -824,3 +824,45 @@ matters") to differences well inside the null, the same failure mode caught in `
 the day before; it now tests both Δs against the null's dispersion first and says "no measurable
 effect" when neither clears. **Data:** 42 full walk-forwards on the 28-sleeve menu + the extended
 universe. **Status:** `OOS modern`, paired permutation design, harness-verified.
+
+## M36 — The reconciliation: the 1/N debate has TWO answers, and menu dispersion decides which one applies
+**Claim (synthesis, not a new measurement — it is the paper's spine, so it belongs in the
+ledger where its supports can be checked):** the twenty-year argument over whether optimization
+beats equal weight has stayed open because both camps are right about different opportunity
+sets, and the literature has argued it as though it had a single answer.
+- **"Optimization wins":** Kritzman-Page-Turkington (2010, *FAJ*, "In Defense of Optimization:
+  the Fallacy of 1/N") blame 1/N's apparent edge on short-window sample means;
+  Kirby-Ostdiek (2012, *JFQA*) blame the extreme turnover of the strategies DeMiguel tested.
+  Both demonstrate wins **on dispersed academic datasets** (industry and factor portfolios).
+- **"Optimization does not win":** DeMiguel-Garlappi-Uppal (2009) and its most recent
+  replication, Gelmini-Uberti (2024, +20 years incl. GFC and COVID), find no systematic win.
+- **What decides it is the MENU, and DeMiguel said so himself** — quoted approvingly by
+  Gelmini-Uberti: mean-variance improves relative to 1/N when idiosyncratic volatility is high,
+  because the covariance is then further from singular and easier to invert.
+
+**Our contribution is to put the retail factor investor on that axis with a number.** Fixing
+the five levers the debate actually turns on — menu dispersion, estimation inputs/window,
+turnover, shorting/leverage, and the significance bar — at the position a real long-only
+index investor occupies, the answer is "no", and the reason is measured rather than asserted:
+**DR² = 1.31 independent bets (M27), long-only factor tilts co-moving at 0.885 (M34), a
+near-singular covariance (smallest eigenvalue 3e-7), and min-variance's four sleeves holding
+1.28 bets — no more than the whole 28-sleeve menu.** The practical consequence, and the
+sentence the paper exists to support: **on this menu the choice of weighting rule cannot help
+you** — it moves you 2.7pt of volatility and 0.8pt of return, against 13.9pt and 8.1pt on the
+asset-class-extended menu. Effort belongs in selection and in the horizon/preference decision,
+not in the optimizer.
+
+**Honesty about novelty, recorded so the paper never oversells:** the MECHANISM is not ours
+(DeMiguel stated it; DR² is Choueifaty-Coignard 2008; the inference tools are others'). What is
+ours is (a) measuring it on the investable menu a retail factor investor can actually buy,
+which nobody had adjudicated with the modern checklist, (b) debunking one published
+"significantly and consistently" with the test and costs its authors never applied (Brodie,
+M28), and (c) the two placebos against our own signature feature (M32, M35). That is a
+solid practitioner-journal contribution, not a new law. **The step that WOULD be novel — the
+DR²-vs-optimization-edge curve and its threshold DR²\* — is recorded as paper 2's candidate
+headline in TODO, deliberately not claimed here on two data points.**
+**See:** `paper/draft.md` §1, §2 ("The debate, and its five levers"), §5.4, and Figures F0/F0b.
+**Code:** `optimizer.diversification_ratio` / `menu_diagnostics` (M27); correlation cuts and
+contestant-correlation reproducible one-liners (M34). **Data:** the 28-sleeve MSCI menu and its
+31-sleeve extension. **Status:** synthesis of measured entries M18/M27/M34 + the cited
+literature; every component number carries its own ledger entry and validation status.

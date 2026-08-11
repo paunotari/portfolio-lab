@@ -1,9 +1,33 @@
 # Robust Portfolio Construction at Retail Data Scale: Structure, Constraints, and Regime-Diverse Assets
 
 *A working paper of the portfolio_lab project. Every number below is traceable: the
-[MILESTONES.md](MILESTONES.md) ledger entry (M1–M21) names the producing module, the input
-data, and the validation status. Regenerate any figure by running the named module. The
-candidate methodological contribution is formalized in [estimator.md](estimator.md).*
+[MILESTONES.md](MILESTONES.md) ledger entry (M1–M36) names the producing module, the input
+data, and the validation status. Regenerate any figure by running the named module.*
+
+> ## ⚠ THIS DOCUMENT IS STALE (as of 2026-07-22) — read `paper/draft.md` v0.2 instead
+>
+> It reflects the **v0.1 framing**, in which the era-agreement-gated estimator was the
+> candidate contribution. Three later results overturned that framing. Until this file is
+> rewritten, treat the following as corrections that override anything below:
+>
+> 1. **The estimator is NOT a contribution — it is a reported null result (M35).** A paired
+>    placebo A/B finds every real-arm effect under half a null standard deviation and the
+>    estimator "helping" in 45–60% of replicates (a coin flip). M10's claimed +0.012 was
+>    always smaller than its own acknowledged ±0.01–0.02 menu-composition noise band. M16's
+>    pre-registered thresholds sat below the measured noise floor — a correctly-run test of a
+>    question it lacked the power to answer.
+> 2. **The macro regime labels add nothing to allocation (M32).** Eighty scrambled-label
+>    walk-forwards: best permutation p = 0.195 across twelve cells, and the real labels sit
+>    BELOW the scrambled mean in seven of them. The flagship's record comes from the
+>    regime-DIVERSE MENU (M6), not from knowing the regime. Every "regime-aware portfolio"
+>    phrasing below should read "a capped worst-case objective over a regime-diverse menu".
+> 3. **The spine is now dispersion, not method (M36).** The 1/N debate has two answers and
+>    menu dispersion decides which applies; the investable factor menu holds DR² = 1.31
+>    independent bets (M27), so no weighting rule can help there. That — plus the defeat of
+>    three published "beat-1/N" rules (M26/M28/M29) and the two placebos above — is what the
+>    paper now argues.
+>
+> The measured NUMBERS below stand; the framing and the attribution do not.
 
 ---
 
