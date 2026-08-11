@@ -100,7 +100,7 @@ the reason is not any optimizer's weakness: the menu itself holds only about one
 bet, so there is no dispersion for any scheme to exploit. The literature's optimization
 defenders are right on their datasets, where dispersion is high; we are right on ours, where
 it is not; and the two are not in conflict once the opportunity set is named. This is the
-paper's spine, and it is a measurement, not an assertion (Figure F0).
+paper's spine, and it is a measurement, not an assertion (Figures 3 and 4).
 
 We reach it by fielding the canonical construction rules — and the three most-cited rules
 built specifically to beat 1/N — against each other under one honesty protocol, attaching a
@@ -417,9 +417,9 @@ vs 1/N; DSR is the deflated Sharpe against the fielded roster. Sorted by Sharpe.
 | 1/N + trend (Faber 10m SMA) | 6.8% | 11.0% | 0.66 | −20% | −0.17 | 0.326 | 0.95 |
 | Dual momentum (Antonacci) | 5.4% | 13.3% | 0.46 | −27% | −0.37 | **0.034** | 0.81 |
 
-![F2 — Sharpe difference vs 1/N with bootstrap p-values](figures/F2_inference_vs_1N.png)
+![Figure 1 — Sharpe difference vs 1/N with bootstrap p-values](figures/F2_inference_vs_1N.png)
 
-***Figure F2.*** *Annualized Sharpe difference vs 1/N for every contestant, with the
+***Figure 1.*** *Annualized Sharpe difference vs 1/N for every contestant, with the
 Ledoit-Wolf bootstrap p-value on each bar. Nothing clears significance above the line; the two
 red bars are the overlays that are significantly **worse** than doing nothing.*
 
@@ -452,9 +452,9 @@ On the modern menu the same signature appears in rolling windows: ERC/HRP beat 1
 
 ### 5.3 Constraints are implicit shrinkage, measured live (M3, M17)
 
-![F5 — sensitivity grids](figures/F5_sensitivity_grids.png)
+![Figure 2 — sensitivity grids](figures/F5_sensitivity_grids.png)
 
-***Figure F5.*** *Left: net OOS Sharpe across every grid cell (costs, refit cadence, cap levels)
+***Figure 2.*** *Left: net OOS Sharpe across every grid cell (costs, refit cadence, cap levels)
 — no ranking conclusion flips. Right: the one genuine frontier, the headline p-value's
 sensitivity to bootstrap block length. (Rework flagged: the left panel connects heterogeneous
 dimensions on one axis and should be small multiples; the σ-estimator column of M33 is missing.)*
@@ -467,18 +467,18 @@ ranking conclusion; the single frontier is the headline p-value's block-length s
 
 ### 5.4 The reason is the opportunity set, not the optimizer (M18, M27, M34)
 
-![F0b — the achievable set on two menus](figures/F0b_frontier_cloud.png)
+![Figure 3 — the achievable set on two menus](figures/F0b_frontier_cloud.png)
 
-***Figure F0b.*** *Every long-only portfolio you could build (grey cloud, 40,000 random
+***Figure 3.*** *Every long-only portfolio you could build (grey cloud, 40,000 random
 weightings) plus the fielded rules, on a shared scale. **Left:** the 28-sleeve equity menu is a
 narrow sliver at high volatility — every rule piles into the same corner and two-thirds of the
 plane is unreachable. **Right:** adding Treasuries, gold and cash opens the set and the rules
 spread apart. This is the paper's claim in one image. (Full-sample geometry, illustrative; the
 cloud is the achievable set, not a frontier estimate.)*
 
-![F0 — dispersion measured](figures/F0_dispersion.png)
+![Figure 4 — dispersion measured](figures/F0_dispersion.png)
 
-***Figure F0.*** *The same fact in numbers. **A:** the most correlated cut of the whole menu is
+***Figure 4.*** *The same fact in numbers. **A:** the most correlated cut of the whole menu is
 same-region/different-factors (0.885) — long-only factor tilts do not decorrelate, because each
 index is its parent market plus a small tilt. Only the non-equity sleeves are genuinely
 different bets (Treasuries −0.115, gold −0.007). **B:** independent risk bets (DR²) — the
@@ -487,7 +487,7 @@ equity sleeves buy 0.03 of a bet; three asset classes buy more than all of them.
 
 Why does no weighting rule beat 1/N here, when the literature's optimization defenders show
 that it can? Because on an investable long-only factor menu there is almost nothing to
-optimize. We measure it three ways (Figure F0). **First, correlation structure:** the
+optimize. We measure it three ways (Figure 4). **First, correlation structure:** the
 highest-correlated cut of the entire menu is *same region, different factors* — value,
 momentum and quality within one country co-move at 0.885, higher than the same factor across
 regions (0.786) or pure market beta across regions (0.821). Long-only factor tilts do not
@@ -557,9 +557,9 @@ what you hold, not how you time it.
 
 ### 5.6 Two null results, reported not buried (M32, M35)
 
-![F7 — the regime-label placebo](figures/F7_placebo_null.png)
+![Figure 5 — the regime-label placebo](figures/F7_placebo_null.png)
 
-***Figure F7.*** *The permutation test against our own signature feature. Grey: net OOS Sharpe
+***Figure 5.*** *The permutation test against our own signature feature. Grey: net OOS Sharpe
 across 40 replicates with the macro-state labels scrambled (circular rotation, which preserves
 run lengths and the transition matrix exactly). Red line: the real-label result. It sits inside
 — and for two of the three contestants below — the scrambled-label distribution.*
@@ -590,9 +590,9 @@ the honest contribution is the negative result plus the apparatus that produced 
 
 ### 6.1 Exposure cannot impersonate skill (M12, M13)
 
-![F3 — leave-one-region-out rank paths](figures/F3_leave_one_region_out.png)
+![Figure 6 — leave-one-region-out rank paths](figures/F3_leave_one_region_out.png)
 
-***Figure F3.*** *Rank of each contestant when a whole region is dropped from the menu. The
+***Figure 6.*** *Rank of each contestant when a whole region is dropped from the menu. The
 structural rules hold their rank; the maximin family is the one that moves — its record was an
 exposure story, not a skill story. (Rework flagged: highlight the maximin family, grey the rest.)*
 
@@ -618,9 +618,9 @@ defense that every conclusion replicates on continuously-computed academic data.
 
 ### 6.3 The pre-registered virgin universe (M16)
 
-![F4 — estimator A/B on the virgin universe](figures/F4_virgin_universe_ab.png)
+![Figure 7 — estimator A/B on the virgin universe](figures/F4_virgin_universe_ab.png)
 
-***Figure F4.*** *Estimator OFF vs ON on the never-touched Fama-French international universe,
+***Figure 7.*** *Estimator OFF vs ON on the never-touched Fama-French international universe,
 on an honest full-height axis. Every pair is visually identical and nothing clears 1/N (dashed):
 the pre-registered Δ of +0.002/+0.016 sits inside the noise band that §5.6 later measures.*
 
@@ -801,27 +801,28 @@ modules for the expensive probes (leave-one-region-out, sensitivity grids, the c
 test); (iii) 71 unit/integrity tests; and (iv) the frozen snapshot of the confirmatory
 dataset and the pre-registration commit that precedes its single run in the git history.
 
-## Appendix B — Figure and table plan (to be exported from the cached CSVs)
+## Appendix B — Figures and tables
 
-**Lead figures (the pillar).** **F0b — the risk-return achievable set**: two panels on a
-shared scale, the Dirichlet cloud of long-only portfolios with the rules on top. Left, the
-28-sleeve equity menu is a narrow sliver at high volatility with every rule piled together and
-two-thirds of the plane empty; right, adding Treasuries/gold/cash fills the plane and the rules
-spread apart. Dispersion, not method, in one image — this opens the results. **F0 — the numbers
-behind it**: Panel A, mean pairwise correlation by menu cut (same-region/different-factors 0.885
-the highest, vs Treasuries −0.115, gold −0.007); Panel B, independent risk bets (DR²) across the
-equity menu (1.31), minimum variance's four sleeves (1.28), the extended menu (1.43).
+**Figure numbering ↔ source file** (paper numbers run in order of appearance; file names are
+the internal identifiers used by `paper/make_figures.py` and cited in the MILESTONES ledger):
 
-**Evidence + checklist.** Table 1 modern race with inference columns · F2 Sharpe-edge bars with
-bootstrap p labels (the two significantly-worse overlays in red) · F6 attribution stacked bars
-(min-variance = 82% Quality) · F7 the two-placebo null histograms (real regime labels inside the
-scrambled-label distribution) · F4 virgin-universe A/B on an honest full-height axis (everything
-clusters; Δ within the M35 noise band, 1/N line marked).
+| in paper | file | section | what it shows |
+|---|---|---|---|
+| Figure 1 | `F2_inference_vs_1N` | §5.1 | Sharpe difference vs 1/N per contestant with bootstrap p-values; the two significantly-worse overlays in red |
+| Figure 2 | `F5_sensitivity_grids` | §5.3 | every grid cell (costs, refits, caps) + the block-length p panel |
+| Figure 3 | `F0b_frontier_cloud` | §5.4 | **the pillar** — the achievable set on both menus, shared scale: equity is a sliver with the rules piled together, the extended menu opens up |
+| Figure 4 | `F0_dispersion` | §5.4 | the same in numbers — correlation cuts (0.885 the highest) and DR² (1.31 / 1.28 / 1.43) |
+| Figure 5 | `F7_placebo_null` | §5.6 | real regime labels inside the scrambled-label null distributions |
+| Figure 6 | `F3_leave_one_region_out` | §6.1 | rank paths when each region is dropped |
+| Figure 7 | `F4_virgin_universe_ab` | §6.3 | estimator ON vs OFF on the virgin universe, honest full-height axis |
 
-**Needs rework before submission (see TODO):** F1 walk-forward cumulative race — 17-line
+Table 1 (§5.1) is the modern race with inference columns. Still to build: T2 the 90-year race
+and window dispersion · T3 the grids in tabular form · T4 the confirmatory protocol and outcome.
+
+**Needs rework before submission (see TODO):** the walk-forward cumulative race (`F1`, not embedded) — 17-line
 spaghetti, redundant with F2/Table 1; cut or demote to appendix, or rebuild highlighting 3–4
 series against a gray cloud. F3 leave-one-region-out — 17-line bump chart; rebuild highlighting
-only the maximin family (the lines that move), graying the stable rules. F5 left panel — plots
+only the maximin family (the lines that move), graying the stable rules. Figure 2's left panel — plots
 heterogeneous grid dimensions on one connected axis (misleading); rebuild as small multiples and
 add the σ-estimator column (M33, the one dimension that actually moved a number). Consistent
 contestant colors across all figures. T2 90-year race + window dispersion · T3 grids · T4
