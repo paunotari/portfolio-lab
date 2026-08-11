@@ -4,7 +4,7 @@
 Portfolio Management* / *Journal of Asset Management*.**
 
 *Author: [owner]. Full reproducibility: every number in this paper is an entry in the
-project's critical-findings ledger (MILESTONES M1–M35), names the module that produces it,
+project's critical-findings ledger (MILESTONES M1–M37), names the module that produces it,
 and regenerates from public data with one command. Repository: [URL on publication].*
 
 ---
@@ -245,6 +245,44 @@ risk number in the study rides on.
 
 ## 3. Data
 
+### 3.1 The investor's setting, and why this menu
+
+The menu is not an arbitrary choice of dataset; it is a *position*, and the paper's question
+only means something once that position is stated. We study a retail investor who is
+**long-only, unlevered, index-based and long-horizon** — the constraint set of someone buying
+liquid, low-cost ETFs rather than running a book. Three commitments follow, and we justify each
+rather than assume it.
+
+**Equity-heavy, because of horizon.** Our scenario cones price this choice: an equity profile
+carries ≈14% probability of cumulative loss at 5 years against the defensive multi-asset
+profile's 1.4% — a tenfold gap — but by 20 years the two are 1.2% and 0.0% while the equity
+profile's median CAGR remains materially higher (≈9.7% vs 7.3%). The gap that dominates a
+5-year decision has largely closed by 20. **Two honesty notes belong with that number.** First,
+converging *loss probability* is not converging *risk*: the dispersion of terminal wealth grows
+with horizon, and whether time reduces equity risk at all is a genuinely open argument
+(Siegel for; Samuelson and Bodie against, the latter noting that the cost of insuring a
+shortfall *rises* with horizon). Second, these are simulations under a re-sequenced-history
+assumption, not forecasts. We therefore *price* the preference; we do not recommend it.
+
+**Long-only and index-based, because that is the accessible set.** This is the binding
+constraint of the paper and, as Sections 5.4–5.5 show, the one that drives every result.
+
+**Factor-tilted, because of documented return premia — not because of diversification.** The
+premia are the best-evidenced regularities in the cross-section: value and size (Fama & French
+1993), momentum (Jegadeesh & Titman 1993), quality (Asness, Frazzini & Pedersen 2019), with
+Asness, Moskowitz & Pedersen (2013) supplying the strongest anti-data-mining defence by finding
+value and momentum in eight asset classes. On our own sleeves every factor beats its own
+regional Reference in CAGR over the full window (Enhanced Value +3.70pt, Momentum +2.88pt,
+Quality +1.47pt; winning in 7/7, 7/7 and 6/6 regions). We report the backfill-free check
+alongside it, because it is the honest half: restricted to the live-index era (2015+), the
+premia **shrink but survive** — Momentum +3.38pt, Enhanced Value +1.76pt, Quality +1.04pt, the
+last winning in only 4 of 6 regions. That attenuation is consistent with McLean & Pontiff's
+(2016) documented post-publication decay, and it is the magnitude a prospective investor should
+plan around rather than the full-window figure. We deliberately do *not* justify the factor
+tilts as diversifiers: Sections 5.4 and 5.5 measure that, in long-only form, they are not.
+
+### 3.2 Sources
+
 **Modern menu.** 28 MSCI region×factor indices (ACWI, World, World ex-USA, USA, EM, Europe,
 AC Asia ex-Japan, Japan × Reference / Momentum / Enhanced Value / Quality where available),
 monthly net-USD total returns, common window 1999-01–2026-06 (330 months), with look-through
@@ -467,6 +505,25 @@ mechanism:** adding the three asset-class proxies moves the menu's minimum pairw
 correlation from 0.53 to −0.14 and its diversification ratio to 1.43 — three sleeves buying
 more independent-bet content than twenty-eight equity sleeves did.
 
+**Why the dispersion is missing: the long-only wrapper.** The literature that motivates factor
+investing measures *long-short* portfolios, in which buying the favoured stocks and shorting
+their opposites removes the market beta and leaves the premium. An investor who cannot short
+holds the premium *and* the parent market — roughly the latter — and the beta dominates whatever
+the tilt contributes. We measure the consequence three independent ways, and they agree.
+*(i) Across factors:* Ilmanen & Kizer (2012) report near-zero correlation across factor
+constituents; on long-only sleeves the within-region cross-factor correlation is **0.885**, the
+highest cut of our menu. *(ii) Value against momentum:* Asness, Moskowitz & Pedersen (2013)
+report ≈ **−0.50** between the two long-short premia — the standard argument for holding both.
+On our sleeves the correlation is **−0.088** once each is measured in excess of its parent index,
+about a fifth of theirs, and **+0.820** in the space an investor actually holds. The hedge is
+not merely weakened; in investable form it is reversed. *(iii) The defensive factor:* Quality's
+excess over junk is positive in drawdowns in long-short form, but long-only Quality carries a
+beta of **0.91** and *falls in 6 of 6 regions* during the worst decile of market months,
+cushioning **0.91 percentage points** (−7.95% against the Reference's −8.87%). That is
+attenuation, not protection. Beta dominance is not a caveat to this paper; it is the mechanism
+the headline result rests on, and it is why the diversification the factor literature promises
+is largely unavailable in the form a retail investor can buy.
+
 This is the paper's central claim, and it reconciles the twenty-year debate. Optimization
 beats 1/N exactly where there is dispersion to exploit — on the industry and factor-portfolio
 datasets of its defenders, where idiosyncratic volatility is high and the covariance is
@@ -660,6 +717,9 @@ Antonacci, G. (2014). *Dual Momentum Investing.* McGraw-Hill.
 Antonov, A., Lipton, A. & López de Prado, M. (2024). Overcoming Markowitz's Instability with
 the Help of the Hierarchical Risk Parity. *Transactions of ADIA Lab* 1.
 Asness, C., Frazzini, A. & Pedersen, L. (2012). Leverage Aversion and Risk Parity. *FAJ* 68(1).
+Asness, C., Frazzini, A. & Pedersen, L. (2019). Quality Minus Junk. *Review of Accounting
+Studies* 24(1).
+Asness, C., Moskowitz, T. & Pedersen, L. (2013). Value and Momentum Everywhere. *JF* 68(3).
 Bailey, D. & López de Prado, M. (2014). The Deflated Sharpe Ratio. *JPM* 40(5).
 Bailey, D., Borwein, J., López de Prado, M. & Zhu, Q. (2017). The Probability of Backtest
 Overfitting. *Journal of Computational Finance* 20(4).
@@ -680,6 +740,8 @@ DeMiguel, V., Garlappi, L. & Uppal, R. (2009). Optimal Versus Naive Diversificat
 Demšar, J. (2006). Statistical Comparisons of Classifiers over Multiple Data Sets. *JMLR* 7.
 Faber, M. (2007). A Quantitative Approach to Tactical Asset Allocation. *Journal of Wealth
 Management* 9(4).
+Fama, E. & French, K. (1993). Common Risk Factors in the Returns on Stocks and Bonds.
+*JFE* 33(1).
 Frazzini, A. & Pedersen, L. (2014). Betting Against Beta. *JFE* 111(1).
 Frost, P. & Savarino, J. (1986). An Empirical Bayes Approach to Efficient Portfolio
 Selection. *JFQA* 21(3).
@@ -715,6 +777,8 @@ López de Prado, M. (2016). Building Diversified Portfolios that Outperform Out-
 Maillard, S., Roncalli, T. & Teïletche, J. (2010). The Properties of Equally Weighted Risk
 Contribution Portfolios. *JPM* 36(4).
 Markowitz, H. (1952). Portfolio Selection. *JF* 7(1).
+McLean, R. D. & Pontiff, J. (2016). Does Academic Research Destroy Stock Return
+Predictability? *JF* 71(1).
 Michaud, R. (1989). The Markowitz Optimization Enigma: Is 'Optimized' Optimal? *FAJ* 45(1).
 Moreira, A. & Muir, T. (2017). Volatility-Managed Portfolios. *JF* 72(4).
 Pflug, G., Pichler, A. & Wozabal, D. (2012). The 1/N Investment Strategy Is Optimal under
@@ -731,7 +795,7 @@ Yuan, M. & Zhou, G. (2023). Why Naive Diversification Is Not So Naive, and How t
 
 Every table and figure regenerates from public data: MSCI end-of-day index levels, FRED,
 the Ken French data library, and an LBMA gold mirror. The repository ships (i) the
-critical-findings ledger (M1–M28), where each claim names its producing module, inputs and
+critical-findings ledger (M1–M37), where each claim names its producing module, inputs and
 validation status; (ii) a 16-stage pipeline (`python scripts/run_pipeline.py`) plus CLI
 modules for the expensive probes (leave-one-region-out, sensitivity grids, the confirmatory
 test); (iii) 71 unit/integrity tests; and (iv) the frozen snapshot of the confirmatory
