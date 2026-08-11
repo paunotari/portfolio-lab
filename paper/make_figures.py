@@ -45,10 +45,13 @@ def style(ax):
 
 
 def save(fig, name):
+    """PDF for submission quality, PNG alongside it so the figures render inline when the
+    draft is read as markdown (draft.md embeds the PNGs)."""
     fig.tight_layout()
     fig.savefig(OUT / name, bbox_inches="tight")
+    fig.savefig(OUT / name.replace(".pdf", ".png"), bbox_inches="tight", dpi=160)
     plt.close(fig)
-    print(f"[figures] wrote figures/{name}")
+    print(f"[figures] wrote figures/{name} (+ .png)")
 
 
 def f0_dispersion():

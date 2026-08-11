@@ -379,6 +379,12 @@ vs 1/N; DSR is the deflated Sharpe against the fielded roster. Sorted by Sharpe.
 | 1/N + trend (Faber 10m SMA) | 6.8% | 11.0% | 0.66 | −20% | −0.17 | 0.326 | 0.95 |
 | Dual momentum (Antonacci) | 5.4% | 13.3% | 0.46 | −27% | −0.37 | **0.034** | 0.81 |
 
+![F2 — Sharpe difference vs 1/N with bootstrap p-values](figures/F2_inference_vs_1N.png)
+
+***Figure F2.*** *Annualized Sharpe difference vs 1/N for every contestant, with the
+Ledoit-Wolf bootstrap p-value on each bar. Nothing clears significance above the line; the two
+red bars are the overlays that are significantly **worse** than doing nothing.*
+
 The three most-cited rules designed to beat 1/N do not, on this menu. The **Yuan-Zhou (2023)
 combination loses outright** (0.74 vs 0.83, p = 0.45) — its own theory predicts this where
 the estimation window is short and the menu one-factor-dominated, and we declared the
@@ -408,6 +414,13 @@ On the modern menu the same signature appears in rolling windows: ERC/HRP beat 1
 
 ### 5.3 Constraints are implicit shrinkage, measured live (M3, M17)
 
+![F5 — sensitivity grids](figures/F5_sensitivity_grids.png)
+
+***Figure F5.*** *Left: net OOS Sharpe across every grid cell (costs, refit cadence, cap levels)
+— no ranking conclusion flips. Right: the one genuine frontier, the headline p-value's
+sensitivity to bootstrap block length. (Rework flagged: the left panel connects heterogeneous
+dimensions on one axis and should be small multiples; the σ-estimator column of M33 is missing.)*
+
 The capped maximin beats its unconstrained twin out of sample in *every* sensitivity-grid
 cell (+0.115 to +0.132 Sharpe across costs 0/10/25 bps, refits 6/12/24m, cap levels
 20/35/35–30/45/45), replicating Jagannathan & Ma prospectively. No grid cell flips any
@@ -415,6 +428,24 @@ ranking conclusion; the single frontier is the headline p-value's block-length s
 (0.042/0.055/0.066), which we report as such.
 
 ### 5.4 The reason is the opportunity set, not the optimizer (M18, M27, M34)
+
+![F0b — the achievable set on two menus](figures/F0b_frontier_cloud.png)
+
+***Figure F0b.*** *Every long-only portfolio you could build (grey cloud, 40,000 random
+weightings) plus the fielded rules, on a shared scale. **Left:** the 28-sleeve equity menu is a
+narrow sliver at high volatility — every rule piles into the same corner and two-thirds of the
+plane is unreachable. **Right:** adding Treasuries, gold and cash opens the set and the rules
+spread apart. This is the paper's claim in one image. (Full-sample geometry, illustrative; the
+cloud is the achievable set, not a frontier estimate.)*
+
+![F0 — dispersion measured](figures/F0_dispersion.png)
+
+***Figure F0.*** *The same fact in numbers. **A:** the most correlated cut of the whole menu is
+same-region/different-factors (0.885) — long-only factor tilts do not decorrelate, because each
+index is its parent market plus a small tilt. Only the non-equity sleeves are genuinely
+different bets (Treasuries −0.115, gold −0.007). **B:** independent risk bets (DR²) — the
+28-sleeve menu holds 1.31, and minimum variance's four sleeves hold 1.28. Twenty-four extra
+equity sleeves buy 0.03 of a bet; three asset classes buy more than all of them.*
 
 Why does no weighting rule beat 1/N here, when the literature's optimization defenders show
 that it can? Because on an investable long-only factor menu there is almost nothing to
@@ -469,6 +500,13 @@ what you hold, not how you time it.
 
 ### 5.6 Two null results, reported not buried (M32, M35)
 
+![F7 — the regime-label placebo](figures/F7_placebo_null.png)
+
+***Figure F7.*** *The permutation test against our own signature feature. Grey: net OOS Sharpe
+across 40 replicates with the macro-state labels scrambled (circular rotation, which preserves
+run lengths and the transition matrix exactly). Red line: the real-label result. It sits inside
+— and for two of the three contestants below — the scrambled-label distribution.*
+
 The regime layer is this paper's most attackable feature, so we attack it ourselves with
 permutation tests and report what they return. **The labels (M32):** re-running the entire
 walk-forward 80 times with the macro-state labels scrambled — a circular rotation that
@@ -495,6 +533,12 @@ the honest contribution is the negative result plus the apparatus that produced 
 
 ### 6.1 Exposure cannot impersonate skill (M12, M13)
 
+![F3 — leave-one-region-out rank paths](figures/F3_leave_one_region_out.png)
+
+***Figure F3.*** *Rank of each contestant when a whole region is dropped from the menu. The
+structural rules hold their rank; the maximin family is the one that moves — its record was an
+exposure story, not a skill story. (Rework flagged: highlight the maximin family, grey the rest.)*
+
 Sub-period splits and region correlations expose the equity-only maximin: 1/N-like before
 2024, correlation 0.93 with EM, lifted by the 2024+ rally. The leave-one-region-out re-race
 then *inverts* the naive story: dropping EM improves every maximin variant (all-weather
@@ -516,6 +560,12 @@ the pre-launch-backfill critique is answered with measurement, alongside the str
 defense that every conclusion replicates on continuously-computed academic data.
 
 ### 6.3 The pre-registered virgin universe (M16)
+
+![F4 — estimator A/B on the virgin universe](figures/F4_virgin_universe_ab.png)
+
+***Figure F4.*** *Estimator OFF vs ON on the never-touched Fama-French international universe,
+on an honest full-height axis. Every pair is visually identical and nothing clears 1/N (dashed):
+the pre-registered Δ of +0.002/+0.016 sits inside the noise band that §5.6 later measures.*
 
 With protocol and thresholds committed before the first run — CONFIRMS if every maximin
 variant's anchored-minus-modern ΔSharpe ≥ 0 with at least one > +0.005; REFUTES if any
