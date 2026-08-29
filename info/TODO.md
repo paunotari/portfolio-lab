@@ -522,6 +522,27 @@ Check items off as completed. Add new ones as they come up; keep entries short a
     practitioner reader takes "sleeve" to mean an allocation bucket, not one index line.
     Defined at first body use; the key takeaway on page 2 (which precedes the definition)
     switched to "indices".
+  - [x] **Full re-read of the compiled PDF (23 pp), 2026-08-30 — six fixes, four of them
+    defects my own enrichment introduced.** Reading the render rather than the source is what
+    caught them:
+    - **`\exhibittitle` and `\exhibitnote` inherited `\centering` from their float**, so all
+      eight exhibit notes rendered centred-ragged instead of justified, and Exhibit 1's title
+      was centred while the rest were flush left. Fixed by explicitly resetting leftskip,
+      rightskip, parfillskip and parindent inside both macros.
+    - **Gelmini: "179: 100525: 100525".** The article number was already in the entry and
+      Crossref returns it in the `page` field, so the script appended it again. Fixed in the
+      .tex AND guarded in the script so a re-run cannot repeat it.
+    - **Three entries showed a single page** (Markowitz "7 (1): 77", Jorion "279", Frost
+      "293") because Crossref carries only the start page for JSTOR-sourced records, which
+      reads as a one-page article. Semantic Scholar supplied Jorion 279–292 and Frost 293–305.
+      **Markowitz could not be verified anywhere** (JSTOR blocks fetching, Semantic Scholar has
+      no record) so its page was REMOVED rather than guessed — incomplete beats wrong.
+    - Prose: the Jobson-Korkie citation rendered as "the Jobson and Korkie test, 1981, that
+      the prior replication uses"; and the sleeve definition had been shoehorned mid-sentence
+      as an appositive that broke the grammar. Both rewritten.
+    - [ ] **Known and not fixed: `[H]` leaves half-empty pages** (11, 12, 17). It is the price
+      of pinning each exhibit next to the text that discusses it, which was a deliberate
+      earlier fix. Journals re-typeset anyway; revisit only if submitting camera-ready.
   - [x] **BIBLIOGRAPHY COMPLETED, 2026-08-30** via `scripts/enrich_bibliography.py` (new,
     re-runnable). Pages 5 -> 43, DOIs 1 -> 43, out of 49 entries.
     **The script refuses to take Crossref's first hit**, because spot-checking showed 2 of 3

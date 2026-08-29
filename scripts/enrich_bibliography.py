@@ -156,6 +156,8 @@ def main() -> int:
         if e["key"] in NON_ARTICLE:
             skipped.append((e["key"], "not a journal article"))
             continue
+        # An article number already in the entry (Gelmini's "179: 100525") IS the page field
+        # in Crossref, so appending it again produced "179: 100525: 100525" on the first run.
         if e["has_pages"] and e["has_doi"]:
             skipped.append((e["key"], "already complete"))
             continue
@@ -173,6 +175,11 @@ def main() -> int:
                 break
             reasons.append(why)
         if hit:
+            if hit["page"] in e["text"]:          # already present; do not append it twice
+                skipped.append((e["key"], "page already in entry"))
+                print(f"  SKIP  {e['key']:<18} page {hit['page']} already present")
+                time.sleep(0.35)
+                continue
             accepted[e["key"]] = dict(page=hit["page"].replace("-", "\u2013"), doi=hit["DOI"])
             print(f"  OK    {e['key']:<18} {hit['page']:>12}   {hit['DOI']}")
         else:
