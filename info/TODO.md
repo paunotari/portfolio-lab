@@ -491,6 +491,20 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       §6.1 with the regional spread (M37).
     - Title also cut 15→11 words and "Cannot" dropped (PMR limit is 12): now *Dispersion, Not
       Method: Why 1/N Holds on an Investable Factor Menu*.
+  - [x] **Exhibit 5 recoloured, 2026-08-29.** Owner asked whether red/green confuse, since in
+    finance they read as loss/gain — correct, and they were also the worst pair for colour
+    vision deficiency (~8% of men). Rejected both alternatives the owner offered: a single
+    colour would hide the grouping that IS the finding (three equity cuts high, two
+    asset-class cuts at zero), and shading by value would double-encode what bar height
+    already shows, implying a continuum where the split is categorical. Used two categorical
+    colours instead, chosen so they already mean something in panel B of the same exhibit:
+    **grey = equity, teal = asset class, in both panels**. Caption states the key.
+    Also fixed "1 bet = no diversification", which was grey-on-grey inside the shaded band and
+    half-covered by the middle bar; now just "1 bet" in the gap between bars 1 and 2, the only
+    spot in that panel empty at every height.
+    - [ ] Minor, not acted on: red means three different things across the exhibits —
+      "significantly worse" (Exhibit 2), a boundary you cannot cross (Exhibits 3 and 4), and
+      "the observed result" (Exhibit 6). The last is the odd one out. Worth a decision.
   - [x] **Formulas added, 2026-08-29 — the maths now sits on the contribution too.** The paper's
     only two equations were the estimator's gate and blend, i.e. all of its mathematics was
     attached to the one thing that did NOT work. Added three numbered equations and one inline:

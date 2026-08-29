@@ -87,7 +87,14 @@ def f0_dispersion():
               "Market beta,\nacross regions", "Treasuries\nvs equity", "Gold\nvs equity"]
     vals = [np.mean(within), np.mean(same_fac), np.mean(cross_ref),
             ac_corr.get("US Treasury 10y", np.nan), ac_corr.get("Gold", np.nan)]
-    colors = ["#C94F4F", "#C97A4F", "#C9A24F", "#2E9E68", "#8C6D1F"]
+    # v3: two colours, not five. Red/green carry loss/gain valence in finance, which these
+    # bars do not mean, and red/green is also the worst pair for colour vision deficiency.
+    # Five arbitrary hues encoded nothing; a single colour would have hidden the grouping that
+    # IS the finding. So: grey = equity-vs-equity cuts, teal = asset-class-vs-equity. Those are
+    # the same two colours panel B already uses for the equity menu and the extended one, so
+    # across the whole exhibit grey means equity and teal means asset class.
+    EQ, AC = "#8E8E93", "#1F8A99"
+    colors = [EQ, EQ, EQ, AC, AC]
 
     inp = opt.build_inputs()
     inp_aw = opt.build_inputs(include_asset_classes=True)
@@ -132,8 +139,12 @@ def f0_dispersion():
         axB.text(xi, top + 0.045, f"{v:.2f}", ha="center", va="bottom", fontsize=8.6,
                  color=INK, zorder=4)
     axB.axhline(1.0, color=MUT, lw=0.9, ls=":", zorder=1)
-    axB.text(0.5, 0.93, "1 bet = no diversification", color=MUT, fontsize=6.8,
-             ha="center", va="top", zorder=4)
+    # label the reference line at the right margin, clear of every bar: centred inside the
+    # shaded band it was grey-on-grey and half-covered by the middle bar.
+    # x=0.5 is the gap between bars 1 and 2, and y just above 1.0 is above the shading:
+    # the only spot in this panel that is empty at every height.
+    axB.text(0.5, 1.03, "1 bet", color=MUT, fontsize=6.5, ha="center", va="bottom", zorder=4)
+    axB.set_xlim(-0.55, 2.55)
     axB.set_xticks(xB, bl, fontsize=7.6)
     axB.set_ylabel("independent risk bets  (DR$^2$)", fontsize=9)
     axB.set_ylim(0, 1.7)
