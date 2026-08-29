@@ -522,6 +522,28 @@ Check items off as completed. Add new ones as they come up; keep entries short a
     practitioner reader takes "sleeve" to mean an allocation bucket, not one index line.
     Defined at first body use; the key takeaway on page 2 (which precedes the definition)
     switched to "indices".
+  - [x] **BIBLIOGRAPHY COMPLETED, 2026-08-30** via `scripts/enrich_bibliography.py` (new,
+    re-runnable). Pages 5 -> 43, DOIs 1 -> 43, out of 49 entries.
+    **The script refuses to take Crossref's first hit**, because spot-checking showed 2 of 3
+    top results were the wrong record (an SSRN preprint, a book-chapter reprint whose pages
+    belong to the book). Every candidate must pass journal + volume + author + type gates
+    before it is written; failures are reported for manual work, never silently filled.
+    Three bugs surfaced by building it:
+    - **A real error in the bibliography:** Yuan & Zhou was cited as *JFQA* **58 (7)**. It is
+      **59 (8), pp. 3601-3632**. The volume check caught it — it refused the match rather than
+      writing pages onto a wrong volume.
+    - Journal normalizer treated Crossref's `&amp;` as text, so "Journal of Banking & Finance"
+      never matched. Fixed.
+    - Surname parser broke on LaTeX accents: `L\'opez de Prado` yielded "opez". Fixed.
+    Year turned out to be a bad key — publishers register the online-first date, so DeMiguel's
+    RFS article carries `issued` 2007 and Yuan-Zhou's 2022. Year is now +/-2 and **volume is
+    the hard identity check**.
+    - [ ] **Three articles remain incomplete, deliberately:** `antonov2024` (Transactions of
+      ADIA Lab — Crossref only has a 2025 World Scientific book chapter, unclear it is the same
+      item; **needs the owner's own source**), `bailey2017` and `ledeit2020` (DOIs verified by
+      fetching them and checking title/authors/journal, but neither publisher registers page
+      ranges with Crossref). `demsar2006` was closed from OpenAlex instead (JMLR 7: 1-30, two
+      concordant records); JMLR does not register with Crossref.
   - [x] **BIBLIOGRAPHY AUDIT, 2026-08-30.** Structurally correct — alphabetical order clean,
     all journal names spelled out, the four 3-em-dash repeats all valid. **But 44 of 49 entries
     have no page range and only 1 has a DOI**, both of which CMS 17 requires for journal
