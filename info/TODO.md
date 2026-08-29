@@ -491,6 +491,27 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       §6.1 with the regional spread (M37).
     - Title also cut 15→11 words and "Cannot" dropped (PMR limit is 12): now *Dispersion, Not
       Method: Why 1/N Holds on an Investable Factor Menu*.
+  - [x] **Abstract rewritten plain, 2026-08-30.** The v0.5 abstract was technically accurate
+    and badly suited to its venue: six figures, "95% confidence interval", "56% power",
+    "0.885", "0.53 to −0.14", an opening rhetorical binary ("we ask not whether X but where"),
+    and two competing closing lines. PMR requires the abstract be **non-technical**. Rewritten
+    at 163 words with **zero digits, zero em dashes and zero technical terms** — the
+    twenty-eight-indices-carry-barely-more-risk-than-one framing replaces DR² = 1.31, and
+    "three asset classes add more than all twenty-eight equity indices combined" replaces the
+    p-value. Numbers now live in the three key takeaways instead: the abstract sells, the
+    takeaways specify. That also closes the re-review's open item — the abstract no longer
+    quantifies one half of its punchline and not the other, because it quantifies neither.
+  - [x] **JARGON: "sleeve" was used 30 times and never defined.** Project-internal vocabulary
+    that leaked into the manuscript. PMR asks for plain English and minimal jargon, and a
+    practitioner reader takes "sleeve" to mean an allocation bucket, not one index line.
+    Defined at first body use; the key takeaway on page 2 (which precedes the definition)
+    switched to "indices".
+  - [x] **BIBLIOGRAPHY AUDIT, 2026-08-30.** Structurally correct — alphabetical order clean,
+    all journal names spelled out, the four 3-em-dash repeats all valid. **But 44 of 49 entries
+    have no page range and only 1 has a DOI**, both of which CMS 17 requires for journal
+    articles. Page numbers deliberately NOT supplied from memory (that is citation
+    fabrication). - [ ] **Open: enrich all 49 from the Crossref API** by title and author,
+    which returns verified pages and DOIs.
   - [x] **Re-review, 2026-08-29 — all 7 round-1 findings verified closed; 1 verification bug
     of my own found.** Ran `academic-paper-reviewer` re-review against `paper/tex/paper.tex`.
     Checked each round-1 finding mechanically against the file rather than asserting it
