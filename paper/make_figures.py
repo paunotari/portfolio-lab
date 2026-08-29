@@ -119,15 +119,24 @@ def f0_dispersion():
     bv = [dr2_eq, dr2_mv, dr2_aw]
     bc = ["#8E8E93", "#2E9E68", "#1F8A99"]
     xB = np.arange(len(bv))
-    axB.bar(xB, bv, 0.6, color=bc, edgecolor="white", lw=0.5)
+    # DR2 = 1 means NO diversification at all, so only the part above 1.0 is real. Shading the
+    # dead band stops the eye reading 1.31 vs 1.43 as "nearly the same bar" (M39).
+    axB.axhspan(0, 1.0, color="#F0F0F3", zorder=0)
+    axB.bar(xB, bv, 0.6, color=bc, edgecolor="white", lw=0.5, zorder=2)
+    # 95% bootstrap CI on the equity menu's DR2 (M39); the other two are not bootstrapped here
+    axB.errorbar([0], [bv[0]], yerr=[[bv[0] - 1.242], [1.399 - bv[0]]], fmt="none",
+                 ecolor=INK, elinewidth=1.1, capsize=4, zorder=3)
     for xi, v in zip(xB, bv):
-        axB.text(xi, v + 0.02, f"{v:.2f}", ha="center", va="bottom", fontsize=8.6, color=INK)
-    axB.axhline(1.0, color=MUT, lw=0.9, ls=":")
-    axB.text(2.4, 1.02, "1 bet", color=MUT, fontsize=7.5, ha="right", va="bottom")
+        top = 1.399 if xi == 0 else v          # clear the CI cap on the bootstrapped bar
+        axB.text(xi, top + 0.045, f"{v:.2f}", ha="center", va="bottom", fontsize=8.6,
+                 color=INK, zorder=4)
+    axB.axhline(1.0, color=MUT, lw=0.9, ls=":", zorder=1)
+    axB.text(0.5, 0.93, "1 bet = no diversification", color=MUT, fontsize=6.8,
+             ha="center", va="top", zorder=4)
     axB.set_xticks(xB, bl, fontsize=7.6)
     axB.set_ylabel("independent risk bets  (DR$^2$)", fontsize=9)
     axB.set_ylim(0, 1.7)
-    axB.set_title("B · The menu is ~1 bet, however you weight it", fontsize=8.8,
+    axB.set_title("B · Only the part above the shading is diversification", fontsize=8.6,
                   loc="left", color=INK)
     style(axB)
 
@@ -135,63 +144,105 @@ def f0_dispersion():
 
 
 def f0b_frontier_cloud():
-    """The dispersion pillar, dramatized (the figure discussed with the owner). Two risk-return
-    panels: the achievable set of long-only portfolios (a Dirichlet cloud) with the fielded
-    rules on top. LEFT the 28-sleeve equity menu — a thin sliver, every rule piled together;
-    RIGHT the menu extended with Treasuries/gold/cash — the set opens up and the rules spread.
-    'Dispersion, not method' in one image: on a one-bet menu there is nowhere for weighting to
-    go. Honest construction (our own note, mean-variance-and-estimation-error.md §6.1): the
-    cloud is the BACKGROUND achievable set; we do not read a frontier off it (Dirichlet
-    under-samples the high-return corners as N grows). Full-sample geometry, illustrative."""
-    from portfolio_lab.portfolio import optimizer as opt
-    ANN = np.sqrt(12.0)
-    rng = np.random.default_rng(0)
+    """THE PILLAR FIGURE. What a long-only investor can actually reach on each menu.
+
+    v2 (2026-08) — the v1 of this figure did not show what its caption claimed. It drew a
+    Dirichlet cloud of random weights, and a uniform Dirichlet over N sleeves concentrates
+    almost all its mass NEAR 1/N: both panels therefore rendered as similar blobs, hiding the
+    very difference the figure exists to show. (The v1 docstring already flagged the sampling
+    problem; the plot was never changed.) The claim itself is true and stronger than v1 showed:
+    the extended menu's achievable region is roughly twice the area, and the decisive fact is
+    the LEFT EDGE — on equities alone no long-only portfolio reaches below ~14% volatility,
+    while the extended menu reaches 0.6%.
+
+    So v2 draws the boundary instead of sampling the interior: the long-only minimum-variance
+    frontier (SLSQP per target return, the same solver `anchors.min_var_weights` uses), the
+    individual sleeves, and the fielded rules. Full-sample geometry, illustrative."""
+    from scipy.optimize import minimize
+    from portfolio_lab.portfolio import anchors, optimizer as opt
+
+    def frontier(mu, cov, k=40):
+        """Long-only EFFICIENT frontier: min w'Sw s.t. w'mu = target, w>=0, sum w = 1.
+
+        Swept upward from the global minimum-variance portfolio's own return, not from
+        mu.min(). Below that return every solution is on the inefficient lower branch, where
+        SLSQP has no unique basin and returns a different local answer per target — which is
+        what made the first attempt at this figure render as a sawtooth instead of an arc."""
+        n = len(mu)
+        pts = []
+        w_mv = anchors.min_var_weights(cov)
+        r_mv = float(w_mv @ mu)
+        pts.append((float(np.sqrt(w_mv @ cov @ w_mv)) * 100, r_mv * 100))
+        w0 = w_mv.copy()
+        for tgt in np.linspace(r_mv, mu.max(), k)[1:]:
+            res = minimize(lambda w: w @ cov @ w, w0, jac=lambda w: 2.0 * cov @ w,
+                           method="SLSQP", bounds=[(0.0, 1.0)] * n,
+                           constraints=[{"type": "eq", "fun": lambda w: w.sum() - 1.0},
+                                        {"type": "eq", "fun": lambda w, t=tgt: w @ mu - t}],
+                           options={"maxiter": 400, "ftol": 1e-11})
+            if res.success:
+                w = np.clip(res.x, 0, None)
+                s = w.sum()
+                if s > 0:
+                    w = w / s
+                    w0 = w                      # warm start: the frontier is continuous
+                    pts.append((float(np.sqrt(w @ cov @ w)) * 100, float(w @ mu) * 100))
+        return np.array(sorted(pts)) if pts else np.empty((0, 2))
 
     def panel(ax, inp, title, rules):
         R = inp["rets"].values
         mu = R.mean(0) * 12.0
         cov = np.cov(R, rowvar=False) * 12.0
-        n = R.shape[1]
-        W = rng.dirichlet(np.ones(n), 40000)
-        pr = W @ mu
-        pv = np.sqrt(np.einsum("ij,jk,ik->i", W, cov, W))
-        ax.scatter(pv * 100, pr * 100, s=2, c="#D8D8DE", alpha=0.5, edgecolors="none",
-                   rasterized=True)
+        vols = np.sqrt(np.diag(cov)) * 100
+        ax.scatter(vols, mu * 100, s=14, c="#C9C9D0", edgecolors="none", zorder=2,
+                   label="individual sleeves")
+        F = frontier(mu, cov)
+        if len(F):
+            ax.plot(F[:, 0], F[:, 1], color=INK, lw=1.6, zorder=3,
+                    label="long-only frontier")
+            floor = F[:, 0].min()
+            ax.axvline(floor, color="#C94F4F", lw=1.0, ls="--", zorder=1)
+            ax.text(floor + 0.4, 0.97, f"nothing exists\nleft of {floor:.1f}%",
+                    transform=ax.get_xaxis_transform(), fontsize=7.2, color="#C94F4F",
+                    va="top", ha="left", zorder=6)
         for name, w, col, mk, off in rules:
-            v = float(np.sqrt(w @ cov @ w)) * 100
-            r = float(w @ mu) * 100
-            ax.scatter(v, r, s=52, c=col, edgecolors="white", lw=0.8, marker=mk, zorder=5)
-            ax.annotate(name, (v, r), textcoords="offset points", xytext=off,
-                        fontsize=7.2, color=INK, zorder=6)
+            v, r = float(np.sqrt(w @ cov @ w)) * 100, float(w @ mu) * 100
+            ax.scatter(v, r, s=54, c=col, edgecolors="white", lw=0.9, marker=mk, zorder=5)
+            ax.annotate(name, (v, r), textcoords="offset points", xytext=off, fontsize=7.4,
+                        color=INK, zorder=6,
+                        bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.75))
         ax.set_xlabel("annualized volatility (%)", fontsize=9)
-        ax.set_title(title, fontsize=9, loc="left", color=INK)
+        ax.set_title(title, fontsize=8.8, loc="left", color=INK)
         style(ax)
-        return pv.min() * 100, pv.max() * 100
 
     inp = opt.build_inputs()
     a = inp["anchors"]
-    eq_rules = [("1/N", a["1/N"], "#8E8E93", "o", (6, 4)),
-                ("Min-var", a["Min-variance"], "#2E9E68", "D", (-40, -2)),
-                ("ERC", a["ERC (anchor)"], "#3B6FD4", "s", (6, 5)),
-                ("HRP", a["HRP"], "#7A5FD0", "^", (6, -10))]
+    # offsets chosen so the four labels never collide: rules pile into one corner here, which
+    # is the point of the panel, so the labels fan out rather than sit on their markers.
+    eq_rules = [("1/N", a["1/N"], "#8E8E93", "o", (8, 6)),
+                ("Min-var", a["Min-variance"], "#2E9E68", "D", (-46, -4)),
+                ("ERC", a["ERC (anchor)"], "#3B6FD4", "s", (8, -4)),
+                ("HRP", a["HRP"], "#7A5FD0", "^", (8, -16))]
 
-    # share BOTH axes: on a common scale the equity cloud is a narrow sliver at high vol while
-    # the extended cloud fills the space to its left — the dispersion difference, made honest.
-    fig, (axL, axR) = plt.subplots(1, 2, figsize=(8.4, 4.0), sharex=True, sharey=True)
-    panel(axL, inp, "A · 28-sleeve equity menu — one bet, rules piled together", eq_rules)
+    fig, (axL, axR) = plt.subplots(1, 2, figsize=(8.6, 4.1), sharex=True, sharey=True)
+    panel(axL, inp, "A · 28 equity sleeves", eq_rules)
     axL.set_ylabel("annualized return (%)", fontsize=9)
+    axL.legend(loc="lower right", fontsize=7, frameon=False)
 
     try:
         inp_aw = opt.build_inputs(include_asset_classes=True)
         aw = inp_aw["anchors"]
-        aw_rules = [("1/N", aw["1/N"], "#8E8E93", "o", (6, 4)),
-                    ("Min-var", aw["Min-variance"], "#2E9E68", "D", (8, 6)),
-                    ("ERC", aw["ERC (anchor)"], "#3B6FD4", "s", (8, -2)),
-                    ("HRP", aw["HRP"], "#7A5FD0", "^", (8, -12))]
-        panel(axR, inp_aw, "B · + Treasuries / gold / cash — the set opens up", aw_rules)
+        aw_rules = [("1/N", aw["1/N"], "#8E8E93", "o", (8, 6)),
+                    ("Min-var", aw["Min-variance"], "#2E9E68", "D", (14, 10)),
+                    ("ERC", aw["ERC (anchor)"], "#3B6FD4", "s", (12, -2)),
+                    ("HRP", aw["HRP"], "#7A5FD0", "^", (14, -12))]
+        panel(axR, inp_aw, "B · + Treasuries / gold / cash", aw_rules)
     except Exception as e:
         axR.text(0.5, 0.5, f"(extended menu unavailable: {e})", ha="center", fontsize=8)
 
+    fig.suptitle("What a long-only investor can actually reach: the equity menu cannot go "
+                 "below 13% volatility, the extended one reaches 0.6%",
+                 fontsize=9, color=INK, y=1.04)
     save(fig, "F0b_frontier_cloud.pdf")
 
 
@@ -231,19 +282,46 @@ def f2_inference():
 
 
 def f3_loro():
+    """v2 (2026-08): HIGHLIGHT, don't enumerate. v1 drew 11 equally-weighted lines with the
+    legend sitting on top of the data, so the finding it exists to show — the structural rules
+    hold rank while the maximin family swings — was invisible in the tangle. v2 greys every
+    stable rule into a background band and colours only the three lines that move, with the
+    legend outside the plot."""
     lo = pd.read_csv(C.OPTIMIZER_LORO)
     drops = list(dict.fromkeys(lo.dropped_region))
     lbl = ["full menu" if d == "none" else f"– {d.replace('_', ' ')}" for d in drops]
-    fig, ax = plt.subplots(figsize=(7.2, 4.0))
-    for p in dict.fromkeys(lo.portfolio):
-        sub = lo[lo.portfolio == p].set_index("dropped_region").reindex(drops)
-        ax.plot(range(len(drops)), sub["rank"], marker="o", ms=3.5, lw=1.2, color=pc(p),
-                label=p)
+    ports = list(dict.fromkeys(lo.portfolio))
+
+    def path(p):
+        return lo[lo.portfolio == p].set_index("dropped_region").reindex(drops)["rank"].values
+
+    swing = {p: float(np.nanmax(path(p)) - np.nanmin(path(p))) for p in ports}
+    # Select the maximin family BY NAME, not by a swing threshold: the paper's claim is about
+    # that family specifically, and a threshold picked a set that did not match it (it colored
+    # min-variance+vol-target and dropped the all-weather variant).
+    movers = [p for p in ports if "Maximin" in p]
+    fig, ax = plt.subplots(figsize=(7.8, 4.0))
+    for p in ports:                                        # background: everything that holds
+        if p not in movers:
+            ax.plot(range(len(drops)), path(p), marker="o", ms=2.6, lw=1.0,
+                    color="#C9C9D0", zorder=1)
+    for p in movers:
+        ax.plot(range(len(drops)), path(p), marker="o", ms=4.5, lw=2.0, color=pc(p),
+                label=f"{p}  (moves {int(swing[p])} ranks)", zorder=3)
+    # name the two anchors the reader needs even though they do not move
+    for p, ha in (("Min-variance", "left"), ("1/N", "left")):
+        if p in ports:
+            ax.annotate(p, (0, path(p)[0]), textcoords="offset points", xytext=(-6, 0),
+                        ha="right", va="center", fontsize=7.4, color=INK, zorder=4)
     ax.set_xticks(range(len(drops)), lbl, rotation=28, ha="right", fontsize=8)
     ax.set_ylabel("rank (1 = best)", fontsize=9)
     ax.invert_yaxis()
     ax.set_yticks(range(1, int(lo["rank"].max()) + 1))
-    ax.legend(fontsize=6.5, ncol=2, frameon=False, loc="lower right")
+    ax.set_xlim(-1.6, len(drops) - 0.6)
+    ax.legend(fontsize=7, frameon=False, loc="upper center", bbox_to_anchor=(0.5, -0.28),
+              ncol=1)
+    ax.set_title("Grey = every rule that holds its rank. Colour = the maximin family, "
+                 "whose record was exposure.", fontsize=8.6, loc="left", color=INK)
     style(ax)
     save(fig, "F3_leave_one_region_out.pdf")
 
@@ -256,58 +334,85 @@ def f4_virgin():
     order = mx + rest
     x = np.arange(len(order))
     fig, ax = plt.subplots(figsize=(7.2, 3.9))
-    ax.bar(x - 0.2, sh.loc[order, "modern"], 0.38, color=[pc(p) for p in order], alpha=0.35,
+    # Two colours only. v1 gave every portfolio its own hue, which encoded nothing — the
+    # light/dark pairing already carries OFF/ON, so per-portfolio colour was pure noise.
+    ax.bar(x - 0.2, sh.loc[order, "modern"], 0.38, color="#C9C9D0",
            label="estimator OFF (modern-only)")
-    ax.bar(x + 0.2, sh.loc[order, "anchored"], 0.38, color=[pc(p) for p in order],
+    ax.bar(x + 0.2, sh.loc[order, "anchored"], 0.38, color="#1F8A99",
            label="estimator ON (66y anchored)")
     for xi, p in enumerate(order):
         d = sh.loc[p, "anchored"] - sh.loc[p, "modern"]
-        ax.text(xi, max(sh.loc[p, "modern"], sh.loc[p, "anchored"]) + 0.012,
-                f"Δ{d:+.3f}", ha="center", fontsize=6.8, color=MUT)
+        # white bbox: in v1 the 1/N reference line struck straight through the Δ label of the
+        # bar that happened to sit at its height.
+        ax.text(xi, max(sh.loc[p, "modern"], sh.loc[p, "anchored"]) + 0.02,
+                f"Δ{d:+.3f}", ha="center", fontsize=6.8, color=MUT, zorder=5,
+                bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="none"))
     if "1/N" in sh.index:
         y1n = float(sh.loc["1/N", "anchored"])
-        ax.axhline(y1n, color=INK, lw=1.0, ls="--")
-        ax.text(len(order) - 0.5, y1n + 0.008, "1/N", color=INK, fontsize=7.5,
-                ha="right", va="bottom")
+        ax.axhline(y1n, color=INK, lw=1.0, ls="--", zorder=1)
+        ax.text(-0.55, y1n, "1/N", color=INK, fontsize=7.5, ha="right", va="center")
     ax.set_xticks(x, order, rotation=28, ha="right", fontsize=7.6)
+    ax.set_xlim(-1.1, len(order) - 0.4)
     # HONEST AXIS: bars start at zero, so the ±0.002–0.016 A/B deltas read as the noise band
     # they are (M35) — never a truncated axis that magnifies them.
     ax.set_ylim(0, max(sh.max().max() * 1.18, 0.8))
     ax.set_ylabel("net OOS Sharpe (virgin universe, 2000–2026)", fontsize=9)
-    ax.set_title("Estimator ON vs OFF on the pre-registered virgin universe: everything "
-                 "clusters, and the Δ is within the noise band (M35)",
-                 fontsize=8.2, loc="left", color=INK)
+    ax.set_title("Every OFF/ON pair is the same height: the estimator does nothing, and no "
+                 "variant clears 1/N", fontsize=8.4, loc="left", color=INK)
     ax.legend(fontsize=8, frameon=False, loc="lower left")
     style(ax)
     save(fig, "F4_virgin_universe_ab.pdf")
 
 
 def f5_sensitivity():
+    """v2 (2026-08): SMALL MULTIPLES. v1 plotted three unrelated grid dimensions along one
+    continuous x-axis, so the line segment joining "cost 25 bps" to "refit 6m" implied a trend
+    between quantities that share no scale, and the eye read large movement in a figure whose
+    caption says nothing flips. Each dimension now gets its own panel with its own axis, and
+    the shared y-range across the three makes the real message visible: every line is flat.
+    The fourth panel keeps the one genuine frontier, the headline p's block-length sensitivity."""
     sd = pd.read_csv(C.OPTIMIZER_SENSITIVITY)
     grid = sd[sd.portfolio.notna()] if "portfolio" in sd.columns else pd.DataFrame()
     blk = sd[sd.dimension == "lw_block"]
-    dims = [("cost_bps", "cost {} bps"), ("refit_months", "refit {}m"),
-            ("caps_slv_geo_fac", "caps {}")]
-    cells = []
-    for d, f in dims:
-        for c in dict.fromkeys(grid[grid.dimension == d].cell):
-            cells.append((d, c, f.format(c)))
+    dims = [("cost_bps", "{} bps", "transaction cost"),
+            ("refit_months", "{}m", "refit cadence"),
+            ("caps_slv_geo_fac", "{}", "diversification caps")]
     want = ["Min-variance", "1/N", "HRP", "Maximin (diversified)", "Maximin (all-weather div)"]
-    fig, (ax, ax2) = plt.subplots(1, 2, figsize=(8.6, 3.6), width_ratios=[2.4, 1])
-    for p in want:
-        ys = [grid[(grid.dimension == d) & (grid.cell == c)
-                   & (grid.portfolio == p)].oos_sharpe.mean() for d, c, _ in cells]
-        ax.plot(range(len(cells)), ys, marker="o", ms=3.5, lw=1.2, color=pc(p), label=p)
-    ax.set_xticks(range(len(cells)), [l for _, _, l in cells], rotation=32, ha="right",
-                  fontsize=7.6)
-    ax.set_ylabel("net OOS Sharpe", fontsize=9)
-    ax.legend(fontsize=6.8, frameon=False)
-    style(ax)
+
+    fig, axes = plt.subplots(1, 4, figsize=(9.2, 3.2), width_ratios=[1, 1, 1.15, 0.9])
+    lo, hi = [], []
+    for k, (d, fmt, nice) in enumerate(dims):
+        ax = axes[k]
+        cells = list(dict.fromkeys(grid[grid.dimension == d].cell))
+        for p in want:
+            ys = [grid[(grid.dimension == d) & (grid.cell == c)
+                       & (grid.portfolio == p)].oos_sharpe.mean() for c in cells]
+            ax.plot(range(len(cells)), ys, marker="o", ms=3.5, lw=1.2, color=pc(p),
+                    label=p if k == 0 else None)
+            lo += [min(ys)]; hi += [max(ys)]
+        ax.set_xticks(range(len(cells)), [fmt.format(c) for c in cells], fontsize=7.4)
+        ax.set_xlim(-0.35, len(cells) - 0.65)
+        ax.set_title(nice, fontsize=8.4, loc="left", color=INK)
+        style(ax)
+        if k:
+            ax.tick_params(labelleft=False)
+    pad = 0.02
+    for k in range(3):
+        axes[k].set_ylim(min(lo) - pad, max(hi) + pad)      # one shared scale: flat is flat
+    axes[0].set_ylabel("net OOS Sharpe", fontsize=9)
+    axes[0].legend(fontsize=6.4, frameon=False, loc="center left")
+
+    ax2 = axes[3]
     ax2.bar([f"b={c}" for c in blk.cell], blk.c2_p_minvar_vs_1N, color="#2E9E68", width=0.55)
     ax2.axhline(0.05, color="#C94F4F", lw=1, ls=":")
-    ax2.text(len(blk) - 0.55, 0.052, "5%", color="#C94F4F", fontsize=8)
-    ax2.set_ylabel("p (min-var vs 1/N)", fontsize=9)
+    ax2.text(-0.4, 0.0525, "5%", color="#C94F4F", fontsize=7.5, va="bottom")
+    ax2.set_ylabel("p (min-var vs 1/N)", fontsize=8.6)
+    ax2.set_title("bootstrap block length", fontsize=8.4, loc="left", color=INK)
+    ax2.tick_params(labelsize=7.4)
     style(ax2)
+    fig.suptitle("No ranking flips in any cell. The one line that moves is the all-weather "
+                 "maximin under looser caps — constraints-as-shrinkage, visible.",
+                 fontsize=8.6, color=INK, y=1.05)
     save(fig, "F5_sensitivity_grids.pdf")
 
 
@@ -357,17 +462,22 @@ def f7_placebo():
         null = circ[col].dropna().values
         ax.hist(null, bins=12, color="#C9C9CE", edgecolor="white", lw=0.5)
         ax.axvline(float(real[col]), color="#C94F4F", lw=1.8)
-        ax.axvline(float(null.mean()), color=INK, lw=1.0, ls=":")
-        ax.text(float(real[col]), ax.get_ylim()[1] * 0.96, " real", color="#C94F4F",
-                fontsize=7.5, ha="left", va="top")
+        ax.axvline(float(null.mean()), color=INK, lw=1.0, ls=":",
+                   label="mean of the scrambled runs")
+        # v1 put this label inside the axes at 96% height, where it landed on the tallest bar,
+        # and never said what the dotted line was.
+        ax.text(float(real[col]), 0.90, " real labels", color="#C94F4F", fontsize=7.4,
+                ha="left", va="top", transform=ax.get_xaxis_transform(), zorder=6,
+                bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.85))
         p_perm = (1 + int((null >= float(real[col])).sum())) / (1 + len(null))
         ax.set_title(f"{p.replace('Maximin ', '').strip('()')}\np = {p_perm:.2f}",
                      fontsize=8.2, color=INK)
         ax.set_xlabel("net OOS Sharpe", fontsize=8.2)
         style(ax)
     axes[0].set_ylabel("scrambled-label replicates", fontsize=8.6)
-    fig.suptitle("Real regime labels vs 40 scrambled-label replicates (circular null)",
-                 fontsize=9.2, color=INK, y=1.02)
+    axes[0].legend(fontsize=6.8, frameon=False, loc="upper right")
+    fig.suptitle("The real labels land inside the scrambled-label distribution: the regime "
+                 "signal earns nothing in the allocation", fontsize=9, color=INK, y=1.06)
     save(fig, "F7_placebo_null.pdf")
 
 

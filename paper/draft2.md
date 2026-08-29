@@ -1,10 +1,10 @@
 # Dispersion, Not Method: Why 1/N Holds on an Investable Factor Menu
 
-**Working paper — draft v0.4 (2026-08). Prepared for SSRN; target outlets: *Journal of
+**Working paper — draft v0.5 (2026-08). Prepared for SSRN; target outlets: *Journal of
 Portfolio Management* / *Journal of Asset Management*.**
 
 *Author: [owner]. Every number in this paper is an entry in the project's critical-findings
-ledger (M1-M37), names the module that produces it, and regenerates from public data with one
+ledger (M1-M39), names the module that produces it, and regenerates from public data with one
 command. Repository: [URL on publication].*
 
 ---
@@ -53,8 +53,7 @@ significance, and Section 5.1 reports the power behind that statement rather tha
 implied. The cause is a property of the menu itself, which holds about one independent bet,
 leaving no dispersion for any scheme to exploit. The optimization defenders are right on their datasets, where
 dispersion is high. We are right on ours, where it is not. The two findings are compatible
-once the opportunity set is named. This is the paper's spine, and Section 6 measures it
-(Figures 3 and 4).
+once the opportunity set is named. Section 6 measures it (Figures 3 and 4).
 
 We reach it by fielding the canonical construction rules, together with the three most-cited
 rules built specifically to beat 1/N, against each other under one protocol, attaching a
@@ -143,8 +142,7 @@ Nogales & Uppal (2009) are the norm-constrained cousin. On the input side, Jorio
 Frost & Savarino (1986) shrink means toward within-sample grand means, whereas ours
 (Section 4.1) shrinks conditional means toward another era's evidence under a pretest gate in
 the Judge & Bock (1978) lineage. Boyd et al. (2024) show what Markowitz looks like when the
-inputs are genuinely there, with factor risk models, explicit robustness terms and an
-engineering budget, which is a useful foil for the opposite regime we study.
+inputs are genuinely there, which is the opposite of the regime we study.
 
 **Regime models and inference.** Ang & Bekaert (2002, 2004) established that regimes matter for
 allocation, and Guidolin & Timmermann (2007) extended the latent-state machinery. We differ in
@@ -161,10 +159,9 @@ only means something once that position is stated. We study a retail investor wh
 **long-only, unlevered, index-based and long-horizon**, the constraint set of someone buying
 liquid, low-cost ETFs rather than running a book. We price the equity-heavy stance without recommending it. Our scenario cones put an equity profile's probability of cumulative loss at ≈14%
 at 5 years against a defensive multi-asset profile's 1.4%, but at 20 years the two are 1.2%
-and 0.0% with the equity profile's median CAGR still materially higher (≈9.7% vs 7.3%). Two
-honesty notes belong with that number. Converging *loss probability* is not converging *risk*,
-since terminal-wealth dispersion grows with horizon, and these are simulations under a
-re-sequenced-history assumption, and they are not forecasts.
+and 0.0% with the equity profile's median CAGR still materially higher (≈9.7% vs 7.3%). Converging *loss
+probability* is not converging *risk*, since terminal-wealth dispersion grows with horizon, and
+these are simulations under a re-sequenced-history assumption, not forecasts.
 
 The factor tilts are justified by documented return premia and not by diversification: value
 and size (Fama & French, 1993), momentum (Jegadeesh & Titman, 1993) and quality (Asness,
@@ -276,8 +273,8 @@ Sharpe, the design has **56% power** at the 5% level, and the smallest gap it co
 80% power is **+0.27**. The observed gap is three quarters of the detectable one. The correct
 statement is therefore weaker than the literature's usual phrasing, and we adopt it throughout:
 **no rule beats 1/N resolvably at this sample size.** Whether a +0.20 edge exists is a question
-210 monthly observations cannot answer either way, and no choice of estimator repairs that.
-Section 6 matters precisely because the menu measurement is not subject to the same limit.
+210 monthly observations cannot answer either way. Section 6 matters because the menu
+measurement is not subject to the same limit.
 
 Two further facts constrain how far the modern race travels, and they point the same way. The
 winner's return is 82% attributable to Quality sleeves (below), and Quality is the defensive
@@ -345,9 +342,11 @@ winner does not.
 
 ![Figure 2 — sensitivity grids](figures/F5_sensitivity_grids.png)
 
-***Figure 2.*** *Left: net out-of-sample Sharpe across every grid cell (costs, refit cadence,
-cap levels), where no ranking conclusion flips. Right: the one genuine frontier, the headline
-p-value's sensitivity to bootstrap block length.*
+***Figure 2.*** *Each grid dimension on its own axis, sharing one Sharpe scale. Costs and
+refit cadence are flat for every contestant. The one line that moves is the all-weather maximin
+under looser caps (0.99 down to 0.87), which is constraints-as-shrinkage made visible rather
+than a ranking flip. Rightmost panel: the study's one genuine frontier, the headline p-value's
+sensitivity to bootstrap block length.*
 
 Constraints behave as Jagannathan & Ma (2003) predicted, measured prospectively rather than
 in-sample. The capped maximin beats its unconstrained twin out of sample in every
@@ -360,11 +359,12 @@ conclusion. The single genuine frontier is the headline p-value's block-length s
 
 ![Figure 3 — the achievable set on two menus](figures/F0b_frontier_cloud.png)
 
-***Figure 3.*** *Every long-only portfolio you could build (grey cloud, 40,000 random
-weightings) plus the fielded rules, on a shared scale. **Left:** the 28-sleeve equity menu is a
-narrow sliver, and every rule piles into the same corner. **Right:** adding Treasuries, gold and
-cash opens the set and the rules spread apart. (Full-sample geometry; the cloud is the
-achievable set, not a frontier estimate.)*
+***Figure 3.*** *The long-only frontier of each menu, with the individual sleeves and the
+fielded rules, on a shared scale. **Left:** on 28 equity sleeves nothing exists to the left of
+13.3% volatility, the frontier is a short arc, and every rule piles into the same corner.
+**Right:** adding Treasuries, gold and cash moves the floor to 0.6% and the frontier sweeps the
+whole plane. The constraint is the menu, not the weighting rule. (Full-sample geometry,
+illustrative; the frontier is solved per target return under long-only weights.)*
 
 Why does no weighting rule beat 1/N here, when the literature's optimization defenders show
 that it can? Because on an investable long-only factor menu there is almost nothing to
@@ -374,9 +374,10 @@ optimize. We measure it three ways.
 
 ***Figure 4.*** *The same fact in numbers. **A:** the most correlated cut of the menu is
 same-region/different-factors (0.885), and only the non-equity sleeves are genuinely different
-bets (Treasuries −0.115, gold −0.007). **B:** independent risk bets (DR²), where the 28-sleeve
-menu holds 1.31 and minimum variance's four sleeves hold 1.28. Twenty-four extra equity
-sleeves buy 0.03 of a bet, and three asset classes buy more than all of them.*
+bets (Treasuries −0.115, gold −0.007). **B:** independent risk bets (DR²). The shaded band below
+1.0 is the region where a menu holds a single bet, so only the part above it is diversification
+at all: the 28 equity sleeves buy 0.31 of a second bet and minimum variance's four sleeves buy
+0.28, while three asset classes buy 0.43. Error bar is the 95% bootstrap interval of Section 6.*
 
 **First, correlation structure.** The highest-correlated cut of the entire menu is *same
 region, different factors*. Value, momentum and quality within one country co-move at 0.885,
@@ -437,7 +438,7 @@ the factor literature promises is largely unavailable in the form a retail inves
 
 ### 6.2 The reconciliation
 
-This is the paper's central claim, and it settles the twenty-year debate. Optimization beats 1/N exactly where there is dispersion to exploit, on the industry and
+Optimization beats 1/N exactly where there is dispersion to exploit, on the industry and
 factor-portfolio datasets of its defenders, where idiosyncratic volatility is high and the
 covariance is well-conditioned, which is Gelmini & Uberti's own explanation (Section 2). An
 investable factor menu is the opposite regime, with one dominant bet, a near-singular
@@ -478,9 +479,9 @@ what you hold rather than how you time it.
 
 ***Figure 5.*** *The permutation test against our own signature feature. Grey: net
 out-of-sample Sharpe across 40 replicates with the macro-state labels scrambled (circular
-rotation, which preserves run lengths and the transition matrix exactly). Red line: the
-real-label result. It sits inside the scrambled-label distribution, and below it for two of the
-three contestants.*
+rotation, which preserves run lengths and the transition matrix exactly). Dotted line: the mean
+of those scrambled runs. Red line: the real-label result. It sits inside the scrambled
+distribution in all three panels, and below the scrambled mean in all three.*
 
 The regime layer is this paper's most attackable feature, so we attack it ourselves and report
 what the tests return. **The labels (M32):** re-running the entire walk-forward 80 times with
@@ -507,9 +508,10 @@ produced it.
 
 ![Figure 6 — leave-one-region-out rank paths](figures/F3_leave_one_region_out.png)
 
-***Figure 6.*** *Rank of each contestant when a whole region is dropped from the menu. The
-structural rules hold their rank. The maximin family is the one that moves, so its record
-traces to exposure.*
+***Figure 6.*** *Rank of each contestant when a whole region is dropped. Grey lines are every
+rule that holds its rank across all nine menus. The maximin family is coloured because it is
+the family that moves: the worst-quadrant variant swings eight ranks, and the all-weather
+variant takes first place once emerging markets are removed. Its record traces to exposure.*
 
 **Exposure and region dependence.** Sub-period splits and region correlations expose the
 equity-only maximin as 1/N-like before 2024, correlated 0.93 with EM and lifted by the 2024+
@@ -527,9 +529,9 @@ pre-launch-backfill critique with measurement.
 ![Figure 7 — estimator A/B on the virgin universe](figures/F4_virgin_universe_ab.png)
 
 ***Figure 7.*** *Estimator OFF against ON on the never-touched Fama-French international
-universe, on an honest full-height axis. Every pair is visually identical and nothing clears
-1/N (dashed). The pre-registered Δ of +0.002/+0.016 sits inside the noise band Section 7.2
-measures.*
+universe, on a full-height axis rather than a truncated one. Every pair is the same height and
+nothing clears 1/N (dashed). The pre-registered Δ of +0.002/+0.016 sits inside the noise band
+Section 7.2 measures.*
 
 **The pre-registered confirmatory test.** With protocol and thresholds committed before the
 first run (CONFIRMS if every maximin variant's anchored-minus-modern ΔSharpe ≥ 0 with at least
@@ -577,11 +579,9 @@ error are not modeled, and all results are USD. **We also charge no ongoing fund
 omission has a direction worth stating.** We measure indices; an investor holds funds tracking
 them, and liquid factor ETFs on this menu carry roughly 20 to 40 bps a year. A flat annual fee
 costs Sharpe in proportion to one over volatility, so at 30 bps it removes about 0.020 from
-1/N at 15.3% volatility and about 0.034 from the all-weather flagship at 8.7%. Rankings within
-the equity menu are unaffected because the charge is common to every contestant, but every
-Sharpe *level* we report is an upper bound, and the low-volatility flagship of Section 7.1
-loses the most from it. A fee-aware restatement is the first thing we would add with product-
-level data. The deflated-Sharpe trial count includes
+1/N at 15.3% volatility and about 0.034 from the all-weather flagship at 8.7%. The charge is common to every
+contestant, so rankings hold, but every Sharpe *level* we report is an upper bound and the
+low-volatility flagship of Section 7.1 loses most from it. The deflated-Sharpe trial count includes
 fielded contestants and not every development-time variant, so the pre-registered test is the
 stronger multiplicity defense.
 
@@ -607,10 +607,9 @@ factor menu, where a real retail investor lives, the set holds one dominant bet,
 weighting rule beats 1/N by a margin this much data can resolve. The finding is a property of the
 menu and not a limitation of any optimizer, and we measure it with inference attached: a
 diversification ratio of 1.31 with a 95% interval of 1.24 to 1.40, rising to 1.43 on the wider
-menu at p = 0.0002, factor tilts co-moving at 0.885, and a near-singular covariance. That
-contrast is the result. The menu effect clears significance comfortably while the weighting
-effect the literature has argued over for twenty years does not clear it at all here, on a
-design with 56% power against the largest gap on offer. The
+menu at p = 0.0002, factor tilts co-moving at 0.885, and a near-singular covariance. The menu effect clears
+significance comfortably; the weighting effect, on a design with 56% power, does not clear it
+at all. The
 optimization defenders are right on their own datasets, where dispersion is high. Both can be
 true because they describe different opportunity sets, and we say which one the retail factor
 investor occupies.

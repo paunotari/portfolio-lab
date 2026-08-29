@@ -485,6 +485,35 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       §6.1 with the regional spread (M37).
     - Title also cut 15→11 words and "Cannot" dropped (PMR limit is 12): now *Dispersion, Not
       Method: Why 1/N Holds on an Investable Factor Menu*.
+  - [x] **Figures rebuilt — v2, 2026-08-29.** Owner read the figures and reported they were
+    unclear with overlapping text. Confirmed by opening all seven. **Originals archived in
+    `paper/figures/v1_archive/`.** Findings and fixes:
+    - **F0b (the pillar figure) did not show what its caption claimed.** It drew a Dirichlet
+      cloud of random weights, and a uniform Dirichlet over N sleeves concentrates its mass
+      near 1/N, so both panels rendered as similar blobs. Checked whether the figure or the
+      CLAIM was wrong: the claim is true and **stronger** than v1 showed (achievable area ~47
+      vs ~20; equity volatility floor **13.3%** vs extended **0.6%**). v2 draws the long-only
+      efficient frontier (SLSQP per target return, swept up from the global min-var portfolio
+      with warm starts — sweeping from mu.min() gave a sawtooth off the inefficient branch).
+    - **F5 joined three unrelated grid dimensions on one continuous axis**, implying trends
+      between quantities sharing no scale. Rebuilt as small multiples on a shared y-scale.
+      This *revealed* an on-message pattern v1 hid: the all-weather maximin genuinely falls
+      0.99→0.87 as caps loosen, i.e. constraints-as-shrinkage made visible.
+    - **F3 was 11 equal-weight lines with the legend on top of the data.** Now greys every
+      rule that holds rank and colours the maximin family by name (an automatic swing
+      threshold picked a set that did not match the paper's claim). The all-weather taking
+      rank 1 at −EM is now visible.
+    - **F4**: the 1/N reference line struck through a Δ label; per-portfolio colours encoded
+      nothing. Two colours + white label bboxes.
+    - **F7**: the dotted line (the scrambled mean) was never explained; now in the legend.
+    - **F0**: "1 bet" overlapped the reference line; DR² bars flattened by the 0-baseline.
+      Now shades the 0–1 dead band and carries the M39 bootstrap CI as an error bar.
+    - All six paper captions rewritten to match. `paper/make_figures.py` docstrings record why
+      each v1 failed, so the mistakes are not repeated.
+  - [x] **Filler pass, 2026-08-29** — 7 cuts of genuine redundancy and meta-commentary
+    ("This is the paper's central claim", the Boyd foil, a re-derivation of the M38/M39
+    asymmetry in §10). 90 words. Not a restructure: the owner asked to keep everything in the
+    body for now.
     - [ ] **CONSEQUENCE — length regressed.** The fixes are all additions: computable body is
       now ~6,370 words vs ~5,130 before, against PMR's 4,000 target (7,500 ceiling) and JAM's
       6,000 cap. PMR states online-supplement material does not count toward length and names
