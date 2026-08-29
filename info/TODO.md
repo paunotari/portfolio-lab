@@ -538,7 +538,15 @@ Check items off as completed. Add new ones as they come up; keep entries short a
     Year turned out to be a bad key — publishers register the online-first date, so DeMiguel's
     RFS article carries `issued` 2007 and Yuan-Zhou's 2022. Year is now +/-2 and **volume is
     the hard identity check**.
-    - [ ] **Three articles remain incomplete, deliberately:** `antonov2024` (Transactions of
+    - [x] **The three stragglers closed, 2026-08-30**, each from the publisher rather than an
+      index. `ledoit2020` — Project Euclid gives *Ann. Statist.* 48 (5): **3043–3065**.
+      `bailey2017` — risk.net gives *JCF* 20 (4): **39–69**. `antonov2024` — the search
+      established it is **not a journal article at all**: it is an open-access book chapter,
+      *Annual ADIA Lab Transactions in Data Science and Finance* (World Scientific), **2025**,
+      pp. 87–121. The entry was rewritten as a chapter, the year corrected 2024→2025, the key
+      renamed `antonov2025`, and its one in-text citation updated. **Final: 49 entries, zero
+      articles missing pages, only Demšar missing a DOI (JMLR registers none).**
+    - superseded: **Three articles remain incomplete, deliberately:** `antonov2024` (Transactions of
       ADIA Lab — Crossref only has a 2025 World Scientific book chapter, unclear it is the same
       item; **needs the owner's own source**), `bailey2017` and `ledeit2020` (DOIs verified by
       fetching them and checking title/authors/journal, but neither publisher registers page
