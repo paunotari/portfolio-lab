@@ -182,8 +182,7 @@ It does not, and this article locates the answer. Whether optimization beats 1/N
 turns on five things: the dispersion of the asset menu, the length and quality of
 the estimation inputs, how much turnover the strategy generates, whether short
 sales and leverage are permitted, and how demanding a bar ``beat'' must clear.
-Fix all five at the position a real retail investor occupies, a \textbf{long-only,
-index-based, factor-tilted equity menu} with realistic data length, transaction
+Fix all five at the position a real retail investor occupies, a \emph{long-only, index-based, factor-tilted equity menu} with realistic data length, transaction
 costs charged and statistical significance required, and the question has a clean answer. On that menu no weighting rule beats 1/N at
 conventional significance, and Section 5.1 reports the power behind that
 statement rather than leaving it implied. The cause is a property of the menu
@@ -315,8 +314,7 @@ dimension on the covariance estimator every risk number rides on.
 
 The menu is not an arbitrary choice of dataset. It is a \emph{position}, and the
 article's question only means something once that position is stated. We study a
-retail investor who is \textbf{long-only, unlevered, index-based and
-long-horizon}, the constraint set of someone buying liquid, low-cost ETFs rather
+retail investor who is \emph{long-only, unlevered, index-based and long-horizon}, the constraint set of someone buying liquid, low-cost ETFs rather
 than running a book. We price the equity-heavy stance without recommending it.
 Our scenario cones put an equity profile's probability of cumulative loss at
 approximately 14\% at 5 years against a defensive multi-asset profile's 1.4\%,
@@ -332,7 +330,7 @@ and quality \citep{asness2019}, with \citet{asness2013} supplying the strongest
 anti-data-mining defence. On our own sleeves every factor beats its regional
 Reference in compound annual growth over the full window (Enhanced Value
 $+3.70$pt, Momentum $+2.88$pt, Quality $+1.47$pt, winning in 7 of 7, 7 of 7 and
-6 of 6 regions). Restricted to the backfill-free live-index era (2015 onward) the premia \textbf{shrink but survive}, with
+6 of 6 regions). Restricted to the backfill-free live-index era (2015 onward) the premia shrink but survive, with
 Momentum $+3.38$pt, Enhanced Value $+1.76$pt and Quality $+1.04$pt, the last
 winning in only 4 of 6 regions. That attenuation is consistent with
 \citeauthor{mclean2016}'s \citeyearpar{mclean2016} post-publication decay, and it
@@ -361,7 +359,7 @@ FRED yield by the \citet{swinkels2019} par-bond approximation (sanity check: 200
 $+21$\%, 2022 $-16$\%), LBMA gold and Treasury bill returns. These are research
 constructs and never investable sleeves. The classifier labels months from 1960
 (789 months, 2.4 times the modern window, containing the actual 1970s
-stagflation). Finally, a \textbf{virgin confirmatory universe}: nine Ken French
+stagflation). Finally, a \emph{virgin confirmatory universe}: nine Ken French
 international sleeves (Europe, Japan and Asia-Pacific ex-Japan, crossed with
 market, value and momentum), USD, monthly, from November 1990 onward, never
 downloaded or inspected during development, with the test protocol and thresholds
@@ -382,7 +380,7 @@ window. The single flip is the market factor in stagflation.
 On top of it we build, freeze and pre-register a transparent estimator for the
 noisiest objects in the exercise, the per-regime conditional means, at 30 to 90
 monthly observations per cell. We state it because Section 7.2 reports that it has
-\textbf{no effect resolvable at this sample size}, and the construction and its
+no effect resolvable at this sample size, and the construction and its
 null result are inseparable. Write $\hat{e}_{is}$ for the modern conditional excess of factor sleeve $i$ in state $s$:
 the mean monthly return of $i$ across the training months labelled $s$, minus the mean of its
 regional Reference sleeve across the same months. Each factor family maps to a long counterpart
@@ -515,7 +513,7 @@ headline test, meaning the chance it would have flagged an edge of that size as
 significant had one really existed, computed on the same standard error the test
 uses. Against the largest gap
 in Exhibit~\ref{ex:race}, minimum variance's $+0.20$ annualized Sharpe, the design
-has \textbf{56\% power} at the 5\% level. The smallest gap the design could detect at a given target power follows from the same standard
+has 56\% power at the 5\% level. The smallest gap the design could detect at a given target power follows from the same standard
 error. Writing $\pi$ for that target and $\alpha$ for the significance level,
 
 \begin{equation}
@@ -523,12 +521,11 @@ error. Writing $\pi$ for that target and $\alpha$ for the significance level,
 \end{equation}
 
 \noindent where $z$ denotes a standard normal quantile. At $\alpha = 0.05$ and $\pi = 0.80$ the
-bracket is 2.80, so the minimum detectable gap is 2.80 standard errors, or \textbf{$+0.27$}
+bracket is 2.80, so the minimum detectable gap is 2.80 standard errors, or $+0.27$
 annualized Sharpe here. Because $\mathrm{se}$ falls with $\sqrt{T}$, that
 threshold is a property of the sample length before it is a property of any estimator. The observed gap is three quarters of the
 detectable one. The correct statement is therefore weaker than the literature's
-usual phrasing, and we adopt it throughout: \textbf{no rule beats 1/N resolvably
-at this sample size.} Whether a $+0.20$ edge exists is a question 210 monthly
+usual phrasing, and we adopt it throughout: no rule beats 1/N resolvably at this sample size. Whether a $+0.20$ edge exists is a question 210 monthly
 observations cannot answer either way. Section 6 matters because the menu
 measurement is not subject to the same limit.
 
@@ -566,8 +563,7 @@ and equal risk contribution at 0.998 are one portfolio under two names, and
 Brodie and minimum variance at 0.975 earn from the same USA Quality sleeve, so
 the seventeen-row table is roughly four distinct strategies, and no Sharpe test
 can pull apart series that move together this closely. Attribution then shows
-what the winner actually is. Minimum variance earns \textbf{82\% of its
-out-of-sample return in Quality sleeves} (USA 52\%, World 30\%), which is the
+what the winner actually is. Minimum variance earns 82\% of its out-of-sample return in Quality sleeves (USA 52\%, World 30\%), which is the
 low-volatility-anomaly mechanism made visible: a defensive factor bet carrying an
 optimizer's name. Both facts point past the optimizer to the menu, which
 Section 6 measures.
@@ -577,7 +573,7 @@ Section 6 measures.
 Re-raced over 1936--2026 on six long-only Fama-French portfolios, minimum variance
 falls to last among structural rules (0.71) while hierarchical risk parity (0.76)
 and equal risk contribution (0.75) edge 1/N (0.74). Across shifted-start variants
-\textbf{both beat 1/N in 100\% of windows and minimum variance in 25\%}. The
+both beat 1/N in 100\% of windows and minimum variance in 25\%. The
 modern menu shows the same signature in rolling windows, with equal risk
 contribution and hierarchical risk parity beating 1/N in 98 to 99\% of rolling
 three-year windows. Structure is the property that travels, and the modern winner
@@ -651,8 +647,8 @@ covariance. The numerator is what the portfolio's risk would be if the sleeves n
 other; the denominator is what it actually is. When correlations cancel nothing the two coincide
 and $DR = 1$, which is why $DR^{2}$ reads as an effective number of independent risk bets: it is
 1 for a single bet and $N$ for $N$ uncorrelated ones of equal risk. (Defined with $|w_i|$ in
-general; every portfolio here is long-only, so $w \ge 0$.) That number is \textbf{1.31} for the
-equal-weighted equity menu, with a 95\% confidence interval of \textbf{1.24 to 1.40}. The menu
+general; every portfolio here is long-only, so $w \ge 0$.) That number is 1.31 for the
+equal-weighted equity menu, with a 95\% confidence interval of 1.24 to 1.40. The menu
 holds about one and a third independent bets, and that figure is tightly estimated.
 
 We attach inference to it because a contribution reported as a bare point estimate would not be
@@ -662,7 +658,7 @@ that what is measured is the variability of the whole estimate-then-summarize ch
 of a fixed covariance.
 
 Two comparisons put the number in context. The four-sleeve minimum-variance portfolio holds
-\textbf{1.28} independent bets, so the engine whose entire job is to exploit correlations to
+1.28 independent bets, so the engine whose entire job is to exploit correlations to
 cancel risk, holding a quarter as many sleeves, finds no more of them than naive diversification
 does. And twenty-four extra equity sleeves buy 0.03 of a bet. The eigenvalues say the same thing: the first principal component alone explains
 77\% of variance and the covariance matrix is near-singular.
@@ -671,8 +667,7 @@ does. And twenty-four extra equity sleeves buy 0.03 of a bet. The eigenvalues sa
 asset-class proxies moves the menu's minimum pairwise correlation from 0.53 to
 $-0.14$ and its diversification ratio to 1.43. Under the paired version of the
 same bootstrap, where one set of resampled months drives both menus, the
-difference is \textbf{$+0.120$, with a 95\% interval of $+0.101$ to $+0.144$ and
-$p = 0.0002$}. Three sleeves buy more independent-bet content than twenty-eight
+difference is $+0.120$, with a 95\% interval of $+0.101$ to $+0.144$ and $p = 0.0002$. Three sleeves buy more independent-bet content than twenty-eight
 equity sleeves did, and that gap is resolved with a confidence the weighting race
 never reaches. At this data scale the menu effect is measurable and the method effect is not.
 
@@ -685,11 +680,11 @@ the premium together with the parent market, and the beta dominates whatever the
 tilt contributes. We measure the consequence three independent ways, and they
 agree. \emph{(i) Across factors:} \citet{ilmanen2012} report near-zero correlation
 across factor constituents, whereas on long-only sleeves the within-region
-cross-factor correlation is \textbf{0.885}, the highest cut of our menu.
+cross-factor correlation is 0.885, the highest cut of our menu.
 \emph{(ii) The value/momentum hedge reverses sign.} \citet{asness2013} put the correlation between the two long-short
-premia at approximately \textbf{$-0.50$}, which is the standard argument for
-holding both. On our sleeves it is \textbf{$-0.088$} once each is measured in
-excess of its parent index, about a fifth of theirs, and \textbf{$+0.820$} in the
+premia at approximately $-0.50$, which is the standard argument for
+holding both. On our sleeves it is $-0.088$ once each is measured in
+excess of its parent index, about a fifth of theirs, and $+0.820$ in the
 space an investor actually holds. The direction survives in excess space, so the
 economic mechanism is real. The magnitude does not, and in investable form the
 sign flips: an investor buying value and momentum indices for their mutual hedge
@@ -698,8 +693,8 @@ worth reporting, with Europe ($-0.301$) and Japan ($-0.217$) approaching the
 published figure while emerging markets ($+0.017$) and AC Asia ($+0.069$) are
 indistinguishable from zero. \emph{(iii) The defensive factor:} Quality's excess
 over junk is positive in drawdowns in long-short form, but long-only Quality
-carries a beta of \textbf{0.91} and \emph{falls in 6 of 6 regions} during the
-worst decile of market months, cushioning \textbf{0.91 percentage points}
+carries a beta of 0.91 and \emph{falls in 6 of 6 regions} during the
+worst decile of market months, cushioning 0.91 percentage points
 ($-7.95$\% against the Reference's $-8.87$\%). A cushion of that size is
 attenuation and cannot serve as a hedge.
 
@@ -718,8 +713,7 @@ any weighting scheme to convert into an edge. The disagreement in the literature
 concerns the opportunity set, and the retail factor investor sits squarely in the
 region where 1/N cannot be beaten.
 
-The practical corollary concerns selection: \textbf{widen the menu before refining
-the weights.} Three asset classes buy more independent-bet content than
+The practical corollary concerns selection: \emph{widen the menu before refining the weights.} Three asset classes buy more independent-bet content than
 twenty-eight equity sleeves, and no amount of estimator sophistication
 substitutes.
 
@@ -735,8 +729,7 @@ restores the floor at half the volatility, with century-scale shape evidence
 behind it: a static all-weather archetype returned $+9.8$\% through the 1973--74
 oil shock while a 60/40 portfolio lost 28.5\%. As a walk-forward contestant the
 resulting flagship, a capped worst-quadrant portfolio over equities, Treasuries
-and gold, delivers \textbf{a Sharpe ratio of 0.95 at 8.7\% volatility with a
-$-16.7$\% maximum drawdown}, is statistically indistinguishable from the
+and gold, delivers a Sharpe ratio of 0.95 at 8.7\% volatility with a $-16.7$\% maximum drawdown, is statistically indistinguishable from the
 era-flagged winner ($p = 0.70$) at two thirds of its volatility, and holds the
 lowest drawdown in Exhibit~\ref{ex:race}.
 
@@ -832,9 +825,9 @@ committed before the first run (confirms if every maximin variant's
 anchored-minus-modern Sharpe difference is at least 0 with at least one above
 $+0.005$; refutes if any falls below $-0.02$), the frozen estimator improves both
 variants on the nine international sleeves (worst-quadrant $+0.002$, diversified
-\textbf{$+0.016$}) over 307 out-of-sample months (November 2000 to May 2026)
+$+0.016$) over 307 out-of-sample months (November 2000 to May 2026)
 containing the dot-com bust and the global financial crisis. Verdict on its own
-terms: \textbf{confirms}. Section 7.2 then forces the power post-mortem. Those
+terms: confirms. Section 7.2 then forces the power post-mortem. Those
 declared thresholds sit inside the $\pm 0.01$ to $0.02$ noise band that menu
 composition alone produces (null standard deviation 0.03 to 0.10). The discipline was sound, but its thresholds were set below the noise floor, so clearing them was a
 correctly run test of a question it did not have the power to answer. Any future
@@ -874,8 +867,7 @@ object of study.
 Costs are a flat 10 basis points on refit turnover. Within-interval drift turnover
 is uncharged but measured immaterial, with a largest Sharpe overstatement of
 0.002. Taxes, spreads and tracking error are not modeled, and all results are in
-US dollars. \textbf{We also charge no ongoing fund fee, and the omission has a
-direction worth stating.} We measure indices; an investor holds funds tracking
+US dollars. We also charge no ongoing fund fee, and the omission has a direction worth stating. We measure indices; an investor holds funds tracking
 them, and liquid factor ETFs on this menu carry roughly 20 to 40 basis points a
 year. A flat annual fee $f$ costs Sharpe in proportion to one over volatility,
 $\Delta SR = -f/\sigma$, so at 30 basis points it removes about 0.020 from 1/N at 15.3\%

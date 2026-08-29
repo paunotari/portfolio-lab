@@ -491,6 +491,19 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       §6.1 with the regional spread (M37).
     - Title also cut 15→11 words and "Cannot" dropped (PMR limit is 12): now *Dispersion, Not
       Method: Why 1/N Holds on an Investable Factor Menu*.
+  - [x] **Bold pass, 2026-08-29.** Owner asked whether so much non-heading bold was normal.
+    It was not: **28 instances in running text**, 17 of them on numbers. In finance journals
+    bold is for headings; running-text emphasis is italic and sparing, and numbers are never
+    bolded because that is what tables are for.
+    **This connects to the earlier "too many numbers" complaint** — 17 bolded figures create a
+    second reading path competing with the prose, so skimming the page yields a disconnected
+    list of digits. The bolding was part of why the page felt like an avalanche.
+    Result: 28 -> 3, and the 3 survivors are the run-in headings of the contributions list.
+    Four genuine term-definitions converted to italic instead (the two statements of the
+    investor's constraint set, "virgin confirmatory universe", and the one recommendation).
+    Everything else stripped, including a whole bolded sentence in §9 announcing the fee
+    omission — bolding your own limitation over-performs candour, same family as the
+    honesty-signalling tic.
   - [x] **Exhibit 5 recoloured, 2026-08-29.** Owner asked whether red/green confuse, since in
     finance they read as loss/gain — correct, and they were also the worst pair for colour
     vision deficiency (~8% of men). Rejected both alternatives the owner offered: a single
