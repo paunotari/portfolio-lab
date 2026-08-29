@@ -491,6 +491,25 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       §6.1 with the regional spread (M37).
     - Title also cut 15→11 words and "Cannot" dropped (PMR limit is 12): now *Dispersion, Not
       Method: Why 1/N Holds on an Investable Factor Menu*.
+  - [x] **Re-review, 2026-08-29 — all 7 round-1 findings verified closed; 1 verification bug
+    of my own found.** Ran `academic-paper-reviewer` re-review against `paper/tex/paper.tex`.
+    Checked each round-1 finding mechanically against the file rather than asserting it
+    (anti-pattern #4 forbids rubber-stamping): C1 DR² inference, C2 power/MDES, M1 the 2.8-vs-
+    1.31 reconciliation, M2 the single-regime window, M3 indices-not-funds, M4 the fund fee,
+    M5 the promoted value/momentum result — **7/7 present and anchored.**
+    - **But the honesty-signalling sweep had NOT actually finished, and my verification said it
+      had.** I used whitespace-tolerant regex to EDIT and literal-string matching to VERIFY, so
+      any phrase broken across a line wrap was edited-around and then reported clean. Two
+      declared-removed phrases survived — "the honest contribution" (§7.2 and §10) and "our own
+      signature feature" (§1) — plus four milder self-characterisations ("narrow and clean",
+      "disciplined and modest"). All now cut, and the sweep re-run whitespace-tolerant.
+    - **Lesson, now twice-learned: hard-wrapped LaTeX defeats literal matching in BOTH
+      directions.** Any future check on this file must flatten whitespace before matching, or
+      it will report false clean.
+    - [ ] Open from the re-review, not acted on: the abstract quantifies only one half of its
+      own punchline (56% power on the weighting side, no significance figure on the menu side,
+      since p = 0.0002 was dropped from the abstract as too technical for PMR). Decide whether
+      the asymmetry claim can carry without it.
   - [x] **Bold pass, 2026-08-29.** Owner asked whether so much non-heading bold was normal.
     It was not: **28 instances in running text**, 17 of them on numbers. In finance journals
     bold is for headings; running-text emphasis is italic and sparing, and numbers are never
