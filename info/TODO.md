@@ -485,6 +485,33 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       §6.1 with the regional spread (M37).
     - Title also cut 15→11 words and "Cannot" dropped (PMR limit is 12): now *Dispersion, Not
       Method: Why 1/N Holds on an Investable Factor Menu*.
+  - [x] **PDF read end-to-end and fixed — v3 figures + LaTeX layout, 2026-08-29.** Owner
+    compiled the .tex and sent the 20-page PDF. Read all of it. Findings and fixes:
+    - **Every figure carried TWO titles and the legible one was wrong.** Each matplotlib chart
+      had its own internal title, which at `width=\textwidth` renders around 6pt — smaller
+      than body text — directly above a full-size caption saying the same thing. Stripped the
+      internal titles/suptitles from F0, F0b, F3, F4, F5, F7; the LaTeX exhibit title now
+      carries that job at proper size. Panel labels kept where the caption references them.
+    - **Exhibit labels were below the graphics.** PMR's Appendix A puts the number and title
+      ABOVE (12pt) and the note BELOW (8pt), for charts as well as tables — not the usual
+      academic convention. The paper was also internally inconsistent (table above, figures
+      below). Added `\exhibittitle`/`\exhibitnote` macros owning the counter directly, and
+      converted all 8 exhibits; every caption split into a short title and an 8pt note.
+    - **Legends sat on the data** in F5 (first panel), F0b and F4. All moved below the figure
+      via `fig.legend`. F4's first attempt landed on the rotated x-tick labels; pushed further.
+    - **Floats drifted away from their text** (Exhibits 4 and 5 both surfaced before the prose
+      explaining them). Added the `float` package and pinned every exhibit with `[H]`.
+    - **Readability: "one paragraph, one job."** The owner reported being overwhelmed by walls
+      of numbers, correctly. Root cause was that no paragraph separated "here is the number"
+      from "here is what it means". Three worst offenders rewritten: §5.1's opening (ten
+      numbers before the reader had seen the table — the table was on the NEXT page, now moved
+      ABOVE its prose), §6's "Second, independent bets" (eight numbers doing four jobs), and
+      §3 Sources. Method detail (B, re-shrinking) pushed back to §4.2 where it belongs.
+    - Jobson-Korkie citation read as "the Jobson and Korkie 1981 test"; now `\citeauthor` +
+      `\citeyear`.
+    - [ ] **draft2.md and paper/tex/paper.tex have now DIVERGED.** The prose splits above exist
+      only in the .tex. Decide which is the source of truth — recommendation: the .tex, with
+      draft2.md retired or regenerated from it. Do not hand-maintain both.
   - [x] **Figures rebuilt — v2, 2026-08-29.** Owner read the figures and reported they were
     unclear with overlapping text. Confirmed by opening all seven. **Originals archived in
     `paper/figures/v1_archive/`.** Findings and fixes:

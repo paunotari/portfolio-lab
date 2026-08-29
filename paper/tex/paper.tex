@@ -28,7 +28,7 @@
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{booktabs}
-\usepackage[font=small,labelfont=bf,labelsep=period]{caption}
+\usepackage{float}                    % [H] — keep exhibits where they are written
 \usepackage{natbib}
 \usepackage[hidelinks]{hyperref}
 
@@ -47,14 +47,18 @@
 % ---- Exhibits: ONE Arabic sequence across tables and figures ---------
 % PMR is explicit that tabular and graphical material share a single
 % "Exhibit" series numbered in order of appearance.
+% PMR's Appendix A puts the exhibit number and title ABOVE the exhibit (12pt) and the
+% source/explanatory note BELOW it (8pt) — for charts as well as tables, which is not the
+% usual academic convention of captions under figures. These two macros implement that, and
+% owning the counter directly keeps tables and charts in one Arabic sequence.
 \newcounter{exhibit}
 \renewcommand{\theexhibit}{\arabic{exhibit}}
-\makeatletter
-\let\c@figure\c@exhibit
-\let\c@table\c@exhibit
-\makeatother
-\captionsetup[figure]{name=Exhibit}
-\captionsetup[table]{name=Exhibit}
+\newcommand{\exhibittitle}[2]{%
+  \refstepcounter{exhibit}%
+  \par\noindent\textbf{Exhibit \theexhibit: #1}\label{#2}%
+  \par\vspace{5pt}}
+\newcommand{\exhibitnote}[1]{%
+  \par\vspace{5pt}\noindent{\fontsize{8}{9.6}\selectfont #1}\par}
 
 % ---- Headings: three levels, PMR style, numbers retained -------------
 % PMR specifies bold uppercase / indented bold / bold in-line. It does not
@@ -207,8 +211,8 @@ the twenty-year 1/N debate on a single axis, the opportunity set.
 
 \item \textbf{A fully instrumented adjudication.} We run the following as
 standing diagnostics on every build: \citet{ledoit2008} bootstrap Sharpe
-inference (the robust successor to the \citealp{jobson1981} test the prior
-replication uses), deflated Sharpe ratios \citep{bailey2014}, a Friedman-Nemenyi joint test
+inference (the robust successor to the \citeauthor{jobson1981} test,
+\citeyear{jobson1981}, that the prior replication uses), deflated Sharpe ratios \citep{bailey2014}, a Friedman-Nemenyi joint test
 \citep{demsar2006}, CSCV backtest-overfitting probability \citep{bailey2017},
 leave-one-region-out re-races, and sensitivity grids over costs, refit cadence,
 constraints, block length and the covariance estimator. Under it, all three
@@ -340,17 +344,16 @@ that in long-only form these tilts do not diversify.
 \head{Sources.} The modern menu is 28 MSCI region-by-factor indices (ACWI, World,
 World ex-USA, USA, EM, Europe, AC Asia ex-Japan, Japan, crossed with Reference,
 Momentum, Enhanced Value and Quality where available), monthly net-USD total
-returns, common window January 1999 to June 2026 (330 months). Its measured
-redundancy disciplines its interpretation: mean pairwise correlation 0.76 and a
-first principal component explaining 77\% of variance. Two summaries of that
-redundancy recur below and answer different questions, so we distinguish them
-once here. The eigenvalue-entropy effective bet count (approximately 2.8)
-measures how many components the variance is spread over. The
-Choueifaty-Coignard $DR^{2}$ (1.31, Section 6) measures how much of the sleeves'
-standalone risk the correlations actually cancel under the weights held. A menu
-can spread variance over several components while cancelling almost none of it,
-which is exactly this menu, and $DR^{2}$ is the quantity a portfolio construction
-claim rides on. All headline statements use $DR^{2}$.
+returns, common window January 1999 to June 2026 (330 months). The menu is redundant by
+construction, with a mean pairwise correlation of 0.76 and a first principal component
+explaining 77\% of variance.
+
+Two summaries of that redundancy recur below and answer different questions, so we distinguish
+them once here. The eigenvalue-entropy effective bet count (approximately 2.8) measures how
+many components the variance is spread over. The Choueifaty-Coignard $DR^{2}$ (1.31, Section 6)
+measures how much of the sleeves' standalone risk the correlations actually cancel under the
+weights held. A menu can spread variance over several components while cancelling almost none
+of it, which is exactly this menu. All headline statements use $DR^{2}$.
 
 Sixteen FRED indicators feed a four-quadrant growth-by-inflation classifier, used
 for descriptive statistics only with no fitted latent-state model. For long
@@ -440,48 +443,9 @@ $p$-value moves from 0.055 to 0.067, so all conclusions are convention-robust.
 
 \subsection{The modern menu, 2009--2026}
 
-Minimum variance tops the table, at a net out-of-sample Sharpe ratio of 1.03
-against 1/N's 0.83, and no contestant's edge over 1/N is significant at 5\%.
-Minimum variance reaches a bootstrap $p$ of 0.055 and every other contestant
-$p \ge 0.14$. The downside is detectable where the upside is not. Equal weight
-plus volatility targeting is significantly worse than plain 1/N ($p = 0.009$),
-dual momentum worse still ($p = 0.034$), and four contestants lose significantly
-to the winner. The result holds jointly as well as pairwise. A Friedman test on
-12-month block ranks rejects the null that the ordering is noise
-($\chi^{2} = 46.6$, $p = 0.0001$), yet the Nemenyi critical difference clears no
-contestant past 1/N. The ranking is real while the gap to equal weight is not.
-Deflated Sharpe ratios of 0.98 and above clear the multiplicity bar, and the CSCV
-probability that the in-sample-selected contestant is no better than the
-out-of-sample median is 33\%, which is real selection information well short of
-certainty.
-
-\head{What that non-rejection is worth.} A $p$ above 0.05 licenses ``no effect''
-only if the design could have found one, so we report the power of our own
-headline test on the same standard error the test uses. Against the largest gap
-in Exhibit~\ref{ex:race}, minimum variance's $+0.20$ annualized Sharpe, the design
-has \textbf{56\% power} at the 5\% level, and the smallest gap it could detect at
-80\% power is \textbf{$+0.27$}. The observed gap is three quarters of the
-detectable one. The correct statement is therefore weaker than the literature's
-usual phrasing, and we adopt it throughout: \textbf{no rule beats 1/N resolvably
-at this sample size.} Whether a $+0.20$ edge exists is a question 210 monthly
-observations cannot answer either way. Section 6 matters because the menu
-measurement is not subject to the same limit.
-
-Two further facts constrain how far the modern race travels, and they point the
-same way. The winner's return is 82\% attributable to Quality sleeves (below),
-and Quality is the defensive factor a post-2009 window rewards. In the 90-year
-proxy race of Section 5.2 the same rule falls to last among structural rules and
-beats 1/N in only 25\% of shifted-start windows. The most economical reading of
-the two together is that minimum variance's modern lead is a regime-shaped factor
-bet and not a durable property of the method.
-
-\begin{table}[!ht]
+\begin{table}[H]
 \centering
-\caption{Walk-forward out-of-sample results, 2009--2026 (210 months), net of 10
-basis points of transaction costs. $\Delta$ Sharpe and $p$ (studentized circular
-block bootstrap, \citealp{ledoit2008}) are against 1/N. DSR is the deflated
-Sharpe ratio against the fielded roster. Sorted by Sharpe ratio.}
-\label{ex:race}
+\exhibittitle{Walk-forward out-of-sample results, 2009--2026}{ex:race}
 \fontsize{9}{11}\selectfont
 \begin{tabular}{lrrrrrrr}
 \toprule
@@ -506,16 +470,57 @@ Balanced sliders              & 11.2\% & 17.3\% & 0.70 & $-27$\% & $-0.13$ & 0.0
 Dual momentum                 &  5.4\% & 13.3\% & 0.46 & $-27$\% & $-0.37$ & \textbf{0.034} & 0.81 \\
 \bottomrule
 \end{tabular}
+\exhibitnote{210 out-of-sample months, net of 10 basis points of transaction
+costs. $\Delta$ Sharpe and $p$ (studentized circular block bootstrap,
+\citealp{ledoit2008}) are against 1/N. DSR is the deflated Sharpe ratio against
+the fielded roster. Sorted by Sharpe ratio.}
 \end{table}
 
-\begin{figure}[!ht]
+Exhibit~\ref{ex:race} has one headline. Minimum variance tops it, and its edge over 1/N is
+not significant.
+
+The rest of the table says the same thing in different ways. No contestant clears 5\% against
+equal weight: minimum variance reaches a bootstrap $p$ of 0.055 and every other rule sits at
+$p \ge 0.14$. What the data can detect is the downside. Equal weight plus volatility targeting
+is significantly worse than plain 1/N, and dual momentum worse still.
+
+The verdict survives a joint test as well as the pairwise ones. A Friedman test on 12-month
+block ranks rejects the null that the ordering is noise ($\chi^{2} = 46.6$), yet the Nemenyi
+critical difference clears no contestant past 1/N. The ranking is real; the gap to equal weight
+is not. Multiplicity does not rescue anything either: deflated Sharpe ratios of 0.98 and above
+clear that bar, and the probability that the in-sample-selected contestant is no better than
+the out-of-sample median is 33\%, which is real selection information well short of
+certainty.
+
+\head{What that non-rejection is worth.} A $p$ above 0.05 licenses ``no effect''
+only if the design could have found one, so we report the power of our own
+headline test on the same standard error the test uses. Against the largest gap
+in Exhibit~\ref{ex:race}, minimum variance's $+0.20$ annualized Sharpe, the design
+has \textbf{56\% power} at the 5\% level, and the smallest gap it could detect at
+80\% power is \textbf{$+0.27$}. The observed gap is three quarters of the
+detectable one. The correct statement is therefore weaker than the literature's
+usual phrasing, and we adopt it throughout: \textbf{no rule beats 1/N resolvably
+at this sample size.} Whether a $+0.20$ edge exists is a question 210 monthly
+observations cannot answer either way. Section 6 matters because the menu
+measurement is not subject to the same limit.
+
+Two further facts constrain how far the modern race travels, and they point the
+same way. The winner's return is 82\% attributable to Quality sleeves (below),
+and Quality is the defensive factor a post-2009 window rewards. In the 90-year
+proxy race of Section 5.2 the same rule falls to last among structural rules and
+beats 1/N in only 25\% of shifted-start windows. The most economical reading of
+the two together is that minimum variance's modern lead is a regime-shaped factor
+bet and not a durable property of the method.
+
+
+
+\begin{figure}[H]
+\exhibittitle{No rule clears significance against 1/N, and two overlays are significantly worse}{ex:inference}
 \centering
 \includegraphics[width=\textwidth]{F2_inference_vs_1N.pdf}
-\caption{Annualized Sharpe difference against 1/N for every contestant, with the
-Ledoit-Wolf bootstrap $p$-value on each bar. Nothing clears significance above
-the line. The two red bars are the overlays that are significantly worse than
-doing nothing.}
-\label{ex:inference}
+\exhibitnote{Annualized Sharpe difference against 1/N for every contestant, with the
+Ledoit-Wolf bootstrap $p$-value on each bar. The two red bars are the overlays that lose
+significantly.}
 \end{figure}
 
 None of the three most-cited rules designed to beat 1/N does so on this menu. The
@@ -550,16 +555,15 @@ contribution and hierarchical risk parity beating 1/N in 98 to 99\% of rolling
 three-year windows. Structure is the property that travels, and the modern winner
 does not.
 
-\begin{figure}[!ht]
+\begin{figure}[H]
+\exhibittitle{No ranking flips in any sensitivity cell}{ex:grids}
 \centering
 \includegraphics[width=\textwidth]{F5_sensitivity_grids.pdf}
-\caption{Each grid dimension on its own axis, sharing one Sharpe scale. Costs and
-refit cadence are flat for every contestant. The one line that moves is the
-all-weather maximin under looser caps (0.99 down to 0.87), which is
-constraints-as-shrinkage made visible rather than a ranking flip. Rightmost
-panel: the study's one genuine frontier, the headline $p$-value's sensitivity to
-bootstrap block length.}
-\label{ex:grids}
+\exhibitnote{Each grid dimension on its own axis, sharing one Sharpe scale. Costs and refit
+cadence are flat for every contestant. The one line that moves is the all-weather maximin
+under looser caps, from 0.99 down to 0.87, which is constraints-as-shrinkage rather than a
+ranking flip. Rightmost panel: the study's one genuine frontier, the headline $p$-value's
+sensitivity to bootstrap block length.}
 \end{figure}
 
 Constraints behave as \citet{jagannathan2003} predicted, measured prospectively
@@ -572,35 +576,30 @@ genuine frontier is the headline $p$-value's block-length sensitivity (0.042,
 
 \section{The opportunity set}
 
-\begin{figure}[!ht]
+\begin{figure}[H]
+\exhibittitle{The equity menu cannot reach below 13.3\% volatility; the extended menu reaches 0.6\%}{ex:frontier}
 \centering
 \includegraphics[width=\textwidth]{F0b_frontier_cloud.pdf}
-\caption{The long-only frontier of each menu, with the individual sleeves and the
-fielded rules, on a shared scale. \emph{Left:} on 28 equity sleeves nothing exists
-to the left of 13.3\% volatility, the frontier is a short arc, and every rule
-piles into the same corner. \emph{Right:} adding Treasuries, gold and cash moves
-the floor to 0.6\% and the frontier sweeps the whole plane. The constraint is the
-menu, not the weighting rule. Full-sample geometry, illustrative; the frontier is
-solved per target return under long-only weights.}
-\label{ex:frontier}
+\exhibitnote{The long-only frontier of each menu, with the individual sleeves and the fielded
+rules, on a shared scale. Panel A: on 28 equity sleeves the frontier is a short arc and every
+rule piles into the same corner. Panel B: adding Treasuries, gold and cash moves the floor to
+0.6\% and the frontier sweeps the whole plane. Full-sample geometry, illustrative; the frontier
+is solved per target return under long-only weights.}
 \end{figure}
 
 Why does no weighting rule beat 1/N here, when the literature's optimization
 defenders show that it can? Because on an investable long-only factor menu there
 is almost nothing to optimize. We measure it three ways.
 
-\begin{figure}[!ht]
+\begin{figure}[H]
+\exhibittitle{Factor tilts do not decorrelate, and the menu holds about one bet}{ex:dispersion}
 \centering
 \includegraphics[width=\textwidth]{F0_dispersion.pdf}
-\caption{The same fact in numbers. \emph{Panel A:} the most correlated cut of the
-menu is same-region, different-factors (0.885), and only the non-equity sleeves
-are genuinely different bets (Treasuries $-0.115$, gold $-0.007$).
-\emph{Panel B:} independent risk bets ($DR^{2}$). The shaded band below 1.0 is the
-region where a menu holds a single bet, so only the part above it is
-diversification at all: the 28 equity sleeves buy 0.31 of a second bet and
-minimum variance's four sleeves buy 0.28, while three asset classes buy 0.43. The
-error bar is the 95\% bootstrap interval reported in this section.}
-\label{ex:dispersion}
+\exhibitnote{Panel A: the most correlated cut of the menu is same-region, different-factors
+(0.885), and only the non-equity sleeves are genuinely different bets (Treasuries $-0.115$,
+gold $-0.007$). Panel B: independent risk bets ($DR^{2}$). The shaded band below 1.0 is the
+region where a menu holds a single bet, so only the part above it is diversification at all.
+The error bar is the 95\% bootstrap interval reported in Section 6.}
 \end{figure}
 
 \head{First, correlation structure.} The highest-correlated cut of the entire
@@ -614,19 +613,21 @@ equity sleeves and gold $-0.007$.
 
 \head{Second, independent bets.} The Choueifaty-Coignard diversification ratio
 squared, the effective number of independent risk bets, is \textbf{1.31} for the
-equal-weighted equity menu and \textbf{1.28} for the four-sleeve minimum-variance
-portfolio. We attach inference to these, since a contribution reported as a bare
-point estimate is not held to the standard this article applies to every Sharpe
-comparison. Resampling months in circular blocks and re-shrinking the covariance
-inside each replicate, so that the sampling variability measured is that of the
-whole estimate-then-summarize chain, the equity menu's $DR^{2}$ has a 95\%
-confidence interval of \textbf{1.24 to 1.40} ($B = 4999$). The claim of roughly
-one and a third independent bets is tightly estimated. The engine whose entire job
-is to exploit correlations to cancel risk, holding a quarter as many sleeves,
-finds no more independent bets than naive diversification does. Twenty-four extra
-equity sleeves buy 0.03 of a bet. The first principal component alone explains
-77\% of variance, and the covariance matrix is near-singular, with a smallest
-eigenvalue of $3 \times 10^{-7}$.
+equal-weighted equity menu, with a 95\% confidence interval of \textbf{1.24 to 1.40}. The menu
+holds about one and a third independent bets, and that figure is tightly estimated.
+
+We attach inference to it because a contribution reported as a bare point estimate would not be
+held to the standard this article applies to every Sharpe comparison. The interval comes from
+the block bootstrap of Section 4.2, with the covariance re-shrunk inside every replicate so
+that what is measured is the variability of the whole estimate-then-summarize chain rather than
+of a fixed covariance.
+
+Two comparisons put the number in context. The four-sleeve minimum-variance portfolio holds
+\textbf{1.28} independent bets, so the engine whose entire job is to exploit correlations to
+cancel risk, holding a quarter as many sleeves, finds no more of them than naive diversification
+does. And twenty-four extra equity sleeves buy 0.03 of a bet. The menu is one dominant factor
+wearing 28 names, which the eigenvalues confirm: the first principal component alone explains
+77\% of variance and the covariance matrix is near-singular.
 
 \head{Third, the contrast that identifies the mechanism.} Adding the three
 asset-class proxies moves the menu's minimum pairwise correlation from 0.53 to
@@ -715,16 +716,14 @@ scale, change what you hold rather than how you time it.
 
 \subsection{Placebo tests of the regime layer}
 
-\begin{figure}[!ht]
+\begin{figure}[H]
+\exhibittitle{Real regime labels land inside the scrambled-label distribution}{ex:placebo}
 \centering
 \includegraphics[width=\textwidth]{F7_placebo_null.pdf}
-\caption{The permutation test against our own signature feature. Grey: net
-out-of-sample Sharpe ratio across 40 replicates with the macro-state labels
-scrambled by a circular rotation, which preserves run lengths and the transition
-matrix exactly. Dotted line: the mean of those scrambled runs. Red line: the
-real-label result. It sits inside the scrambled distribution in all three panels,
-and below the scrambled mean in all three.}
-\label{ex:placebo}
+\exhibitnote{The permutation test against our own signature feature. Grey: net out-of-sample
+Sharpe ratio across 40 replicates with the macro-state labels scrambled by a circular rotation,
+which preserves run lengths and the transition matrix exactly. Dotted line: the mean of those
+scrambled runs. Red line: the real-label result.}
 \end{figure}
 
 The regime layer is this article's most attackable feature, so we attack it
@@ -752,15 +751,13 @@ contribution is the negative result together with the apparatus that produced it
 
 \section{Robustness}
 
-\begin{figure}[!ht]
+\begin{figure}[H]
+\exhibittitle{Only the maximin family changes rank when a region is dropped}{ex:loro}
 \centering
 \includegraphics[width=\textwidth]{F3_leave_one_region_out.pdf}
-\caption{Rank of each contestant when a whole region is dropped. Grey lines are
-every rule that holds its rank across all nine menus. The maximin family is
-coloured because it is the family that moves: the worst-quadrant variant swings
-eight ranks, and the all-weather variant takes first place once emerging markets
-are removed. Its record traces to exposure.}
-\label{ex:loro}
+\exhibitnote{Rank of each contestant when a whole region is dropped. Grey lines are every rule
+that holds its rank across all nine menus. The worst-quadrant maximin swings eight ranks, and
+the all-weather variant takes first place once emerging markets are removed.}
 \end{figure}
 
 \head{Exposure and region dependence.} Sub-period splits and region correlations
@@ -779,14 +776,14 @@ look-ahead subsidy. Restricting scoring to the live-index era (2015 onward, 138
 months) preserves the hierarchy, which answers the pre-launch-backfill critique
 with measurement.
 
-\begin{figure}[!ht]
+\begin{figure}[H]
+\exhibittitle{The pre-registered estimator changes nothing on the virgin universe}{ex:virgin}
 \centering
 \includegraphics[width=\textwidth]{F4_virgin_universe_ab.pdf}
-\caption{Estimator off against on for the never-touched Fama-French international
-universe, on a full-height axis rather than a truncated one. Every pair is the
-same height and nothing clears 1/N (dashed). The pre-registered difference of
-$+0.002$ and $+0.016$ sits inside the noise band Section 7.2 measures.}
-\label{ex:virgin}
+\exhibitnote{Estimator off against on for the never-touched Fama-French international universe,
+on a full-height axis rather than a truncated one. Every pair is the same height and nothing
+clears 1/N (dashed). The pre-registered difference of $+0.002$ and $+0.016$ sits inside the
+noise band Section 7.2 measures.}
 \end{figure}
 
 \head{The pre-registered confirmatory test.} With protocol and thresholds

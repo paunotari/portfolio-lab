@@ -110,8 +110,9 @@ def f0_dispersion():
     axA.set_xticks(xA, labels, fontsize=7.4)
     axA.set_ylabel("mean pairwise correlation", fontsize=9)
     axA.set_ylim(-0.32, 1.05)
-    axA.set_title("A · Factor tilts don't decorrelate; asset classes do",
-                  fontsize=9, loc="left", color=INK)
+    # v3: the descriptive title moves to the LaTeX exhibit label. Scaled to \textwidth a
+    # matplotlib title renders at ~6pt, smaller than body text, and duplicates the caption.
+    axA.set_title("A", fontsize=10, loc="left", color=INK, fontweight="bold")
     style(axA)
 
     # ---- Panel B: independent bets (DR²)
@@ -136,8 +137,7 @@ def f0_dispersion():
     axB.set_xticks(xB, bl, fontsize=7.6)
     axB.set_ylabel("independent risk bets  (DR$^2$)", fontsize=9)
     axB.set_ylim(0, 1.7)
-    axB.set_title("B · Only the part above the shading is diversification", fontsize=8.6,
-                  loc="left", color=INK)
+    axB.set_title("B", fontsize=10, loc="left", color=INK, fontweight="bold")
     style(axB)
 
     save(fig, "F0_dispersion.pdf")
@@ -227,7 +227,6 @@ def f0b_frontier_cloud():
     fig, (axL, axR) = plt.subplots(1, 2, figsize=(8.6, 4.1), sharex=True, sharey=True)
     panel(axL, inp, "A · 28 equity sleeves", eq_rules)
     axL.set_ylabel("annualized return (%)", fontsize=9)
-    axL.legend(loc="lower right", fontsize=7, frameon=False)
 
     try:
         inp_aw = opt.build_inputs(include_asset_classes=True)
@@ -240,9 +239,9 @@ def f0b_frontier_cloud():
     except Exception as e:
         axR.text(0.5, 0.5, f"(extended menu unavailable: {e})", ha="center", fontsize=8)
 
-    fig.suptitle("What a long-only investor can actually reach: the equity menu cannot go "
-                 "below 13% volatility, the extended one reaches 0.6%",
-                 fontsize=9, color=INK, y=1.04)
+    h, l = axL.get_legend_handles_labels()
+    fig.legend(h, l, loc="lower center", bbox_to_anchor=(0.5, -0.06), ncol=2, fontsize=8,
+               frameon=False)
     save(fig, "F0b_frontier_cloud.pdf")
 
 
@@ -320,8 +319,6 @@ def f3_loro():
     ax.set_xlim(-1.6, len(drops) - 0.6)
     ax.legend(fontsize=7, frameon=False, loc="upper center", bbox_to_anchor=(0.5, -0.28),
               ncol=1)
-    ax.set_title("Grey = every rule that holds its rank. Colour = the maximin family, "
-                 "whose record was exposure.", fontsize=8.6, loc="left", color=INK)
     style(ax)
     save(fig, "F3_leave_one_region_out.pdf")
 
@@ -356,11 +353,11 @@ def f4_virgin():
     # HONEST AXIS: bars start at zero, so the ±0.002–0.016 A/B deltas read as the noise band
     # they are (M35) — never a truncated axis that magnifies them.
     ax.set_ylim(0, max(sh.max().max() * 1.18, 0.8))
-    ax.set_ylabel("net OOS Sharpe (virgin universe, 2000–2026)", fontsize=9)
-    ax.set_title("Every OFF/ON pair is the same height: the estimator does nothing, and no "
-                 "variant clears 1/N", fontsize=8.4, loc="left", color=INK)
-    ax.legend(fontsize=8, frameon=False, loc="lower left")
+    ax.set_ylabel("net OOS Sharpe (virgin universe)", fontsize=9)
     style(ax)
+    h, l = ax.get_legend_handles_labels()
+    fig.legend(h, l, loc="lower center", bbox_to_anchor=(0.5, -0.16), ncol=2, fontsize=8,
+               frameon=False)
     save(fig, "F4_virgin_universe_ab.pdf")
 
 
@@ -400,7 +397,7 @@ def f5_sensitivity():
     for k in range(3):
         axes[k].set_ylim(min(lo) - pad, max(hi) + pad)      # one shared scale: flat is flat
     axes[0].set_ylabel("net OOS Sharpe", fontsize=9)
-    axes[0].legend(fontsize=6.4, frameon=False, loc="center left")
+    # legend below the figure, not on the data (it sat over the first panel in v2)
 
     ax2 = axes[3]
     ax2.bar([f"b={c}" for c in blk.cell], blk.c2_p_minvar_vs_1N, color="#2E9E68", width=0.55)
@@ -410,9 +407,9 @@ def f5_sensitivity():
     ax2.set_title("bootstrap block length", fontsize=8.4, loc="left", color=INK)
     ax2.tick_params(labelsize=7.4)
     style(ax2)
-    fig.suptitle("No ranking flips in any cell. The one line that moves is the all-weather "
-                 "maximin under looser caps — constraints-as-shrinkage, visible.",
-                 fontsize=8.6, color=INK, y=1.05)
+    h, l = axes[0].get_legend_handles_labels()
+    fig.legend(h, l, loc="lower center", bbox_to_anchor=(0.5, -0.10), ncol=5, fontsize=8,
+               frameon=False)
     save(fig, "F5_sensitivity_grids.pdf")
 
 
@@ -475,9 +472,9 @@ def f7_placebo():
         ax.set_xlabel("net OOS Sharpe", fontsize=8.2)
         style(ax)
     axes[0].set_ylabel("scrambled-label replicates", fontsize=8.6)
-    axes[0].legend(fontsize=6.8, frameon=False, loc="upper right")
-    fig.suptitle("The real labels land inside the scrambled-label distribution: the regime "
-                 "signal earns nothing in the allocation", fontsize=9, color=INK, y=1.06)
+    h, l = axes[0].get_legend_handles_labels()
+    fig.legend(h, l, loc="lower center", bbox_to_anchor=(0.5, -0.06), ncol=2, fontsize=8,
+               frameon=False)
     save(fig, "F7_placebo_null.pdf")
 
 
