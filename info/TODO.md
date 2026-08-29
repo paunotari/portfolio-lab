@@ -491,6 +491,22 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       §6.1 with the regional spread (M37).
     - Title also cut 15→11 words and "Cannot" dropped (PMR limit is 12): now *Dispersion, Not
       Method: Why 1/N Holds on an Investable Factor Menu*.
+  - [x] **Honesty-signalling pass, 2026-08-29.** Owner flagged "Two null results, reported in
+    full" as reading like AI boilerplate. Swept the whole .tex: it was not one phrase but a
+    repeated tic — **the paper kept announcing its own honesty instead of just being honest**
+    (7 instances: "reported in full", "the honest half", "where we correct ourselves", "our own
+    signature feature" x2, "we attack it ourselves", "the lesson we draw against ourselves",
+    "Reported ungated"). The merit is that the placebo exists, not that we narrate running it;
+    a referee reads self-praise and asks why they are being told instead of shown. All cut, plus
+    6 superlatives about the paper's own qualities and one over-written metaphor.
+    - **One was a substantive error, not a style problem:** the introduction promised "a clean
+      and, we show, inevitable answer" while §5.1 reports 56% power and says the race is
+      unresolved. "Inevitable" is now gone — it contradicted M38.
+    - Rule applied throughout: cut anything describing the paper's virtue, keep anything
+      describing the finding. Legitimate technical language ("leak check", "a coin flip") kept.
+    - Lesson for future edits: the hard-wrapped .tex breaks literal-string anchors constantly.
+      Use whitespace-tolerant regex substitution instead; three separate batches aborted on
+      line-wrap mismatches before switching.
   - [x] **PDF read end-to-end and fixed — v3 figures + LaTeX layout, 2026-08-29.** Owner
     compiled the .tex and sent the 20-page PDF. Read all of it. Findings and fixes:
     - **Every figure carried TWO titles and the legible one was wrong.** Each matplotlib chart

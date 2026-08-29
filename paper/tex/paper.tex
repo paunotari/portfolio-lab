@@ -184,8 +184,7 @@ the estimation inputs, how much turnover the strategy generates, whether short
 sales and leverage are permitted, and how demanding a bar ``beat'' must clear.
 Fix all five at the position a real retail investor occupies, a \textbf{long-only,
 index-based, factor-tilted equity menu} with realistic data length, transaction
-costs charged and statistical significance required, and the question has a clean
-and, we show, inevitable answer. On that menu no weighting rule beats 1/N at
+costs charged and statistical significance required, and the question has a clean answer. On that menu no weighting rule beats 1/N at
 conventional significance, and Section 5.1 reports the power behind that
 statement rather than leaving it implied. The cause is a property of the menu
 itself, which holds about one independent bet, leaving no dispersion for any
@@ -221,7 +220,7 @@ published ``beat-1/N'' rules we field fail. \citeauthor{yuan2023}'s
 \citeyearpar{brodie2009} sparse portfolio reaches only $p = 0.149$, and HERC
 lands below both its parents.
 
-\item \textbf{Two null results, reported in full.} We build, freeze and
+\item \textbf{Two null results.} We build, freeze and
 pre-register a regime-conditioned shrinkage estimator, then attack it, and the
 macro regime signal it depends on, with placebo tests aimed at our own signature
 feature. Both return nothing resolvable at this sample size. We report the
@@ -333,8 +332,7 @@ and quality \citep{asness2019}, with \citet{asness2013} supplying the strongest
 anti-data-mining defence. On our own sleeves every factor beats its regional
 Reference in compound annual growth over the full window (Enhanced Value
 $+3.70$pt, Momentum $+2.88$pt, Quality $+1.47$pt, winning in 7 of 7, 7 of 7 and
-6 of 6 regions). The backfill-free check is the honest half. Restricted to the
-live-index era (2015 onward) the premia \textbf{shrink but survive}, with
+6 of 6 regions). Restricted to the backfill-free live-index era (2015 onward) the premia \textbf{shrink but survive}, with
 Momentum $+3.38$pt, Enhanced Value $+1.76$pt and Quality $+1.04$pt, the last
 winning in only 4 of 6 regions. That attenuation is consistent with
 \citeauthor{mclean2016}'s \citeyearpar{mclean2016} post-publication decay, and it
@@ -571,8 +569,7 @@ does not.
 \exhibitnote{Each grid dimension on its own axis, sharing one Sharpe scale. Costs and refit
 cadence are flat for every contestant. The one line that moves is the all-weather maximin
 under looser caps, from 0.99 down to 0.87, which is constraints-as-shrinkage rather than a
-ranking flip. Rightmost panel: the study's one genuine frontier, the headline $p$-value's
-sensitivity to bootstrap block length.}
+ranking flip. Rightmost panel: the one specification choice that does move the headline $p$-value, the bootstrap block length.}
 \end{figure}
 
 Constraints behave as \citet{jagannathan2003} predicted, measured prospectively
@@ -634,8 +631,7 @@ of a fixed covariance.
 Two comparisons put the number in context. The four-sleeve minimum-variance portfolio holds
 \textbf{1.28} independent bets, so the engine whose entire job is to exploit correlations to
 cancel risk, holding a quarter as many sleeves, finds no more of them than naive diversification
-does. And twenty-four extra equity sleeves buy 0.03 of a bet. The menu is one dominant factor
-wearing 28 names, which the eigenvalues confirm: the first principal component alone explains
+does. And twenty-four extra equity sleeves buy 0.03 of a bet. The eigenvalues say the same thing: the first principal component alone explains
 77\% of variance and the covariance matrix is near-singular.
 
 \head{Third, the contrast that identifies the mechanism.} Adding the three
@@ -645,8 +641,7 @@ same bootstrap, where one set of resampled months drives both menus, the
 difference is \textbf{$+0.120$, with a 95\% interval of $+0.101$ to $+0.144$ and
 $p = 0.0002$}. Three sleeves buy more independent-bet content than twenty-eight
 equity sleeves did, and that gap is resolved with a confidence the weighting race
-never reaches. The asymmetry is the article's argument in one line: at this data
-scale the menu effect is measurable and the method effect is not.
+never reaches. At this data scale the menu effect is measurable and the method effect is not.
 
 \subsection{The long-only wrapper}
 
@@ -658,8 +653,7 @@ tilt contributes. We measure the consequence three independent ways, and they
 agree. \emph{(i) Across factors:} \citet{ilmanen2012} report near-zero correlation
 across factor constituents, whereas on long-only sleeves the within-region
 cross-factor correlation is \textbf{0.885}, the highest cut of our menu.
-\emph{(ii) The value/momentum hedge reverses sign.} This is the sharpest form of
-the result. \citet{asness2013} put the correlation between the two long-short
+\emph{(ii) The value/momentum hedge reverses sign.} \citet{asness2013} put the correlation between the two long-short
 premia at approximately \textbf{$-0.50$}, which is the standard argument for
 holding both. On our sleeves it is \textbf{$-0.088$} once each is measured in
 excess of its parent index, about a fifth of theirs, and \textbf{$+0.820$} in the
@@ -713,8 +707,7 @@ $-16.7$\% maximum drawdown}, is statistically indistinguishable from the
 era-flagged winner ($p = 0.70$) at two thirds of its volatility, and holds the
 lowest drawdown in Exhibit~\ref{ex:race}.
 
-Those numbers stand, and their explanation is where we correct ourselves. The
-worst-quadrant objective maximizes the mean of the worst of four macro partitions
+Those numbers stand. Their explanation does not. The worst-quadrant objective maximizes the mean of the worst of four macro partitions
 of history, but that objective is a robustness device even when the partitions are
 meaningless. A capped worst-case allocation over a menu containing genuinely
 negatively correlated assets is pushed toward those assets under any four-way
@@ -729,14 +722,13 @@ scale, change what you hold rather than how you time it.
 \exhibittitle{Real regime labels land inside the scrambled-label distribution}{ex:placebo}
 \centering
 \includegraphics[width=\textwidth]{F7_placebo_null.pdf}
-\exhibitnote{The permutation test against our own signature feature. Grey: net out-of-sample
+\exhibitnote{Permutation test on the macro-state labels. Grey: net out-of-sample
 Sharpe ratio across 40 replicates with the macro-state labels scrambled by a circular rotation,
 which preserves run lengths and the transition matrix exactly. Dotted line: the mean of those
 scrambled runs. Red line: the real-label result.}
 \end{figure}
 
-The regime layer is this article's most attackable feature, so we attack it
-ourselves and report what the tests return. \head{The labels.} Re-running the
+The regime layer carries the most weight and the least direct evidence, so we test it two ways. \head{The labels.} Re-running the
 entire walk-forward 80 times with the macro-state labels scrambled, a circular
 rotation preserving marginal frequencies, run lengths and the transition matrix
 exactly while destroying only the alignment between a month's label and its
@@ -751,8 +743,7 @@ difference-of-differences, switching the anchor off and on within each replicate
 on the same labels, finds every real-arm effect under half a null standard
 deviation and the estimator helping in 45 to 60\% of replicates, a coin flip.
 
-We report these because a checklist article that ran the tests and withheld the
-answers would refute its own thesis. The classifier's descriptive value, meaning
+The classifier's descriptive value, meaning
 which quadrant we occupy and how factors have behaved per state, is a different
 claim and is not tested here. What the placebos settle is narrow and clean. The
 macro signal does not earn its place in the allocation, and the honest
@@ -804,19 +795,16 @@ variants on the nine international sleeves (worst-quadrant $+0.002$, diversified
 containing the dot-com bust and the global financial crisis. Verdict on its own
 terms: \textbf{confirms}. Section 7.2 then forces the power post-mortem. Those
 declared thresholds sit inside the $\pm 0.01$ to $0.02$ noise band that menu
-composition alone produces (null standard deviation 0.03 to 0.10). The discipline
-was sound and we keep it as an example. The lesson we draw against ourselves is
-that its thresholds were set below the noise floor, so clearing them was a
+composition alone produces (null standard deviation 0.03 to 0.10). The discipline was sound, but its thresholds were set below the noise floor, so clearing them was a
 correctly run test of a question it did not have the power to answer. Any future
 confirmatory test in this program must declare thresholds against a measured null.
-Reported ungated: nothing beats 1/N significantly there either (best $p = 0.246$),
+Two secondary readouts, declared before the run: nothing beats 1/N significantly there either (best $p = 0.246$),
 and the equity-only maximin family ranks last through the two bears, consistent
 with Section 6.
 
 \section{Limitations}
 
-The modern out-of-sample window is the article's sharpest external-validity limit,
-and it deserves more than the usual sentence. Scoring begins in 2009 because a
+The modern out-of-sample window is the sharpest external-validity limit here. Scoring begins in 2009 because a
 120-month warmup on a window opening in 1999 puts it there, which places the
 entire 210-month race inside a single post-crisis regime containing no prolonged
 bear. That matters specifically, not generically: the modern winner earns 82\% of
@@ -889,8 +877,7 @@ describe different opportunity sets, and we say which one the retail factor
 investor occupies.
 
 What survives our checklist, covering nine decades, three universes,
-pre-registration, real-time discipline, region removal, sensitivity grids, and two
-placebos aimed at our own signature feature, is disciplined and modest.
+pre-registration, real-time discipline, region removal, sensitivity grids, and two placebos on the regime layer, is disciplined and modest.
 Risk-structure engines edge return-estimation ones but not significantly, hard
 caps help, and a menu holding genuinely different asset classes rather than
 another equity factor is what buys a shallow-drawdown floor. What does not survive
