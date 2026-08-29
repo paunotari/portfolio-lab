@@ -465,6 +465,17 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       Figure 1 in the intro — the draft itself calls it "the paper's claim in one image";
       (c) draft.md is kept as the long reference text, not deleted — decide before SSRN whether
       to retire it.
+  - **Toolkit installed 2026-08-29 (local, gitignored):** `academic-research-skills` v3.21.1
+    cloned to `~/academic-research-skills`, symlinked into `.claude/skills/` as 4 skills
+    (academic-paper, academic-paper-reviewer, academic-pipeline, deep-research). Installed
+    SKILLS-ONLY by symlink, deliberately NOT as a plugin — the plugin ships a PreToolUse hook
+    that runs on every Write/Edit/Bash (measured 0.22s/call here). Audited before install: no
+    exfiltration, network only to arXiv/OpenAlex/Crossref, no credential access, no
+    instruction-override text. **Caveat: licensed CC-BY-NC-4.0 (NonCommercial)** — re-check
+    before any commercial use of work it helped produce (see `info/vision.md`). Directly
+    useful here: `academic-paper format-convert` and its
+    `references/citation_format_switcher.md`, which carries the Chicago 17th **Author-Date**
+    spec JPM requires.
 - [~] Paper draft — **v0.1 WRITTEN 2026-07-19** (`paper/draft.md`: full SSRN-style working
       paper — abstract, intro, related lit, data incl. virgin universe, method incl. the
       estimator's two operative lines, results R-sections with inference, referee's
