@@ -166,6 +166,12 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       empirical-Bayes shrinkage) and position against the regime-allocation literature
       (Ang-Bekaert; Guidolin-Timmermann).
 - [ ] **Pre-draft checks (audit 2026-07-19)** — the remaining attackable assumptions:
+  - [x] **CORRECTED 2026-08-29 (M40) — this item's plan was never executed and the paper
+        text was written as if it had been.** The paper reports rf=0 Sharpes; §4.2 claimed
+        excess-over-T-bill. Text now matches the table. The 0.067 below is NOT reproducible:
+        both cached risk-free series cover only 148/210 OOS months. Restated on a common
+        window instead (rf=0 p=0.180 vs excess p=0.209 — the convention is not load-bearing).
+        Open: source a risk-free series spanning 2009-01→2026-06.
   - [x] Sharpe convention: recomputed the walk-forward table as EXCESS over T-bill
         (rf ~1.3%/yr avg) — rankings identical (only #8/#9 swap), min-var vs 1/N p_boot
         0.067 (vs 0.055 rf0): conclusions robust; paper tables will use the excess

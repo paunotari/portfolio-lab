@@ -958,3 +958,44 @@ being a rhetorical frame and becomes the inferential finding.
 `estimate_covariance`). **Data:** 329 shared months, 1999-01→2026-06. **Status:** measured;
 4 unit tests in `tests/test_optimizer.py` (CI brackets the point estimate, a genuinely
 uncorrelated sleeve tests significant, a redundant clone does not).
+
+---
+
+## M40 — CORRECTION: the paper reported rf=0 Sharpes while claiming excess-over-T-bill
+**Claim (a correction to the record, found by reading the compiled PDF):** the walk-forward
+table and every headline number in the paper are computed with a **zero risk-free rate**, but
+§4.2 asserted the opposite — that Sharpe ratios were excess over Treasury bills, with the
+headline p moving 0.055→0.067 under that convention. The table and the text were in different
+conventions. Verified against the cached walk-forward returns:
+
+| | 1/N | Min-variance | Δ | p_boot |
+|---|---|---|---|---|
+| cached returns, rf=0, 210 months | **0.830** | **1.031** | +0.201 | **0.0554** |
+| Table 1 as printed | 0.83 | 1.03 | +0.20 | 0.055 |
+
+Exact match. The table is rf=0.
+
+**Origin of the error.** The TODO entry from 2026-07-19 recorded the excess-convention check and
+declared "paper tables *will* use the excess convention (standard)". The prose was written as if
+that switch had happened. It never did.
+
+**The 0.067 is NOT reproducible from the repo as it stands.** Both risk-free series available
+(`asset_class_monthly` T-bill proxy and Ken French `rf`) cover only **148 of the 210 OOS
+months**, so a full-window excess restatement cannot be computed from cached data. Whatever run
+produced 0.067 used a fuller series than what is cached.
+
+**The underlying robustness claim survives, restated honestly.** Isolating the convention on a
+COMMON window (the 148 months where rf exists):
+
+| convention, same 148 months | Δ Sharpe | p_boot |
+|---|---|---|
+| rf = 0 | +0.163 | 0.180 |
+| excess over T-bill | +0.151 | 0.209 |
+
+Switching convention moves p by 0.03. What moves it away from 0.055 is the **shorter window**,
+not the convention. §4.2 now states this instead of the unverifiable 0.067.
+**⇒ Consequence.** Every headline in the paper is rf=0 and now says so. No number in Table 1,
+M38 or M39 changes. **Open:** obtaining a risk-free series covering 2009-01→2026-06 would let
+the full-window excess restatement be computed for real; until then the paper does not claim it.
+**See:** `inference.sharpe_diff_test` on `optimizer_walkforward_returns.csv`. **Status:**
+measured and corrected in the LaTeX source.

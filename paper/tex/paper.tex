@@ -435,9 +435,16 @@ delta-method plus a studentized circular block bootstrap ($B = 4999$,
 $b \approx T^{1/3}$, sensitivity $b \in \{3,6,10\}$) for every contestant against
 1/N and against the incumbent winner, deflated Sharpe with the fielded-roster
 trial count, and CSCV probability of backtest overfitting ($S = 16$, 12,870
-half-splits). Sharpe ratios are excess over Treasury bills here and use a zero
-risk-free rate in internal tables. Rankings are identical and the headline
-$p$-value moves from 0.055 to 0.067, so all conclusions are convention-robust.
+half-splits). We use the bootstrap rather than the classical Sharpe test because
+monthly Sharpe differences carry heavy tails and autocorrelation, which that test
+assumes away.
+
+Sharpe ratios use a zero risk-free rate throughout, tables and text alike. On the
+148 of 210 out-of-sample months for which a Treasury-bill series is available,
+recomputing in excess terms on that same subset moves the headline $p$ from 0.180
+to 0.209 and the Sharpe gap from $+0.163$ to $+0.151$, so the convention is not
+load-bearing. What separates those figures from the 0.055 of the full sample is
+the shorter window, not the choice of convention.
 
 \section{The walk-forward race}
 
@@ -494,7 +501,9 @@ certainty.
 
 \head{What that non-rejection is worth.} A $p$ above 0.05 licenses ``no effect''
 only if the design could have found one, so we report the power of our own
-headline test on the same standard error the test uses. Against the largest gap
+headline test, meaning the chance it would have flagged an edge of that size as
+significant had one really existed, computed on the same standard error the test
+uses. Against the largest gap
 in Exhibit~\ref{ex:race}, minimum variance's $+0.20$ annualized Sharpe, the design
 has \textbf{56\% power} at the 5\% level, and the smallest gap it could detect at
 80\% power is \textbf{$+0.27$}. The observed gap is three quarters of the
