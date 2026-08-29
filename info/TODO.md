@@ -465,6 +465,20 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       Figure 1 in the intro — the draft itself calls it "the paper's claim in one image";
       (c) draft.md is kept as the long reference text, not deleted — decide before SSRN whether
       to retire it.
+  - [x] **v0.4 style pass — DONE 2026-08-29.** Ran `academic-paper`'s
+    `references/writing_quality_check.md` against draft2.md. The draft failed three of its
+    rules badly: **84 em dashes** (limit 3), **21 binary contrasts** of the "not X, but Y"
+    shape (limit 2), **10.2 semicolons per 1000 words** (limit 2.0). Vocabulary was clean —
+    the AI register came from punctuation rhythm and rhetorical structure, not word choice.
+    Rewrote the whole body: em dashes in prose 75→1, semicolons 10.2→1.1, binary contrasts
+    16→7 of which only 2 are rhetorical (the abstract's thesis and the closing
+    recommendation — the two the checklist allows). Section headings converted from
+    rhetorical to plain noun phrases: "The race: nothing beats equal weight" → "The
+    walk-forward race"; "Why: the opportunity set, not the optimizer" → "The opportunity
+    set"; "Two null results, reported not buried" → "Placebo tests of the regime layer";
+    "Selection, not just weighting" → "Menu selection". Audited: zero data numbers changed,
+    all 49 references still cited, all cross-references resolve. Body 6193→6166 words (a
+    style pass, not a cut).
   - **Toolkit installed 2026-08-29 (local, gitignored):** `academic-research-skills` v3.21.1
     cloned to `~/academic-research-skills`, symlinked into `.claude/skills/` as 4 skills
     (academic-paper, academic-paper-reviewer, academic-pipeline, deep-research). Installed
