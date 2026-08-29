@@ -383,11 +383,19 @@ On top of it we build, freeze and pre-register a transparent estimator for the
 noisiest objects in the exercise, the per-regime conditional means, at 30 to 90
 monthly observations per cell. We state it because Section 7.2 reports that it has
 \textbf{no effect resolvable at this sample size}, and the construction and its
-null result are inseparable. For a factor sleeve $i$ in state $s$ with modern
-conditional excess $\hat{e}_{is}$ over its region Reference, long counterpart $j$
-with 66-year state mean $\bar{f}_{js}$, modern-window restriction
-$\bar{f}^{\,\prime}_{js}$, sample sizes $n_s$ and $m_s$, and mapping coefficient
-$\beta_j$, the estimator is a gate and a blend
+null result are inseparable. Write $\hat{e}_{is}$ for the modern conditional excess of factor sleeve $i$ in state $s$:
+the mean monthly return of $i$ across the training months labelled $s$, minus the mean of its
+regional Reference sleeve across the same months. Each factor family maps to a long counterpart
+$j$ among the Fama-French research factors, Enhanced Value to HML and Momentum to MOM, with
+Quality having none and staying modern. Then $\bar{f}_{js}$ is that counterpart's mean return in
+state $s$ over the 66-year sample and $\bar{f}^{\,\prime}_{js}$ is the same quantity over the
+modern window alone. The two sample sizes are the months available in state $s$ on each side,
+$n_s$ modern and $m_s$ long, and $m_s \gg n_s$ throughout: 789 classifiable long months against
+roughly 330 modern ones, which is why the anchor dominates wherever the gate opens. Finally
+$\beta_j$ translates academic long-short factor units into long-only sleeve excess units,
+estimated once per family as the ordinary-least-squares slope of the pooled modern sleeve excess
+on $f_j$ over their overlap; measured values run from 0.19 to 0.28. With $\mathbf{1}\{\cdot\}$
+the indicator function, the estimator is a gate and a blend
 
 \begin{equation}
 g_{js} = \mathbf{1}\!\left\{ \operatorname{sign}(\bar{f}_{js})
@@ -400,8 +408,12 @@ g_{js} = \mathbf{1}\!\left\{ \operatorname{sign}(\bar{f}_{js})
   + (1 - g_{js})\, \hat{e}_{is}
 \end{equation}
 
-This is empirical-Bayes pooling with prior strength equal to months of long
-evidence, plus a pretest gate on the crudest sufficient statistic. It feeds the
+The gate asks one question of the long series: does its 66-year record in state $s$ agree in
+sign with what that same series did in the modern era? If the two eras disagree about direction,
+nothing transfers and the modern estimate stands. If they agree, the blend is a precision-weighted
+average of the modern estimate and the $\beta$-mapped long one, weighted by the months of evidence
+behind each. This is empirical-Bayes pooling with a pretest gate on the crudest sufficient
+statistic, the sign. It feeds the
 \citet{black1992} view vector and the worst-quadrant objective's per-regime means,
 and reporting always shows raw modern means. Full treatment, including the
 asset-class and no-counterpart cases, is in the repository.
@@ -503,8 +515,17 @@ headline test, meaning the chance it would have flagged an edge of that size as
 significant had one really existed, computed on the same standard error the test
 uses. Against the largest gap
 in Exhibit~\ref{ex:race}, minimum variance's $+0.20$ annualized Sharpe, the design
-has \textbf{56\% power} at the 5\% level, and the smallest gap it could detect at
-80\% power is \textbf{$+0.27$}. The observed gap is three quarters of the
+has \textbf{56\% power} at the 5\% level. The smallest gap the design could detect at a given target power follows from the same standard
+error. Writing $\pi$ for that target and $\alpha$ for the significance level,
+
+\begin{equation}
+\mathrm{MDES} \;=\; \left(z_{1-\alpha/2} + z_{\pi}\right) \mathrm{se},
+\end{equation}
+
+\noindent where $z$ denotes a standard normal quantile. At $\alpha = 0.05$ and $\pi = 0.80$ the
+bracket is 2.80, so the minimum detectable gap is 2.80 standard errors, or \textbf{$+0.27$}
+annualized Sharpe here. Because $\mathrm{se}$ falls with $\sqrt{T}$, that
+threshold is a property of the sample length before it is a property of any estimator. The observed gap is three quarters of the
 detectable one. The correct statement is therefore weaker than the literature's
 usual phrasing, and we adopt it throughout: \textbf{no rule beats 1/N resolvably
 at this sample size.} Whether a $+0.20$ edge exists is a question 210 monthly
@@ -617,8 +638,19 @@ and the market beta dominates. The three non-equity proxies are the only genuine
 different bets on the menu, with Treasuries correlating $-0.115$ with the 28
 equity sleeves and gold $-0.007$.
 
-\head{Second, independent bets.} The Choueifaty-Coignard diversification ratio
-squared, the effective number of independent risk bets, is \textbf{1.31} for the
+\head{Second, independent bets.} The Choueifaty-Coignard diversification ratio compares the
+risk of the sleeves held separately with the risk of the portfolio that holds them,
+
+\begin{equation}
+DR(w) \;=\; \frac{\sum_i w_i \sigma_i}{\sqrt{w' \Sigma w}},
+\end{equation}
+
+\noindent with $\sigma_i$ the standalone volatility of sleeve $i$ and $\Sigma$ the shrunk
+covariance. The numerator is what the portfolio's risk would be if the sleeves never offset each
+other; the denominator is what it actually is. When correlations cancel nothing the two coincide
+and $DR = 1$, which is why $DR^{2}$ reads as an effective number of independent risk bets: it is
+1 for a single bet and $N$ for $N$ uncorrelated ones of equal risk. (Defined with $|w_i|$ in
+general; every portfolio here is long-only, so $w \ge 0$.) That number is \textbf{1.31} for the
 equal-weighted equity menu, with a 95\% confidence interval of \textbf{1.24 to 1.40}. The menu
 holds about one and a third independent bets, and that figure is tightly estimated.
 
@@ -707,9 +739,17 @@ $-16.7$\% maximum drawdown}, is statistically indistinguishable from the
 era-flagged winner ($p = 0.70$) at two thirds of its volatility, and holds the
 lowest drawdown in Exhibit~\ref{ex:race}.
 
-Those numbers stand. Their explanation does not. The worst-quadrant objective maximizes the mean of the worst of four macro partitions
-of history, but that objective is a robustness device even when the partitions are
-meaningless. A capped worst-case allocation over a menu containing genuinely
+Those numbers stand. Their explanation does not. The worst-quadrant objective maximizes the
+mean of the worst of four macro partitions of history,
+
+\begin{equation}
+\max_{w \in \mathcal{C}} \; \min_{s \in S} \; \mu_s' w,
+\end{equation}
+
+\noindent with $\mathcal{C}$ the capped long-only weight set and $\mu_s$ the mean vector in state
+$s$. Written this way the problem is visibly a robustness device even when the partitions are
+meaningless: the states enter only through the $\mu_s$, so any four-way split of history leaves
+the same structure. A capped worst-case allocation over a menu containing genuinely
 negatively correlated assets is pushed toward those assets under any four-way
 partition, because they are what a worst-case floor rewards. The flagship's record
 belongs to the regime-diverse menu and not to knowledge of the regime. The
@@ -836,9 +876,9 @@ is uncharged but measured immaterial, with a largest Sharpe overstatement of
 US dollars. \textbf{We also charge no ongoing fund fee, and the omission has a
 direction worth stating.} We measure indices; an investor holds funds tracking
 them, and liquid factor ETFs on this menu carry roughly 20 to 40 basis points a
-year. A flat annual fee costs Sharpe in proportion to one over volatility, so at
-30 basis points it removes about 0.020 from 1/N at 15.3\% volatility and about
-0.034 from the all-weather flagship at 8.7\%. The charge is common to every
+year. A flat annual fee $f$ costs Sharpe in proportion to one over volatility,
+$\Delta SR = -f/\sigma$, so at 30 basis points it removes about 0.020 from 1/N at 15.3\%
+volatility and about 0.034 from the all-weather flagship at 8.7\%. The charge is common to every
 contestant, so rankings hold, but every Sharpe level we report is an upper bound
 and the low-volatility flagship of Section 7.1 loses most from it. The
 deflated-Sharpe trial count includes fielded contestants and not every

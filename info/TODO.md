@@ -491,6 +491,29 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       §6.1 with the regional spread (M37).
     - Title also cut 15→11 words and "Cannot" dropped (PMR limit is 12): now *Dispersion, Not
       Method: Why 1/N Holds on an Investable Factor Menu*.
+  - [x] **Formulas added, 2026-08-29 — the maths now sits on the contribution too.** The paper's
+    only two equations were the estimator's gate and blend, i.e. all of its mathematics was
+    attached to the one thing that did NOT work. Added three numbered equations and one inline:
+    - **DR² (§6)** — the contribution. `DR(w) = Σwᵢσᵢ / √(w'Σw)`, with the text explaining that
+      the numerator is the risk of the sleeves held separately and the denominator the risk of
+      the portfolio, so DR = 1 when correlations cancel nothing. That is what makes DR² readable
+      as a bet count, and it is what the shaded band in Exhibit 5 rests on.
+    - **MDES (§5.1)** — makes the sample-size argument mechanical: the detectable gap is just
+      the standard error times a constant, and se falls with √T.
+    - **Maximin objective (§7.1)** — `max_w min_s μ_s'w`. Makes §7.1's self-correction land:
+      written out, the states enter only through μ_s, so any four-way split leaves the structure.
+    - **Fee arithmetic (§9)** — `ΔSR = −f/σ`, inline, replacing a sentence of prose.
+    - **Option A: every symbol in the estimator is now defined** (PMR requires "clearly define
+      all terms used in the equation"). Five were not: ê as a MEAN not just "an excess"; which of
+      n_s/m_s is modern vs long; the j mapping (EV→HML, Momentum→MOM, Quality→none); the
+      indicator notation; and above all **β_j**, previously just "mapping coefficient" — it is
+      the OLS slope translating long-short factor units into long-only sleeve excess units,
+      measured 0.19–0.28. Also added that m_s ≫ n_s (789 vs ~330), which is WHY the anchor
+      dominates and was absent entirely.
+    - **Caught a symbol collision I introduced myself:** β was the OLS slope in §4.1 and the
+      type-II error rate in the first MDES draft. Rewrote MDES with π for target power.
+    - [ ] **Length: main text is now ~6,680 words** (was ~5,800). Still inside PMR's 7,500
+      ceiling but far from the 4,000 target. The supplement split is now the only lever left.
   - [x] **Honesty-signalling pass, 2026-08-29.** Owner flagged "Two null results, reported in
     full" as reading like AI boilerplate. Swept the whole .tex: it was not one phrase but a
     repeated tic — **the paper kept announcing its own honesty instead of just being honest**
