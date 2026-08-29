@@ -901,3 +901,60 @@ Beta dominance is not an incidental caveat in this paper; it is the finding.
 corr of each minus its Reference). **Code:** ad-hoc on the cached CSV. **Data:** 6 regions with
 both sleeves, common window 1999-01→2026-06. **Status:** descriptive, full-sample — a property
 of the investable wrapper, not a backtested strategy claim.
+
+---
+
+## M38 — The headline test has 56% power: the modern race is UNRESOLVED, not settled
+**Claim (measured, and it weakens our own headline):** the paper's central "nothing beats 1/N"
+rests on `min-variance vs 1/N: p_boot = 0.055` — a *failure to reject*. Failing to reject
+licenses "no effect" only if the design could have detected one, and ours largely could not.
+On the same Ledoit-Wolf HAC standard error the test itself uses (se = 0.0275/month):
+
+| quantity | value |
+|---|---|
+| observed gap | **+0.201** annualized Sharpe |
+| **power to detect it at α=0.05** | **56.2%** |
+| **MDES at 80% power** | **+0.266** annualized Sharpe |
+| observed / MDES | 0.755 |
+
+**⇒ Consequence.** Every "nothing beats 1/N" sentence in the paper is downgraded to **"no rule
+beats 1/N *resolvably at this sample size*"**. Whether a +0.20 edge exists is a question 210
+monthly observations cannot answer either way. This is the same error the paper caught itself
+committing in M16/M35 (thresholds declared below the noise floor) — applied, this time, to the
+main result rather than the estimator. It also reframes the paper for the better: the race was
+never going to settle the question, which is *why* the menu measurement (M18/M39) is the
+contribution.
+**Corroborating (not new):** the modern winner earns 82% of its return in Quality (M21), the
+defensive factor a post-2009 window rewards, and the same rule ranks LAST over 90 years and
+beats 1/N in only 25% of shifted-start windows (M2). The modern lead is regime-shaped.
+**See:** `inference.sharpe_power`. **Code:** `portfolio/inference.py::sharpe_power`, on the
+cached walk-forward returns. **Data:** 210 OOS months, 2009–2026. **Status:** measured,
+deterministic (closed-form from the test's own s.e.); tests in `tests/test_optimizer.py`.
+
+---
+
+## M39 — DR² now carries inference, and the menu effect clears what the method effect cannot
+**Claim (measured):** DR² was reported as a bare point estimate while every Sharpe comparison in
+the study carried a p-value — the paper's actual contribution held to a lower evidentiary
+standard than its replications. Circular block bootstrap (B=4999, block 7, months resampled and
+the covariance **re-shrunk inside every replicate**, so the variability measured is that of the
+whole estimate-then-summarize chain):
+
+| menu | DR² | 95% CI |
+|---|---|---|
+| 28-sleeve equity, 1/N | **1.310** | **[1.242, 1.399]** |
+| + Treasuries/gold/cash (31 sleeves) | **1.430** | — |
+| **paired difference** | **+0.120** | **[+0.101, +0.144]**, **p = 0.0002** |
+
+Point estimates reproduce the optimizer's `dr2_equal_weight` exactly (1.310 / 1.430).
+
+**⇒ Consequence, and it is the paper's argument in one line.** Put M38 and M39 side by side:
+the **method** effect (+0.20 Sharpe) cannot be resolved at p<0.05 on a design with 56% power,
+while the **menu** effect (+0.120 independent bets) is resolved at p=0.0002. At this data scale
+the opportunity set is measurable and the weighting rule is not. "Dispersion, not method" stops
+being a rhetorical frame and becomes the inferential finding.
+**See:** `inference.dr2_bootstrap`. **Code:** `portfolio/inference.py::dr2_bootstrap` (+
+`_dr2_equal_weight`, which calls the engine's own `diversification_ratio` and
+`estimate_covariance`). **Data:** 329 shared months, 1999-01→2026-06. **Status:** measured;
+4 unit tests in `tests/test_optimizer.py` (CI brackets the point estimate, a genuinely
+uncorrelated sleeve tests significant, a redundant clone does not).

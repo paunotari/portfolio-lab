@@ -724,6 +724,70 @@ def test_inference_table_on_cached_walkforward():
     assert table.set_index("portfolio")["delta_ann_vs_1/N"].isna()["1/N"]
 
 
+def test_sharpe_power_recovers_known_design():
+    """Power/MDES must be internally consistent with the test's own s.e., and must move the
+    right way with sample size. Built on synthetic paired series so the truth is known."""
+    from portfolio_lab.portfolio.inference import sharpe_power
+    rng = np.random.default_rng(11)
+    short = rng.normal(0.006, 0.03, 120), rng.normal(0.005, 0.03, 120)
+    long_ = rng.normal(0.006, 0.03, 600), rng.normal(0.005, 0.03, 600)
+    ps, pl = sharpe_power(*short, B=99), sharpe_power(*long_, B=99)
+    for r in (ps, pl):
+        assert 0.0 <= r["power_at_observed"] <= 1.0
+        assert r["mdes"] > 0
+        # identity: a difference exactly at the MDES must have power == target
+        assert abs(r["mdes"] / r["se"] - (1.959963985 + 0.841621234)) < 1e-6
+    assert pl["se"] < ps["se"], "s.e. must shrink with T"
+    assert pl["mdes"] < ps["mdes"], "MDES must shrink with T"
+
+
+def test_sharpe_power_agrees_with_p_value():
+    """Power and the p-value come from one s.e., so they must agree on which side of alpha the
+    observed effect falls: |delta| >= MDES implies the test rejected."""
+    from portfolio_lab.portfolio.inference import sharpe_power
+    rng = np.random.default_rng(5)
+    r = sharpe_power(rng.normal(0.010, 0.03, 400), rng.normal(0.002, 0.03, 400), B=299)
+    z_crit = abs(r["delta"]) / r["se"]
+    assert (z_crit > 1.96) == (r["p_boot"] < 0.15), "HAC z and bootstrap p should broadly concur"
+    assert (r["observed_over_mdes"] >= 1.0) == (r["power_at_observed"] >= 0.80)
+
+
+def test_dr2_bootstrap_brackets_point_and_detects_a_real_gap():
+    """DR^2 inference: the CI must contain the point estimate, and a menu given a genuinely
+    uncorrelated extra sleeve must test as more diversified than one without it."""
+    from portfolio_lab.portfolio.inference import dr2_bootstrap, _dr2_equal_weight
+    import pandas as pd
+    rng = np.random.default_rng(3)
+    T, n = 300, 6
+    common = rng.normal(0, 0.04, T)                       # one dominant factor
+    tight = pd.DataFrame({f"e{i}": common + rng.normal(0, 0.01, T) for i in range(n)},
+                         index=pd.date_range("2000-01-31", periods=T, freq="ME"))
+    wide = tight.copy()
+    wide["diversifier"] = rng.normal(0, 0.04, T)          # uncorrelated by construction
+    r = dr2_bootstrap(tight, wide, B=299)
+    assert r["ci_lo_a"] <= r["dr2_a"] <= r["ci_hi_a"], "CI must bracket the point estimate"
+    assert abs(r["dr2_a"] - _dr2_equal_weight(tight.values)) < 1e-9, "point estimate must match"
+    assert r["dr2_b"] > r["dr2_a"], "adding an uncorrelated sleeve must raise DR^2"
+    assert r["delta_ba"] > 0 and r["p_boot_delta"] < 0.05, "a real gap must test significant"
+    assert r["delta_ci_lo"] > 0, "CI for the difference must exclude zero here"
+
+
+def test_dr2_bootstrap_finds_no_gap_when_menus_are_equivalent():
+    """The complement: duplicating a menu's own risk structure must NOT register as more
+    diversification. Guards against a test that fires on any column-count change."""
+    from portfolio_lab.portfolio.inference import dr2_bootstrap
+    import pandas as pd
+    rng = np.random.default_rng(9)
+    T = 300
+    common = rng.normal(0, 0.04, T)
+    idx = pd.date_range("2000-01-31", periods=T, freq="ME")
+    a = pd.DataFrame({f"e{i}": common + rng.normal(0, 0.01, T) for i in range(5)}, index=idx)
+    b = a.copy()
+    b["clone"] = a["e0"] + rng.normal(0, 0.01, T)         # another sleeve of the same bet
+    r = dr2_bootstrap(a, b, B=299)
+    assert abs(r["delta_ba"]) < 0.10, "a redundant sleeve must not buy a meaningful new bet"
+
+
 def test_exposure_diagnostics_bounds():
     if not (C.LEVELS_WIDE.exists() and C.OPTIMIZER_WALKFORWARD_RETURNS.exists()):
         return

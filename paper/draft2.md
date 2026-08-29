@@ -1,4 +1,4 @@
-# Dispersion, Not Method: When Portfolio Optimization Cannot Beat Equal Weight on an Investable Factor Menu
+# Dispersion, Not Method: Why 1/N Holds on an Investable Factor Menu
 
 **Working paper — draft v0.4 (2026-08). Prepared for SSRN; target outlets: *Journal of
 Portfolio Management* / *Journal of Asset Management*.**
@@ -12,17 +12,16 @@ command. Repository: [URL on publication].*
 ## Abstract
 
 Twenty years after the naive-diversification debate began, we ask not whether portfolio
-optimization beats equal weighting, but where, and why. On the menu a real investor can
-actually buy, 28 long-only regional factor index funds over roughly 28 years of monthly
-data, no optimization rule beats equal weighting at conventional significance, and several
-popular overlays do significantly worse. The cause lies in the menu rather than in the
-optimizer. These funds hold the equivalent of only 1.3 independent risk bets, because
-long-only factor tilts inside a region move together at a correlation of 0.885. Almost no
-dispersion is left for any weighting scheme to exploit. Widening the menu restores it: adding
-Treasuries and gold moves the lowest pairwise correlation from 0.53 to −0.14, and the
-resulting portfolio earns a 0.95 Sharpe ratio at a 16.7% maximum drawdown. Optimization wins
-where dispersion exists, and an investable factor menu has almost none. Widen the menu before
-refining the weights.
+optimization beats equal weighting, but where, and why. On the menu a real investor can reach,
+28 long-only regional factor indices over roughly 28 years of monthly data, no optimization
+rule beats equal weighting at conventional significance. The design, however, carries only 56%
+power against the largest observed gap, so that race is unresolved rather than settled. What
+the same data do resolve is the menu. These indices hold the equivalent of 1.31 independent
+risk bets (95% CI 1.24 to 1.40), because long-only factor tilts inside a region move together
+at a correlation of 0.885, leaving almost no dispersion for any weighting scheme to exploit.
+Adding Treasuries and gold raises that to 1.43 (p = 0.0002) and moves the lowest pairwise
+correlation from 0.53 to −0.14. The menu effect is measurable where the weighting effect is
+not. Widen the menu before refining the weights.
 
 **Keywords:** portfolio choice, estimation error, naive diversification, diversification
 ratio, backtest overfitting, replication. **JEL:** G11, C58.
@@ -49,9 +48,10 @@ much turnover the strategy generates, whether short sales and leverage are permi
 demanding a bar "beat" must clear. Fix all five at the position a real retail investor
 occupies, a **long-only, index-based, factor-tilted equity menu** with realistic data length,
 transaction costs charged and statistical significance required, and the question has a clean
-and, we show, inevitable answer. On that menu no weighting rule beats 1/N. The cause is a
-property of the menu itself, which holds about one independent bet, leaving no dispersion for
-any scheme to exploit. The optimization defenders are right on their datasets, where
+and, we show, inevitable answer. On that menu no weighting rule beats 1/N at conventional
+significance, and Section 5.1 reports the power behind that statement rather than leaving it
+implied. The cause is a property of the menu itself, which holds about one independent bet,
+leaving no dispersion for any scheme to exploit. The optimization defenders are right on their datasets, where
 dispersion is high. We are right on ours, where it is not. The two findings are compatible
 once the opportunity set is named. This is the paper's spine, and Section 6 measures it
 (Figures 3 and 4).
@@ -61,10 +61,11 @@ rules built specifically to beat 1/N, against each other under one protocol, att
 p-value to every ranking sentence. Our contributions are three.
 
 1. **The reconciling finding: dispersion, not method.** We measure why 1/N is unbeatable on
-   an investable factor menu. The diversification ratio implies 1.31 independent bets,
-   long-only factor tilts co-move at 0.885, and the covariance is near-singular. The
-   mechanism is confirmed by contrast: adding three asset classes moves the menu's minimum
-   pairwise correlation from 0.53 to −0.14. This places the twenty-year 1/N debate on a single
+   an investable factor menu. The diversification ratio implies 1.31 independent bets
+   (95% CI 1.24 to 1.40 by circular block bootstrap), long-only factor tilts co-move at 0.885,
+   and the covariance is near-singular. The mechanism is confirmed by contrast: adding three
+   asset classes raises the ratio to 1.43, a paired difference of +0.120 at p = 0.0002, and
+   moves the menu's minimum pairwise correlation from 0.53 to −0.14. This places the twenty-year 1/N debate on a single
    axis, the opportunity set.
 
 2. **A fully-instrumented adjudication.** We run the following as standing diagnostics on every build: Ledoit-Wolf (2008) bootstrap Sharpe inference (the robust successor to
@@ -180,8 +181,14 @@ do not diversify.
 **Sources.** The modern menu is 28 MSCI region×factor indices (ACWI, World, World ex-USA, USA,
 EM, Europe, AC Asia ex-Japan, Japan × Reference / Momentum / Enhanced Value / Quality where
 available), monthly net-USD total returns, common window 1999-01–2026-06 (330 months). Its
-measured redundancy disciplines its interpretation: mean pairwise correlation 0.76, first
-principal component 77% of variance, ≈2.8 effective bets. Sixteen FRED indicators feed a
+measured redundancy disciplines its interpretation: mean pairwise correlation 0.76 and a first
+principal component explaining 77% of variance. Two summaries of that redundancy recur below
+and answer different questions, so we distinguish them once here. The eigenvalue-entropy
+effective bet count (≈2.8) measures how many components the variance is spread over. The
+Choueifaty-Coignard DR² (1.31, Section 6) measures how much of the sleeves' standalone risk the
+correlations actually cancel under the weights held. A menu can spread variance over several
+components while cancelling almost none of it, which is exactly this menu, and DR² is the
+quantity a portfolio construction claim rides on. All headline statements use DR². Sixteen FRED indicators feed a
 4-quadrant growth×inflation classifier, used for descriptive statistics only with no fitted
 latent-state model. For long history we use Ken French research factors (1926+) and six
 long-only size×value portfolios, 10-year US Treasury total returns constructed from the FRED
@@ -261,6 +268,23 @@ clears no contestant past 1/N. The ranking is real while the gap to equal weight
 Deflated Sharpes of 0.98 and above clear the multiplicity bar, and the CSCV probability that
 the in-sample-selected contestant is no better than the out-of-sample median is 33%, which is
 real selection information well short of certainty.
+
+**What that non-rejection is worth.** A p above 0.05 licenses "no effect" only if the design
+could have found one, so we report the power of our own headline test on the same HAC standard
+error the test uses. Against the largest gap in the table, minimum variance's +0.20 annualized
+Sharpe, the design has **56% power** at the 5% level, and the smallest gap it could detect at
+80% power is **+0.27**. The observed gap is three quarters of the detectable one. The correct
+statement is therefore weaker than the literature's usual phrasing, and we adopt it throughout:
+**no rule beats 1/N resolvably at this sample size.** Whether a +0.20 edge exists is a question
+210 monthly observations cannot answer either way, and no choice of estimator repairs that.
+Section 6 matters precisely because the menu measurement is not subject to the same limit.
+
+Two further facts constrain how far the modern race travels, and they point the same way. The
+winner's return is 82% attributable to Quality sleeves (below), and Quality is the defensive
+factor a post-2009 window rewards. In the 90-year proxy race of Section 5.2 the same rule falls
+to last among structural rules and beats 1/N in only 25% of shifted-start windows. The most
+economical reading of the two together is that minimum variance's modern lead is a
+regime-shaped factor bet and not a durable property of the method.
 
 **Table 1.** Walk-forward out-of-sample results, 2009-2026 (210 months), net of 10 bps
 transaction costs. Δ Sharpe and p (studentized circular block bootstrap, Ledoit-Wolf 2008) are
@@ -364,7 +388,13 @@ sleeves and gold −0.007.
 
 **Second, independent bets.** The Choueifaty-Coignard diversification ratio squared, the
 effective number of independent risk bets, is **1.31** for the equal-weighted equity menu and
-**1.28** for the four-sleeve minimum-variance portfolio. The engine whose entire job is to
+**1.28** for the four-sleeve minimum-variance portfolio. We attach inference to these, since a
+contribution reported as a bare point estimate is not held to the standard this paper applies
+to every Sharpe comparison. Resampling months in circular blocks and re-shrinking the
+covariance inside each replicate, so that the sampling variability measured is that of the
+whole estimate-then-summarize chain, the equity menu's DR² has a 95% confidence interval of
+**1.24 to 1.40** (B = 4999). The claim of roughly one and a third independent bets is tightly
+estimated. The engine whose entire job is to
 exploit correlations to cancel risk, holding a quarter as many sleeves, finds no more
 independent bets than naive diversification does. Twenty-four extra equity sleeves buy 0.03 of
 a bet. The first principal component alone explains 77% of variance, and the covariance matrix
@@ -372,7 +402,12 @@ is near-singular, with a smallest eigenvalue of 3×10⁻⁷.
 
 **Third, the contrast that identifies the mechanism.** Adding the three asset-class proxies
 moves the menu's minimum pairwise correlation from 0.53 to −0.14 and its diversification ratio
-to 1.43. Three sleeves buy more independent-bet content than twenty-eight equity sleeves did.
+to 1.43. Under the paired version of the same bootstrap, where one set of resampled months
+drives both menus, the difference is **+0.120, with a 95% interval of +0.101 to +0.144 and
+p = 0.0002**. Three sleeves buy more independent-bet content than twenty-eight equity sleeves
+did, and that gap is resolved with a confidence the weighting race never reaches. The asymmetry
+is the paper's argument in one line: at this data scale the menu effect is measurable and the
+method effect is not.
 
 ### 6.1 The long-only wrapper
 
@@ -382,11 +417,16 @@ premium. An investor who cannot short holds the premium together with the parent
 the beta dominates whatever the tilt contributes. We measure the consequence three independent
 ways, and they agree. *(i) Across factors:* Ilmanen & Kizer (2012) report near-zero correlation
 across factor constituents, whereas on long-only sleeves the within-region cross-factor
-correlation is **0.885**, the highest cut of our menu. *(ii) Value against momentum:* Asness,
-Moskowitz & Pedersen (2013) report ≈ **−0.50** between the two long-short premia, the standard
-argument for holding both. On our sleeves the correlation is **−0.088** once each is measured
-in excess of its parent index, about a fifth of theirs, and **+0.820** in the space an investor
-actually holds. The hedge is not merely weakened. In investable form its sign reverses.
+correlation is **0.885**, the highest cut of our menu. *(ii) The value/momentum hedge
+reverses sign.* This is the sharpest form of the result. Asness, Moskowitz & Pedersen (2013)
+put the correlation between the two long-short premia at ≈ **−0.50**, which is the standard
+argument for holding both. On our sleeves it is **−0.088** once each is measured in excess of
+its parent index, about a fifth of theirs, and **+0.820** in the space an investor actually
+holds. The direction survives in excess space, so the economic mechanism is real. The magnitude
+does not, and in investable form the sign flips: an investor buying value and momentum indices
+for their mutual hedge is buying two versions of the same market exposure. Regional spread is
+wide and worth reporting, with Europe (−0.301) and Japan (−0.217) approaching the published
+figure while EM (+0.017) and AC Asia (+0.069) are indistinguishable from zero.
 *(iii) The defensive factor:* Quality's excess over junk is positive in drawdowns in long-short
 form, but long-only Quality carries a beta of **0.91** and *falls in 6 of 6 regions* during the
 worst decile of market months, cushioning **0.91 percentage points** (−7.95% against the
@@ -507,8 +547,15 @@ equity-only maximin family ranks last through the two bears, consistent with Sec
 
 ## 9. Limitations
 
-The modern out-of-sample window contains no prolonged bear. The proxy race and the virgin
-universe (two bears) are the complements, though proxies are frictionless constructs. The
+The modern out-of-sample window is the paper's sharpest external-validity limit, and it
+deserves more than the usual sentence. Scoring begins in 2009 because a 120-month warmup on a
+window opening in 1999 puts it there, which places the entire 210-month race inside a single
+post-crisis regime containing no prolonged bear. That matters specifically, not generically:
+the modern winner earns 82% of its return in Quality, the defensive factor such a regime
+rewards, and the same rule falls to last over 90 years (Section 5.1). Read together with the
+56% power of the headline test, the modern race should be treated as one regime's evidence and
+not as a settled ordering. The proxy race and the virgin universe (two bears) are the
+complements, though proxies are frictionless constructs. The
 classifier carries a mild full-sample z-normalization, affecting scale and never direction and
 bounded by the real-time lag test, and it uses revised rather than vintage FRED values, so an
 ALFRED-vintage replay is future work.
@@ -526,7 +573,15 @@ which is the object of study.
 
 Costs are flat 10 bps on refit turnover. Within-interval drift turnover is uncharged but
 measured immaterial, with a largest Sharpe overstatement of 0.002. Taxes, spreads and tracking
-error are not modeled, and all results are USD. The deflated-Sharpe trial count includes
+error are not modeled, and all results are USD. **We also charge no ongoing fund fee, and the
+omission has a direction worth stating.** We measure indices; an investor holds funds tracking
+them, and liquid factor ETFs on this menu carry roughly 20 to 40 bps a year. A flat annual fee
+costs Sharpe in proportion to one over volatility, so at 30 bps it removes about 0.020 from
+1/N at 15.3% volatility and about 0.034 from the all-weather flagship at 8.7%. Rankings within
+the equity menu are unaffected because the charge is common to every contestant, but every
+Sharpe *level* we report is an upper bound, and the low-volatility flagship of Section 7.1
+loses the most from it. A fee-aware restatement is the first thing we would add with product-
+level data. The deflated-Sharpe trial count includes
 fielded contestants and not every development-time variant, so the pre-registered test is the
 stronger multiplicity defense.
 
@@ -547,11 +602,15 @@ our effect sizes accordingly.
 ## 10. Conclusion
 
 Two decades of argument over whether optimization beats equal weight have a resolution this
-paper can state precisely. It depends on the opportunity set, and on an investable long-only
-factor menu, where a real retail investor lives, the set holds one dominant bet, so no
-weighting rule can beat 1/N and, tested properly, none does. The finding is a property of the
-menu and not a limitation of any optimizer, and we measure it (a diversification ratio of 1.31,
-factor tilts co-moving at 0.885, a near-singular covariance). The
+paper can state precisely. It depends on the opportunity set. On an investable long-only
+factor menu, where a real retail investor lives, the set holds one dominant bet, and no
+weighting rule beats 1/N by a margin this much data can resolve. The finding is a property of the
+menu and not a limitation of any optimizer, and we measure it with inference attached: a
+diversification ratio of 1.31 with a 95% interval of 1.24 to 1.40, rising to 1.43 on the wider
+menu at p = 0.0002, factor tilts co-moving at 0.885, and a near-singular covariance. That
+contrast is the result. The menu effect clears significance comfortably while the weighting
+effect the literature has argued over for twenty years does not clear it at all here, on a
+design with 56% power against the largest gap on offer. The
 optimization defenders are right on their own datasets, where dispersion is high. Both can be
 true because they describe different opportunity sets, and we say which one the retail factor
 investor occupies.

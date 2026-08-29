@@ -465,6 +465,31 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       Figure 1 in the intro — the draft itself calls it "the paper's claim in one image";
       (c) draft.md is kept as the long reference text, not deleted — decide before SSRN whether
       to retire it.
+  - [x] **v0.5 — simulated peer review run and ALL findings resolved, 2026-08-29.** Ran
+    `academic-paper-reviewer` (5 seats + editorial synthesis) against draft2.md. Two CRITICAL,
+    five MAJOR. Every one is now closed:
+    - **C1 (no inference on the contribution)** → built `inference.dr2_bootstrap`; DR² 1.310
+      [1.242, 1.399], equity→extended +0.120 at **p=0.0002** (M39). In §6.
+    - **C2 (headline is a non-rejection with no power reported)** → built
+      `inference.sharpe_power`; **56% power**, MDES +0.27 vs observed +0.20 (M38). Every
+      "nothing beats 1/N" downgraded to "not resolvably at this sample size". New subsection
+      in §5.1; abstract, §1 and §10 realigned.
+    - **M1 (2.8 vs 1.31 unreconciled)** → §3 now distinguishes eigenvalue-entropy bets from
+      DR² and states that all headline claims use DR².
+    - **M2 (single-regime OOS)** → §9 opening rewritten; §5.1 now connects the 82%-Quality
+      attribution to the 90-year reversal, naming the modern lead regime-shaped.
+    - **M3 (index "funds" vs indices)** → abstract corrected to indices.
+    - **M4 (no ongoing fund fee)** → §9 states the omission, its direction, and the arithmetic
+      (30 bps costs 1/N ~0.020 Sharpe and the 8.7%-vol flagship ~0.034).
+    - **M5 (novelty buried)** → the value/momentum sign reversal promoted to a named result in
+      §6.1 with the regional spread (M37).
+    - Title also cut 15→11 words and "Cannot" dropped (PMR limit is 12): now *Dispersion, Not
+      Method: Why 1/N Holds on an Investable Factor Menu*.
+    - [ ] **CONSEQUENCE — length regressed.** The fixes are all additions: computable body is
+      now ~6,370 words vs ~5,130 before, against PMR's 4,000 target (7,500 ceiling) and JAM's
+      6,000 cap. PMR states online-supplement material does not count toward length and names
+      "detailed empirical results" as suited to it. Candidate move: §5.2 (193) + §7.2 (319) +
+      §8 (417) → supplement, which lands ~5,440. Owner call, not done.
   - [x] **v0.4 style pass — DONE 2026-08-29.** Ran `academic-paper`'s
     `references/writing_quality_check.md` against draft2.md. The draft failed three of its
     rules badly: **84 em dashes** (limit 3), **21 binary contrasts** of the "not X, but Y"

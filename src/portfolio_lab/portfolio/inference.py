@@ -274,6 +274,123 @@ def friedman_nemenyi(monthly: pd.DataFrame, block: int = 12, metric: str = "shar
 BENCHMARKS = ("1/N", "Min-variance")
 
 
+# ------------------------------------------- power of the headline test (paper review C2)
+
+def sharpe_power(x, y, alpha: float = 0.05, target_power: float = 0.80,
+                 block: int = None, B: int = None, seed: int = None) -> dict:
+    """Power and minimum detectable effect for a Ledoit-Wolf Sharpe-difference test.
+
+    A non-rejection means "no effect" ONLY if the design could have detected one. The module
+    docstring has always said power here is modest; this puts a number on it, so a null can be
+    reported as "no effect resolvable at this sample size" rather than "no effect".
+
+    Uses the SAME HAC standard error the test itself uses, so power and p come from one object.
+    Under the local-alternative normal approximation d = delta/se ~ N(delta_true/se, 1):
+
+        power(delta) = Phi(delta/se - z_a) + Phi(-delta/se - z_a),   z_a = z_{1-alpha/2}
+        MDES         = (z_a + z_{target_power}) * se
+
+    Returns monthly units plus annualized (x sqrt(12)) copies for display. `mdes_ann` is the
+    smallest annualized Sharpe gap this design could call significant at `target_power`; an
+    observed gap below it is uninformative about the true one either way."""
+    t = sharpe_diff_test(x, y, block=block, B=B, seed=seed)
+    se, delta = t.get("se", np.nan), t.get("delta", np.nan)
+    out = dict(T=t["T"], block=t["block"], alpha=alpha, target_power=target_power,
+               delta=delta, se=se, p_boot=t.get("p_boot", np.nan))
+    if not np.isfinite(se) or se <= 0:
+        return {**out, "power_at_observed": np.nan, "mdes": np.nan, "mdes_ann": np.nan,
+                "note": t.get("note", "degenerate s.e.")}
+    z_a = norm.ppf(1 - alpha / 2)
+    lam = abs(delta) / se
+    out["power_at_observed"] = float(norm.cdf(lam - z_a) + norm.cdf(-lam - z_a))
+    out["mdes"] = float((z_a + norm.ppf(target_power)) * se)
+    out["delta_ann"] = float(delta * np.sqrt(12))
+    out["mdes_ann"] = float(out["mdes"] * np.sqrt(12))
+    out["observed_over_mdes"] = float(abs(delta) / out["mdes"])
+    return out
+
+
+# ------------------------------- inference for the diversification ratio (paper review C1)
+
+def _dr2_equal_weight(R: np.ndarray) -> float:
+    """DR^2 of 1/N on the shrunk covariance of `R` — the engine's own estimator, so the point
+    estimate here reproduces the optimizer's `dr2_equal_weight` exactly."""
+    from portfolio_lab.portfolio.optimizer import diversification_ratio
+    from portfolio_lab.portfolio.shrinkage import estimate_covariance
+    sigma, _ = estimate_covariance(R)
+    n = R.shape[1]
+    return float(diversification_ratio(np.ones(n) / n, sigma) ** 2)
+
+
+def dr2_bootstrap(rets_a: pd.DataFrame, rets_b: pd.DataFrame = None, alpha: float = 0.05,
+                  block: int = None, B: int = None, seed: int = None) -> dict:
+    """Circular block bootstrap for DR^2 (Choueifaty-Coignard independent bets) under 1/N.
+
+    Every Sharpe claim in this study carries a p-value while DR^2 — the paper's actual
+    contribution — was a bare point estimate. This supplies the missing leg: a percentile
+    confidence interval for one menu, and, when `rets_b` is given, a PAIRED test of
+    H0: DR2_a = DR2_b. Paired means the same resampled month indices drive both menus (they
+    share a window and 28 of their columns), so the comparison is not inflated by drawing two
+    independent histories.
+
+    Resampling is months, in circular blocks of the same length the Sharpe test uses, and the
+    covariance is re-shrunk inside every replicate — the sampling variability being measured is
+    the one that matters, i.e. of the whole estimate-then-summarize chain, not of a fixed Sigma.
+
+    The p-value is the usual bootstrap inversion: twice the smaller tail mass of the centered
+    difference distribution, floored at 1/(B+1)."""
+    B = B or C.OPTIMIZER_INFER_B
+    seed = C.OPTIMIZER_SEED if seed is None else seed
+    paired = rets_b is not None
+    if paired:                       # align on the shared window before anything else
+        idx = rets_a.index.intersection(rets_b.index)
+        rets_a, rets_b = rets_a.loc[idx], rets_b.loc[idx]
+    Ra = rets_a.dropna().values
+    T = len(Ra)
+    b = block or C.OPTIMIZER_INFER_BLOCK or max(3, round(T ** (1 / 3)))
+    Rb = rets_b.loc[rets_a.dropna().index].values if paired else None
+
+    point_a = _dr2_equal_weight(Ra)
+    point_b = _dr2_equal_weight(Rb) if paired else np.nan
+    out = dict(T=T, block=b, B=B, n_a=Ra.shape[1], dr2_a=point_a,
+               n_b=(Rb.shape[1] if paired else np.nan), dr2_b=point_b)
+
+    rng = np.random.default_rng(seed)
+    L = int(np.ceil(T / b))
+    starts = rng.integers(0, T, size=(B, L))
+    idx_bs = (starts[:, :, None] + np.arange(b)[None, None, :]) % T
+    idx_bs = idx_bs.reshape(B, L * b)[:, :T]
+
+    draws_a, draws_d = [], []
+    for s in range(B):
+        i = idx_bs[s]
+        try:
+            da = _dr2_equal_weight(Ra[i])
+        except Exception:
+            continue
+        if paired:
+            try:
+                db = _dr2_equal_weight(Rb[i])
+            except Exception:
+                continue                      # keep the two draw lists aligned
+            draws_d.append(db - da)
+        draws_a.append(da)
+    a = np.array(draws_a, float)
+    lo, hi = np.percentile(a, [100 * alpha / 2, 100 * (1 - alpha / 2)])
+    out.update(ci_lo_a=float(lo), ci_hi_a=float(hi), boot_used=len(a))
+
+    if paired and draws_d:
+        d = np.array(draws_d, float)
+        obs = point_b - point_a
+        centered = d - d.mean()
+        tail = min((centered >= abs(obs)).mean(), (centered <= -abs(obs)).mean())
+        out.update(delta_ba=float(obs),
+                   delta_ci_lo=float(np.percentile(d, 100 * alpha / 2)),
+                   delta_ci_hi=float(np.percentile(d, 100 * (1 - alpha / 2))),
+                   p_boot_delta=float(max(2 * tail, 1.0 / (len(d) + 1))))
+    return out
+
+
 def inference_table(monthly: pd.DataFrame) -> pd.DataFrame:
     """LW pairwise tests vs each benchmark + DSR, on the walk-forward net OOS returns."""
     srs = {c: float(monthly[c].dropna().mean() / monthly[c].dropna().std())
