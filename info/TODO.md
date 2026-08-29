@@ -491,6 +491,22 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       §6.1 with the regional spread (M37).
     - Title also cut 15→11 words and "Cannot" dropped (PMR limit is 12): now *Dispersion, Not
       Method: Why 1/N Holds on an Investable Factor Menu*.
+  - [x] **Title changed, 2026-08-30** — now *"Naive Diversification and the Opportunity Set:
+    Evidence from Long-Only Factor Indices"* (11 words, PMR limit 12), replacing *"Dispersion,
+    Not Method: Why 1/N Holds on an Investable Factor Menu"*. Three reasons the old one had to
+    go: (a) **"Dispersion, Not Method" was the binary-contrast tic** we cut 21 times from the
+    body and left on the cover; (b) "dispersion" is not the term anyone searches for — the
+    field says *naive diversification*, *1/N*, *equally weighted portfolio*, and PMR weights
+    the opening words for search visibility; (c) "Holds" is a weak verb chosen only to avoid
+    "Cannot".
+    **Owner rejected my preferred alternative for a good reason I had missed:** "Factor Indices
+    Hold One Independent Bet" reads as though each individual index contains one bet, when the
+    claim is about a portfolio spanning all 28 behaving as one. The `Evidence from...`
+    construction fixes exactly that — it marks the indices as the data, not the subject.
+    I had also argued against "opportunity set" on the grounds that the paper says "menu" 28
+    times and "opportunity set" only 6. That objection was weak: **§6 is titled "The
+    Opportunity Set"**, so the term names the paper's central section, and a title may use the
+    theory term while the prose uses the readable one.
   - [x] **Abstract rewritten plain, 2026-08-30.** The v0.5 abstract was technically accurate
     and badly suited to its venue: six figures, "95% confidence interval", "56% power",
     "0.885", "0.53 to −0.14", an opening rhetorical binary ("we ask not whether X but where"),
