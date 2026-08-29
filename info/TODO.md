@@ -448,6 +448,23 @@ Check items off as completed. Add new ones as they come up; keep entries short a
         references, the MSCI-backfill limitations paragraph (closing the M20 follow-up) and
         a menu-design limitation stating DR^2 = 1.31 so readers discount effect sizes
         accordingly.
+- [~] **Paper length pass — v0.3 WRITTEN 2026-08-29** (`paper/draft2.md`). Motivated by a
+      measurement against the target outlets' actual guidelines: JPM's abstract target is
+      **160 words, explicitly non-technical and reference-free**, and JAM caps articles at
+      **6,000 words** — v0.2's abstract was 427 words with 5 citations, and its body 6,850.
+      v0.3 cuts body to 5,809 (4,967 of prose + 509 of Table 1 + 333 of figure captions),
+      abstract to 161, and re-weights toward the thesis: the dispersion mechanism is promoted
+      from §5.4 to its own top-level §6, the race narrates less because Table 1 carries the
+      numbers, the estimator's exposition shrinks (it returns a null), and the referee's
+      checklist collapses into one §8 pointing at the ledger. Audited: all 49 references still
+      cited, every cross-reference resolves, and NO data number was dropped (only old section
+      numbers). Estimated ~12–13 pp in JPM's typeset style, inside their 10–14 range.
+      **Open decisions for the owner:** (a) §2 is still 829 w — getting it to ~450 for JPM
+      means dropping ~15 references, which is a call about whom to stop crediting; (b) whether
+      to lead the paper with the F0b frontier-cloud figure (currently Figure 3 in §6) as
+      Figure 1 in the intro — the draft itself calls it "the paper's claim in one image";
+      (c) draft.md is kept as the long reference text, not deleted — decide before SSRN whether
+      to retire it.
 - [~] Paper draft — **v0.1 WRITTEN 2026-07-19** (`paper/draft.md`: full SSRN-style working
       paper — abstract, intro, related lit, data incl. virgin universe, method incl. the
       estimator's two operative lines, results R-sections with inference, referee's

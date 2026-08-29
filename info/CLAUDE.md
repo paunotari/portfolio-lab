@@ -44,9 +44,14 @@ portfolio_lab/                     (repo root)
 │   ├── raw/msci_indexes/<REGION>/ source files: *Monthly.xlsx (returns) + *.pdf (factsheets)
 │   └── processed/                 tidy CSVs (REGENERABLE — gitignored)
 ├── outputs/                       analytics CSVs, REPORT.md, diversification/, dashboard.html (REGENERABLE — gitignored)
-├── paper/                         the working paper: draft.md (SSRN-style, numbers cite the
-│                                  ledger) + make_figures.py → figures/F1-F6.pdf (static
-│                                  exports from the same cached CSVs — rerun after pipeline)
+├── paper/                         the working paper. draft.md = v0.2 (long form, ~6.9k words of
+│                                  body, kept as the reference text); draft2.md = v0.3, the
+│                                  submission cut (~5.0k words of prose, abstract 161 w to JPM's
+│                                  160-word target, dispersion promoted to its own §6) — draft2
+│                                  is the one to submit, draft.md the one to consult for material
+│                                  cut out. Numbers in both cite the ledger. make_figures.py →
+│                                  figures/F0-F7.{pdf,png} (static exports from the same cached
+│                                  CSVs — rerun after pipeline)
 ├── src/portfolio_lab/             the Python package (see §4)
 ├── scripts/run_pipeline.py        one command to rebuild everything
 ├── tests/test_pipeline.py         data-integrity checks
