@@ -22,7 +22,7 @@ except ImportError:
 
 DATA_DIR = PROJECT_ROOT / "data"
 RAW_DIR = DATA_DIR / "raw" / "msci_indexes"             # region subfolders: xlsx + pdf
-MSCI_API_CACHE_DIR = DATA_DIR / "raw" / "msci_api"      # committed JSON cache for source=msci_api
+MSCI_API_CACHE_DIR = DATA_DIR / "raw" / "msci_api"      # local JSON cache for source=msci_api (gitignored)
 PROCESSED_DIR = DATA_DIR / "processed"                  # tidy CSVs (regenerable)
 INDEX_REGISTRY = DATA_DIR / "index_registry.csv"        # the manifest of tracked indexes
 

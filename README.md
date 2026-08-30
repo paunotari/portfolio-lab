@@ -33,11 +33,12 @@ classifier, and the scenario simulation, all of which depend on FRED data — se
 
 ## Data
 
-Three of the four sources are freely redistributable and ship with this repository: **FRED**
-(macro indicators), the **Ken French data library** (research factors and the frozen
-confirmatory snapshot) and an **LBMA gold** mirror.
+Three of the four sources are public and free, and the pipeline fetches them at run time:
+**FRED** (macro indicators), the **Ken French data library** (research factors) and an
+**LBMA gold** mirror. The frozen Ken French snapshot behind the confirmatory test is the one
+data file committed here, so that run reproduces exactly.
 
-The fourth does not. **MSCI index levels and factsheets are licensed and are deliberately not
+The fourth is not. **MSCI index levels and factsheets are licensed and are deliberately not
 committed here** — redistributing them is not ours to do. Everything else, including all the
 code and the findings ledger, is present, so the pipeline runs end to end once you supply your
 own copies:

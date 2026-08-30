@@ -554,10 +554,23 @@ Check items off as completed. Add new ones as they come up; keep entries short a
     The acknowledgments already declared no funding and no conflicts, which is now consistent.
     - [ ] **`[URL on publication]` is the ONLY placeholder left in the paper.** Fills in once
       the repository goes public.
-    - [ ] **PRE-PUBLICATION CHECK OF THE REPO — requested, not yet run.** Owner intends to make
-    the repository public and wants a sweep for anything that should not ship with it:
-    credentials, local paths, personal data, and any file that is licensed rather than ours
-    to publish.
+    - [x] **PRE-PUBLICATION CHECK OF THE REPO — DONE 2026-08-30.** Licensed MSCI index data is
+      kept out of version control (gitignored; each user supplies their own from their MSCI
+      access), and the tree was checked against a fresh clone of the remote rather than the
+      local copy, which is not evidence of what the public sees.
+    - **Credential sweep across history is clean.** The one regex hit is a `ghp_xxx`
+      placeholder inside a vendored third-party skill doc; `.env.example` carries an empty
+      `FRED_API_KEY=`; no absolute paths, no personal data beyond the email already on the paper.
+    - **The real find was documentation drift, not data.** `paper.tex` and `README.md` said
+      FRED / Ken French / LBMA gold "ship with the repository" when the pipeline fetches all
+      three at run time (only the frozen FF-international snapshot is committed);
+      `ingest/returns.py` (×2), `config.py` and `info/CLAUDE.md` still described the
+      `data/raw/msci_api/*.json` cache as "committed" when it is gitignored. All six fixed.
+    - **Judgment call left to the owner, not acted on:** `ingest/returns.py` ships a client for
+      MSCI's unauthenticated end-of-day endpoint, the one behind their public index charts.
+      Nothing secret, and the code caches rather than hammers it — but shipping a fetcher sits
+      slightly against the repo's own reason for not carrying the data. Keep, or drop the
+      `msci_api` source and leave only `msci_local`.
   - [x] **Full re-read of the compiled PDF (23 pp), 2026-08-30 — six fixes, four of them
     defects my own enrichment introduced.** Reading the render rather than the source is what
     caught them:

@@ -9,7 +9,7 @@ Two sources:
 - ``msci_api``: MSCI's own end-of-day data service (app2.msci.com, the same source behind the
   xlsx exports — verified identical to 9 significant figures on USA Momentum). ``returns_file``
   holds the numeric index code. Responses are cached to ``data/raw/msci_api/<code>.json``
-  (committed, like the xlsx files) so offline runs and reproducibility keep working; on a
+  (gitignored, like the xlsx files) so offline runs and reproducibility keep working; on a
   network failure the cache is used, and only cache-AND-fetch failure raises.
 
 We emit two tidy files:
@@ -39,7 +39,7 @@ _MSCI_API = ("https://app2.msci.com/products/service/index/indexmaster/getLevelD
 
 
 def _read_levels_api(code: str) -> list:
-    """[(date, level)] from the MSCI data service, with a committed JSON cache."""
+    """[(date, level)] from the MSCI data service, with a local JSON cache."""
     cache = C.MSCI_API_CACHE_DIR / f"{code}.json"
     payload = None
     try:

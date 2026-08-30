@@ -152,7 +152,7 @@ explicit, not implied by which folders happen to exist. Columns:
 | `index_id` | MSCI numeric code (also prefixes the returns filename) |
 | `display_name` | full index name (as it appears in the returns xlsx) |
 | `region`, `factor_type` | the series key — **unique together** |
-| `source` | how ingest loads it: `msci_local` (xlsx + factsheet pdf) · `msci_local_webweights` (xlsx local, weights via `ingest/asia_images.py`) · **`msci_api`** (MSCI's end-of-day data service, same source as the xlsx — verified to 9 significant figures; `returns_file` holds the numeric index code; responses cached to `data/raw/msci_api/<code>.json`, committed, so offline runs work) |
+| `source` | how ingest loads it: `msci_local` (xlsx + factsheet pdf) · `msci_local_webweights` (xlsx local, weights via `ingest/asia_images.py`) · **`msci_api`** (MSCI's end-of-day data service, same source as the xlsx — verified to 9 significant figures; `returns_file` holds the numeric index code; responses cached to `data/raw/msci_api/<code>.json` — gitignored, like the xlsx, so the cache is local only) |
 | `returns_file` | xlsx basename inside `data/raw/msci_indexes/<region>/` |
 | `weights_file` | factsheet pdf basename, or empty (webweights / none). An `msci_local` row with an empty `weights_file` is a **returns-only** sleeve (owner-exported xlsx, no factsheet — look-through approximated per caveat #18) |
 
