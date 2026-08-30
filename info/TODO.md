@@ -554,7 +554,7 @@ Check items off as completed. Add new ones as they come up; keep entries short a
     The acknowledgments already declared no funding and no conflicts, which is now consistent.
     - [ ] **`[URL on publication]` is the ONLY placeholder left in the paper.** Fills in once
       the repository goes public.
-  - [ ] **PRE-PUBLICATION CHECK OF THE REPO — requested, not yet run.** Owner intends to make
+    - [ ] **PRE-PUBLICATION CHECK OF THE REPO — requested, not yet run.** Owner intends to make
     the repository public and wants a sweep for anything that should not ship with it:
     credentials, local paths, personal data, and any file that is licensed rather than ours
     to publish.

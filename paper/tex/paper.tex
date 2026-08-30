@@ -109,8 +109,8 @@ Spain, and conducted this research independently of any institutional affiliatio
 
 \vspace{18pt}
 \noindent\emph{Every number in this article is an entry in the project's
-critical-findings ledger (M1--M39), names the module that produces it, and
-regenerates from public data with one command. Repository: [URL on publication].}
+critical-findings ledger (M1--M41), names the module that produces it, and regenerates with one command from the
+sources listed in the data availability statement. Repository: [URL on publication].}
 
 \clearpage
 
@@ -937,14 +937,19 @@ and we report that with a power post-mortem. At retail data scale the contributi
 
 \section*{ACKNOWLEDGMENTS AND DISCLOSURES}
 
-The author reports no conflicts of interest. No external funding supported this
-work. Every table and figure regenerates from public data: MSCI end-of-day index
-levels, FRED, the Ken French data library, and an LBMA gold mirror. The repository
-ships the critical-findings ledger (M1--M39), where each claim names its producing
-module, inputs and validation status; a 16-stage pipeline plus command-line
-modules for the expensive probes; 75 unit and integrity tests; and the frozen
-snapshot of the confirmatory dataset with the pre-registration commit that
-precedes its single run in the version history.
+The author reports no conflicts of interest and received no external funding.
+
+\head{Data availability.} The study draws on four sources. Three are freely redistributable and
+ship with the repository: FRED, the Ken French data library, and an LBMA gold mirror. The fourth,
+MSCI end-of-day index levels and factsheets, is licensed and is therefore not redistributed; the
+repository documents how to obtain it, and every result that depends on it regenerates once the
+files are in place.
+
+\head{Code and reproducibility.} The repository ships the critical-findings ledger (M1--M41),
+where each claim names its producing module, inputs and validation status; a 16-stage pipeline
+plus command-line modules for the expensive probes; 75 unit and integrity tests; and the frozen
+snapshot of the confirmatory dataset, together with the pre-registration commit that precedes
+its single run in the version history.
 
 
 % =====================================================================

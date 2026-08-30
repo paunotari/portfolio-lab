@@ -27,3 +27,8 @@ env/
 # --- regenerable pipeline output (rebuild with scripts/run_pipeline.py) ---
 /outputs/
 /data/processed/
+
+# --- licensed data: MSCI index levels and factsheets are proprietary and
+# must not be redistributed. Kept locally, never committed.
+data/raw/msci_indexes/
+data/raw/msci_api/

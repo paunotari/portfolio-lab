@@ -26,9 +26,30 @@ classifier, and the scenario simulation, all of which depend on FRED data — se
 - **How the code works, module map, caveats:** [info/CLAUDE.md](info/CLAUDE.md)
 - **Product vision & roadmap:** [info/vision.md](info/vision.md)
 - **Conceptual diversification thesis:** [info/factor-diversification-thesis.md](info/factor-diversification-thesis.md)
-- **Source data:** `data/raw/msci_indexes/<REGION>/` (xlsx returns + pdf factsheets)
+- **Source data:** `data/raw/msci_indexes/<REGION>/` (xlsx returns + pdf factsheets) — **not
+  included, see Data below**
 - **Code:** `src/portfolio_lab/` (`ingest` → `analytics` / `portfolio` → `dashboard`)
 - **Generated output:** `data/processed/` and `outputs/` (both regenerable; gitignored)
+
+## Data
+
+Three of the four sources are freely redistributable and ship with this repository: **FRED**
+(macro indicators), the **Ken French data library** (research factors and the frozen
+confirmatory snapshot) and an **LBMA gold** mirror.
+
+The fourth does not. **MSCI index levels and factsheets are licensed and are deliberately not
+committed here** — redistributing them is not ours to do. Everything else, including all the
+code and the findings ledger, is present, so the pipeline runs end to end once you supply your
+own copies:
+
+```
+data/raw/msci_indexes/<REGION>/*.xlsx   # monthly net-USD index levels
+data/raw/msci_indexes/<REGION>/*.pdf    # factsheets, for look-through weights
+```
+
+`<REGION>` is one of ACWI, World, World_ex_USA, USA, EM, Europe, AC_Asia_ex_Japan, Japan, and
+`data/index_registry.csv` lists exactly which index each file should be. Without them the
+macro, long-history and Fama-French stages still run; the MSCI stages do not.
 
 ## Coverage
 
