@@ -552,8 +552,10 @@ Check items off as completed. Add new ones as they come up; keep entries short a
     states that plainly rather than inventing one. Dropped the corresponding-author line (PMR
     conditions it on multiple authors) and the street-address and telephone placeholders.
     The acknowledgments already declared no funding and no conflicts, which is now consistent.
-    - [ ] **`[URL on publication]` is the ONLY placeholder left in the paper.** Fills in once
-      the repository goes public.
+        - [x] **Repository URL filled in, 2026-08-30** — `github.com/paunotari/portfolio-lab`,
+      renamed from `Intelligent_portfolio_manager` to match the `portfolio_lab` package. No
+      placeholders remain in the paper. Still to do: flip the repository to public, or the
+      printed link 404s for readers.
         - [x] **Pre-publication sign-off complete, 2026-08-30.** The hosting side was rebuilt from
       the local history so the remote holds only what is in this tree: 133 commits, first
       commit dated 2026-07-04, no licensed data at any point, credential sweep clean. Safe to
