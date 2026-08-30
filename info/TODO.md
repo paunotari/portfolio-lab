@@ -577,6 +577,27 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       Nothing secret, and the code caches rather than hammers it — but shipping a fetcher sits
       slightly against the repo's own reason for not carrying the data. Keep, or drop the
       `msci_api` source and leave only `msci_local`.
+  - [x] **Fourth PDF read, owner-annotated, 2026-08-30 — 26 highlights plus a naming defect
+    the highlights led to.** The defect: the same contestant appeared as *Black-Litterman
+    blend* in the hand-typeset Exhibit 1 and as *Balanced sliders (5/5/5)* in the generated
+    Exhibits 2 and 8, because the figures take their labels straight from the pipeline, whose
+    contestant names are dashboard vocabulary. Same p-value (0.070) under two names, two pages
+    apart. Fixed with a `DISPLAY` map in `make_figures.py` rather than by renaming the
+    pipeline, so internal names stay stable. The same sweep caught `ERC (anchor)` — a
+    qualifier that appears zero times in the paper — and `GMV combo` vs `GMV combination`.
+    - **`HRP` and `ERC` were used in figures but never defined in the text.** Now introduced
+      at first use in §4.2. Any future figure label must be checkable against the .tex; the
+      one-liner that does it is in this entry's commit.
+    - **Register pass:** cut the remaining self-praise ("rather than leaving it implied"),
+      three slogan headings, two binary contrasts ("Structure is the property that travels",
+      "Those numbers stand. Their explanation does not."), and the "humility side" coinage,
+      which editorialized and was never defined.
+    - **Notation:** the Yuan-Zhou passage used $\tau$, $SR$, $\eta$, $N$, $T$ with only
+      $\eta = N/T$ defined. Now spelled out in words.
+    - **Keywords rewritten.** They led with "estimation error", which the conclusion
+      explicitly rejects as the explanation, and omitted factor investing, 1/N and equity
+      indices — the terms someone would actually search.
+    - Roadmap paragraph cut as filler; body now ~6,730 words against PMR's 4,000 target.
   - [x] **Full re-read of the compiled PDF (23 pp), 2026-08-30 — six fixes, four of them
     defects my own enrichment introduced.** Reading the render rather than the source is what
     caught them:

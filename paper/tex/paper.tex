@@ -146,9 +146,9 @@ weighting: widen the menu before refining the weights.
 \section*{KEY TAKEAWAYS}
 
 \begin{itemize}\setlength{\itemsep}{6pt}\setlength{\parskip}{0pt}
-\item On the menu a retail investor can reach, no weighting rule beats equal weight
-      by a margin this data can resolve: at 56\% power, a real edge of that size would go
-      undetected nearly half the time.
+\item On the menu a retail investor can reach, no weighting rule beats equal weight by a margin
+      this data can resolve. The test carries 56\% power, so an edge the size of the largest
+      one observed would have gone undetected about half the time.
 \item The binding constraint is the menu, not the optimizer. Twenty-eight long-only
       \emph{equity} factor indices hold 1.31 independent risk bets, and adding Treasuries,
       gold and cash buys more than all of them.
@@ -158,8 +158,8 @@ weighting: widen the menu before refining the weights.
 \end{itemize}
 
 \vspace{12pt}
-\noindent\textbf{Keywords:} portfolio choice; estimation error; naive
-diversification; diversification ratio; backtest overfitting; replication.
+\noindent\textbf{Keywords:} naive diversification; 1/N; factor investing; equity
+indices; portfolio choice; diversification ratio; backtest overfitting.
 
 \noindent\textbf{JEL classification:} G11, C58.
 
@@ -193,21 +193,19 @@ the estimation inputs, how much turnover the strategy generates, whether short
 sales and leverage are permitted, and how demanding a bar ``beat'' must clear.
 Fix all five at the position a real retail investor occupies, a \emph{long-only, index-based, factor-tilted equity menu} with realistic data length, transaction
 costs charged and statistical significance required, and the question has a clean answer. On that menu no weighting rule beats 1/N at
-conventional significance, and Section 5.1 reports the power behind that
-statement rather than leaving it implied. The cause is a property of the menu
+conventional significance, and Section 5.1 reports the power behind that statement. The cause is a property of the menu
 itself, which holds about one independent bet, leaving no dispersion for any
 scheme to exploit. The optimization defenders are right on their datasets, where
 dispersion is high. We are right on ours, where it is not. The two findings are
 compatible once the opportunity set is named. Section 6 measures it
 (Exhibits~\ref{ex:frontier} and~\ref{ex:dispersion}).
 
-We reach it by fielding the canonical construction rules, together with the three
-most-cited rules built specifically to beat 1/N, against each other under one
-protocol, attaching a $p$-value to every ranking sentence. Our contributions are
-three.
+We field the canonical construction rules together with the three most-cited rules built
+specifically to beat 1/N, race them under one protocol, and report a $p$-value for every
+ranking claim. We make three contributions.
 
 \begin{enumerate}\setlength{\itemsep}{6pt}
-\item \textbf{The reconciling finding: dispersion, not method.} We measure why
+\item \textbf{The reconciling finding.} We measure why
 1/N is unbeatable on an investable factor menu. The diversification ratio implies
 1.31 independent bets (95\% confidence interval 1.24 to 1.40 by circular block
 bootstrap), long-only factor tilts co-move at 0.885, and the covariance is
@@ -216,7 +214,7 @@ raises the ratio to 1.43, a paired difference of $+0.120$ at $p = 0.0002$, and
 moves the menu's minimum pairwise correlation from 0.53 to $-0.14$. This places
 the twenty-year 1/N debate on a single axis, the opportunity set.
 
-\item \textbf{A fully instrumented adjudication.} We run the following as
+\item \textbf{Inference on every comparison.} We run the following as
 standing diagnostics on every build: \citet{ledoit2008} bootstrap Sharpe
 inference (the robust successor to the Jobson-Korkie test of \citeyear{jobson1981} that the prior replication uses), deflated Sharpe ratios \citep{bailey2014}, a Friedman-Nemenyi joint test
 \citep{demsar2006}, the combinatorially symmetric cross-validation (CSCV) probability of backtest overfitting \citep{bailey2017}, leave-one-region-out re-races, and sensitivity grids over costs, refit cadence,
@@ -226,21 +224,16 @@ published ``beat-1/N'' rules we field fail. \citeauthor{yuan2023}'s
 \citeyearpar{brodie2009} sparse portfolio reaches only $p = 0.149$, and HERC
 lands below both its parents.
 
-\item \textbf{Two null results.} We build, freeze and
+\item \textbf{A pre-registered estimator that does not work.} We build, freeze and
 pre-register a regime-conditioned shrinkage estimator, then attack it, and the
 macro regime signal it depends on, with placebo tests on the regime layer. Both return nothing resolvable at this sample size. We report the
 negative result with a power post-mortem.
 \end{enumerate}
 
-Section 2 places the article in the five-lever debate. Sections 3 and 4 give the
-data and the protocol, Section 5 runs the race, and Section 6, the contribution,
-measures why it comes out the way it does. Sections 7 and 8 report the nulls and
-the robustness checks.
-
 \setcounter{section}{1}
 \section{The debate and its five levers}
 
-The two camps rarely engage on the same terms. On one side, \citet{demiguel2009}
+The two sides rarely engage on the same terms. On one side, \citet{demiguel2009}
 and, most recently, \citet{gelmini2024} find 1/N is not systematically beaten out
 of sample. On the other, \citet{kritzman2010}, titling their rebuttal ``the
 fallacy of 1/N,'' and \citet{kirby2012} show optimization can win. Read together,
@@ -255,21 +248,24 @@ Kirby and Ostdiek attribute the result to the extreme turnover of the strategies
 DeMiguel tested. (iv) \emph{Short sales and leverage}: much of the measured
 optimization advantage requires positions a long-only investor cannot take.
 (v) \emph{The significance bar}: pro-optimization evidence is often point-estimate
-or single-dataset, whereas the humility side demands significance across datasets.
-\citet{pflug2012} supply the theory the humility side otherwise lacks, showing 1/N
+or single-dataset, whereas the 1/N side demands significance across datasets.
+\citet{pflug2012} supply the theory that side otherwise lacks, showing 1/N
 optimal under sufficient model ambiguity, which is the regime a retail investor
 with a few decades of data inhabits. We fix all five levers at that retail
 position.
 
 \head{Estimation error.} \citet{markowitz1952} optimality collides with sampling
 error \citep{michaud1989,chopra1993}, which \citet{demiguel2009} quantify.
-\citet{yuan2023} supply the missing theory. The plug-in Sharpe converges to
-$\tau \cdot SR$ with $\tau = \sqrt{(1-\eta)/(1+\eta/SR^{2})}$ and $\eta = N/T$,
-and under a one-factor structure 1/N is asymptotically optimal as $N$ grows. They
+\citet{yuan2023} supply the missing theory. The Sharpe ratio an investor actually realizes from estimated weights converges to
+$\tau \cdot SR$, a fraction $\tau$ of the true Sharpe ratio $SR$, where
+$\tau = \sqrt{(1-\eta)/(1+\eta/SR^{2})}$ and $\eta = N/T$ is the number of assets per
+observation. The more assets a menu carries per month of data, the more of the attainable
+Sharpe ratio estimation destroys. Under a one-factor structure 1/N is asymptotically
+optimal as $N$ grows. They
 then beat 1/N with a closed-form combination of the plug-in global
 minimum-variance portfolio and 1/N. We field their rule (Section 5), where it
 loses on our menu, an outcome their own Proposition 3 and their $T = 360$ window
-requirement predict in advance. The humility result therefore survives its
+requirement predict in advance. The 1/N result therefore survives its
 strongest published challenger, adjudicated with that challenger's mathematics.
 
 \head{Menu selection.} A weighting study is only as interesting as its menu.
@@ -425,8 +421,9 @@ asset-class and no-counterpart cases, is in the repository.
 
 \subsection{Contestants, protocol and inference}
 
-We field equal weight (1/N), minimum variance, equal risk contribution and
-hierarchical risk parity (all on \citet{ledoit2004} shrunk covariances), a mean-variance blend built around a Black-Litterman posterior, which the exhibits label the Black-Litterman blend,
+We field equal weight (1/N), minimum variance, equal risk contribution (ERC) and
+hierarchical risk parity (HRP), all on \citet{ledoit2004} shrunk covariances; a
+mean-variance blend built around a Black-Litterman posterior;
 cross-sectional momentum (12-1, top 6), unlevered volatility targeting
 \citep{moreira2017}, binary trend overlays \citep{faber2007,antonacci2014},
 worst-quadrant maximin, which maximizes the mean return in whichever of the four macro states turns out worst, both unconstrained and under diversified caps (per-sleeve at most 25\%, look-through geographic at most 40\%, factor at most 40\%), and an
@@ -540,8 +537,6 @@ beats 1/N in only 25\% of shifted-start windows. The most economical reading of
 the two together is that minimum variance's modern lead is a regime-shaped factor
 bet and not a durable property of the method.
 
-
-
 \begin{figure}[H]
 \exhibittitle{No rule clears significance against 1/N, and two overlays are significantly worse}{ex:inference}
 \centering
@@ -579,8 +574,7 @@ and equal risk contribution (0.75) edge 1/N (0.74). Across shifted-start variant
 both beat 1/N in 100\% of windows and minimum variance in 25\%. The
 modern menu shows the same signature in rolling windows, with equal risk
 contribution and hierarchical risk parity beating 1/N in 98 to 99\% of rolling
-three-year windows. Structure is the property that travels, and the modern winner
-does not.
+three-year windows. The structural rules hold their advantage across both eras; minimum variance does not.
 
 \begin{figure}[H]
 \exhibittitle{No ranking flips in any sensitivity cell}{ex:grids}
@@ -589,7 +583,7 @@ does not.
 \exhibitnote{Each grid dimension on its own axis, sharing one Sharpe scale. Costs and refit
 cadence are flat for every contestant. The one line that moves is the all-weather maximin
 under looser caps, from 0.99 down to 0.87, which is constraints-as-shrinkage rather than a
-ranking flip. Rightmost panel: the one specification choice that does move the headline $p$-value, the bootstrap block length.}
+ranking flip. Rightmost panel: block length is the one choice that moves the headline $p$-value.}
 \end{figure}
 
 Constraints behave as \citet{jagannathan2003} predicted, measured prospectively
@@ -609,8 +603,8 @@ genuine frontier is the headline $p$-value's block-length sensitivity (0.042,
 \exhibitnote{The long-only frontier of each menu, with the individual sleeves and the fielded
 rules, on a shared scale. Panel A: on 28 equity sleeves the frontier is a short arc and every
 rule piles into the same corner. Panel B: adding Treasuries, gold and cash moves the floor to
-0.6\% and the frontier sweeps the whole plane. Full-sample geometry, illustrative; the frontier
-is solved per target return under long-only weights.}
+0.6\% and the frontier sweeps the whole plane. Both frontiers are computed on the full sample, one solution per target return under
+long-only weights. They show the shape of each opportunity set, not an out-of-sample result.}
 \end{figure}
 
 Why does no weighting rule beat 1/N here, when the literature's optimization
@@ -621,12 +615,10 @@ is almost nothing to optimize. We measure it three ways.
 \exhibittitle{Factor tilts do not decorrelate, and the menu holds about one bet}{ex:dispersion}
 \centering
 \includegraphics[width=\textwidth]{F0_dispersion.pdf}
-\exhibitnote{Grey marks equity-against-equity comparisons throughout the exhibit and teal
-marks asset classes. Panel A: the most correlated cut of the menu is same-region,
-different-factors (0.885), and only the non-equity sleeves are genuinely different bets
-(Treasuries $-0.115$, gold $-0.007$). Panel B: independent risk bets ($DR^{2}$). The shaded band below 1.0 is the
-region where a menu holds a single bet, so only the part above it is diversification at all.
-The error bar is the 95\% bootstrap interval reported in Section 6.}
+\exhibitnote{Grey is equity, teal is asset classes. Panel A: the most correlated cut of the menu is
+same-region, different-factors (0.885); only the non-equity sleeves are genuinely different
+bets (Treasuries $-0.115$, gold $-0.007$). Panel B: independent risk bets ($DR^{2}$), with the
+95\% bootstrap interval of Section 6. Below 1.0 a menu holds a single bet.}
 \end{figure}
 
 \head{First, correlation structure.} The highest-correlated cut of the entire
@@ -725,11 +717,11 @@ any weighting scheme to convert into an edge. The disagreement in the literature
 concerns the opportunity set, and the retail factor investor sits squarely in the
 region where 1/N cannot be beaten.
 
-The practical corollary concerns selection: \emph{widen the menu before refining the weights.} Three asset classes buy more independent-bet content than
+For the investor this is a selection problem: \emph{widen the menu before refining the weights.} Three asset classes buy more independent-bet content than
 twenty-eight equity sleeves, and no amount of estimator sophistication
 substitutes.
 
-\section{The extended menu and two null results}
+\section{The extended menu and the regime layer}
 
 \subsection{A worst-case objective over a regime-diverse menu}
 
@@ -744,7 +736,7 @@ resulting flagship, a capped worst-quadrant portfolio over equities, Treasuries
 and gold, delivers a Sharpe ratio of 0.95 at 8.7\% volatility with a $-16.7$\% maximum drawdown, is statistically indistinguishable from minimum variance, the modern winner, at $p = 0.70$ and two thirds of its volatility, and holds the
 lowest drawdown in Exhibit~\ref{ex:race}.
 
-Those numbers stand. Their explanation does not. The worst-quadrant objective maximizes the
+Those numbers stand, but not for the reason the objective was built on. The worst-quadrant objective maximizes the
 mean of the worst of four macro partitions of history,
 
 \begin{equation}
@@ -835,8 +827,7 @@ anchored-minus-modern Sharpe difference is at least 0 with at least one above
 $+0.005$; refutes if any falls below $-0.02$), the frozen estimator improves both
 variants on the nine international sleeves (worst-quadrant $+0.002$, diversified
 $+0.016$) over 307 out-of-sample months (November 2000 to May 2026)
-containing the dot-com bust and the global financial crisis. Verdict on its own
-terms: confirms. Section 7.2 then forces the power post-mortem. Those
+containing the dot-com bust and the global financial crisis. On its own declared terms the test confirms. Section 7.2 then requires a power post-mortem. Those
 declared thresholds sit inside the $\pm 0.01$ to $0.02$ noise band that menu
 composition alone produces (null standard deviation 0.03 to 0.10). The discipline was sound, but its thresholds were set below the noise floor, so clearing them was a
 correctly run test of a question it did not have the power to answer. Any future

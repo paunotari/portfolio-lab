@@ -36,6 +36,20 @@ def pc(name: str) -> str:
     return PCOLOR.get(name, "#E08A00")
 
 
+# The pipeline's internal contestant names are dashboard labels, not publication ones.
+# Exhibit 1 is typeset by hand in the .tex and already uses the published name, so any
+# figure that draws a contestant has to be renamed to match or the same rule appears
+# under two names across exhibits.
+DISPLAY = {"Balanced sliders (5/5/5)": "Black-Litterman blend",
+           "ERC (anchor)": "ERC",   # "(anchor)" is pipeline vocabulary, not the paper's
+           "GMV combo (Yuan-Zhou)": "GMV combination (Yuan-Zhou)"}
+
+
+def disp(names):
+    """Publication labels for an iterable of internal contestant names."""
+    return [DISPLAY.get(str(n), str(n)) for n in names]
+
+
 def style(ax):
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
@@ -283,7 +297,7 @@ def f2_inference():
     for yi, (d, p) in enumerate(zip(inf["delta_ann_vs_1/N"], inf["p_boot_vs_1/N"])):
         ax.text(d + (0.006 if d >= 0 else -0.006), yi, f"p={p:.3f}", va="center",
                 ha="left" if d >= 0 else "right", fontsize=7.5, color=MUT)
-    ax.set_yticks(y, inf.portfolio, fontsize=8.5)
+    ax.set_yticks(y, disp(inf.portfolio), fontsize=8.5)
     ax.axvline(0, color=INK, lw=0.8)
     ax.set_xlabel("annualized OOS Sharpe difference vs 1/N (net)", fontsize=9)
     ax.set_xlim(inf["delta_ann_vs_1/N"].min() - 0.09, inf["delta_ann_vs_1/N"].max() + 0.09)
@@ -359,7 +373,7 @@ def f4_virgin():
         y1n = float(sh.loc["1/N", "anchored"])
         ax.axhline(y1n, color=INK, lw=1.0, ls="--", zorder=1)
         ax.text(-0.55, y1n, "1/N", color=INK, fontsize=7.5, ha="right", va="center")
-    ax.set_xticks(x, order, rotation=28, ha="right", fontsize=7.6)
+    ax.set_xticks(x, disp(order), rotation=28, ha="right", fontsize=7.6)
     ax.set_xlim(-1.1, len(order) - 0.4)
     # HONEST AXIS: bars start at zero, so the ±0.002–0.016 A/B deltas read as the noise band
     # they are (M35) — never a truncated axis that magnifies them.
@@ -444,7 +458,7 @@ def f6_attribution():
                 ax.text(xi, bottom + r.share / 2, f"{r.sleeve.replace(' | ', ' ')}\n"
                         f"{r.share:.0%}", ha="center", va="center", fontsize=6.4)
             bottom += r.share
-    ax.set_xticks(range(len(ports)), ports, fontsize=8.2)
+    ax.set_xticks(range(len(ports)), disp(ports), fontsize=8.2)
     ax.set_ylabel("share of OOS return (arithmetic)", fontsize=9)
     ax.set_ylim(0, 1.02)
     style(ax)
