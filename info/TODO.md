@@ -522,6 +522,18 @@ Check items off as completed. Add new ones as they come up; keep entries short a
     practitioner reader takes "sleeve" to mean an allocation bucket, not one index line.
     Defined at first body use; the key takeaway on page 2 (which precedes the definition)
     switched to "indices".
+  - [x] **Title page completed, 2026-08-30.** Pau Notari Martí, independent researcher,
+    Valencian Community, Spain, pau.notari@gmail.com. PMR requires one sentence giving each
+    author's role and affiliation; with no institution behind the work, the accurate version
+    states that plainly rather than inventing one. Dropped the corresponding-author line (PMR
+    conditions it on multiple authors) and the street-address and telephone placeholders.
+    The acknowledgments already declared no funding and no conflicts, which is now consistent.
+    - [ ] **`[URL on publication]` is the ONLY placeholder left in the paper.** Fills in once
+      the repository goes public.
+  - [ ] **PRE-PUBLICATION CHECK OF THE REPO — requested, not yet run.** Owner intends to make
+    the repository public and wants a sweep for anything that should not ship with it:
+    credentials, local paths, personal data, and any file that is licensed rather than ours
+    to publish.
   - [x] **Full re-read of the compiled PDF (23 pp), 2026-08-30 — six fixes, four of them
     defects my own enrichment introduced.** Reading the render rather than the source is what
     caught them:
