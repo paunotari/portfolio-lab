@@ -597,7 +597,12 @@ Check items off as completed. Add new ones as they come up; keep entries short a
     - **Keywords rewritten.** They led with "estimation error", which the conclusion
       explicitly rejects as the explanation, and omitted factor investing, 1/N and equity
       indices — the terms someone would actually search.
-    - Roadmap paragraph cut as filler; body now ~6,730 words against PMR's 4,000 target.
+    - **Roadmap paragraph: cut, then restored on the owner's call, rewritten.** Cutting it
+      was wrong — a practitioner reader skims before reading, and the roadmap is what tells
+      them where to jump. The original's fault was that it listed sections without saying
+      what question each answers, and it buried the structural point: §5 gives the result,
+      §6 measures the menu that explains it. The rewrite joins those two with a semicolon
+      rather than listing them separately. Body ~6,800 words against PMR's 4,000 target.
   - [x] **Full re-read of the compiled PDF (23 pp), 2026-08-30 — six fixes, four of them
     defects my own enrichment introduced.** Reading the render rather than the source is what
     caught them:
