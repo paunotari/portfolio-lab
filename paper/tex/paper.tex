@@ -660,6 +660,15 @@ the block bootstrap of Section 4.2, with the covariance re-shrunk inside every r
 that what is measured is the variability of the whole estimate-then-summarize chain rather than
 of a fixed covariance.
 
+One objection has to be met before those numbers mean anything. The regional menu nests:
+ACWI contains World, which contains the USA, Europe and Japan sleeves, and World ex-USA
+contains Europe and Japan. A reader may reasonably ask whether the redundancy is an artefact of
+holding the same stocks several times over. It is not. Restricting the calculation to the five
+regions that do not overlap, USA, Europe, Japan, emerging markets and AC Asia ex-Japan, leaves
+19 sleeves and a $DR^{2}$ of \textbf{1.37} (95\% interval 1.28 to 1.47), slightly higher than
+the full menu's 1.31 rather than lower, and the within-region cross-factor correlation is
+unchanged at 0.884. Dropping the nested aggregates does not rescue the menu.
+
 Two comparisons put the number in context. The four-sleeve minimum-variance portfolio holds
 1.28 independent bets, so the engine whose entire job is to exploit correlations to
 cancel risk, holding a quarter as many sleeves, finds no more of them than naive diversification

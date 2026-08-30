@@ -999,3 +999,31 @@ M38 or M39 changes. **Open:** obtaining a risk-free series covering 2009-01→20
 the full-window excess restatement be computed for real; until then the paper does not claim it.
 **See:** `inference.sharpe_diff_test` on `optimizer_walkforward_returns.csv`. **Status:**
 measured and corrected in the LaTeX source.
+
+---
+
+## M41 — The DR² result is not an artefact of nested indices
+**Claim (measured, pre-empting the obvious referee objection):** the 28-sleeve menu spans eight
+MSCI regions that overlap heavily — ACWI ⊃ World ⊃ {USA, Europe, Japan}, ACWI ⊃ EM, World ex-USA
+⊃ {Europe, Japan}. A referee can therefore argue that DR² = 1.31 measures nothing but the fact
+that the same stocks were included three or four times over, making the headline a tautology
+rather than a finding about factor investing. Tested by dropping every aggregate region:
+
+| menu | sleeves | DR² | 95% CI |
+|---|---|---|---|
+| full, nested (8 regions) | 28 | **1.311** | [1.242, 1.399] |
+| disjoint regions only (USA, Europe, Japan, EM, AC Asia ex-Japan) | 19 | **1.368** | [1.284, 1.471] |
+
+**The objection fails, and fails in the informative direction.** Removing the nested aggregates
+moves DR² *up* by 0.057, not down — the intervals overlap almost entirely, so the menu holds
+about 1.3 to 1.4 independent bets either way. The within-region cross-factor correlation is
+**0.884** on disjoint regions against 0.885 on all eight, i.e. that number never depended on
+nesting at all, which is what one would expect since it compares factors *within* a region.
+**⇒ Consequence.** The §6 headline survives its most obvious attack, and the paper now says so
+in §6 rather than leaving the reader to wonder. Also relevant to the four absent sleeves (Europe
+has no Quality, World none for Enhanced Value, World ex-USA neither Momentum nor Quality): they
+are missing from MSCI's coverage, not dropped for performance, and since all four would be
+further highly-correlated equity sleeves, including them would push DR² DOWN. The reported 1.31
+is if anything generous to the menu.
+**See:** `inference.dr2_bootstrap` on the disjoint column subset. **Data:** 330 months,
+1999-01→2026-06. **Status:** measured.
