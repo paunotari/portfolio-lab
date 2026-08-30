@@ -522,6 +522,30 @@ Check items off as completed. Add new ones as they come up; keep entries short a
     practitioner reader takes "sleeve" to mean an allocation bucket, not one index line.
     Defined at first body use; the key takeaway on page 2 (which precedes the definition)
     switched to "indices".
+  - [x] **Clarity audit, 2026-08-30 — eight gaps found and closed.** Systematic sweep for
+    terms used without explanation, acronyms undefined, and information the reader needs but
+    is not given. Two were the same failure as "sleeve": internal project vocabulary leaking
+    into the manuscript.
+    - **"the era-flagged winner"** (§7.1) — used ONCE, defined nowhere, and it carried the
+      flagship's headline comparison. It means minimum variance, flagged era-dependent by the
+      90-year race (M2). Had to be looked up in this repo to decode; a reader had no chance.
+      Now "minimum variance, the modern winner".
+    - **"Balanced sliders"** — a row in Exhibit 1 whose name appeared nowhere in the prose,
+      which called the same contestant "a mean-variance-derived balanced blend around a
+      Black-Litterman posterior". Unified: both now say Black-Litterman blend.
+    - **"the incumbent winner"** (§4.2) — tests were run against it and it was never named.
+      Now "minimum variance as the incumbent winner".
+    - **CSCV** used three times, first on page 3, never expanded — a direct breach of PMR's
+      "define any acronyms on first use". Now spelled out at first use.
+    - **"maximin"** first appeared ~8 pages before the formula explaining it; now glossed at
+      first use ("maximizes the mean return in whichever of the four macro states turns out
+      worst").
+    - **8 regions x 4 variants = 32 but the menu is 28.** The paper said "where available" and
+      never which four were absent. Checked against the data and now named: Europe has no
+      Quality, World none for Enhanced Value, World ex-USA neither Momentum nor Quality.
+    - **"regional Reference"** used before Sources revealed what a Reference is; now defined
+      alongside "sleeve" at first use.
+    - **MDES** letters never expanded; now "its minimum detectable effect size".
   - [x] **Title page completed, 2026-08-30.** Pau Notari Martí, independent researcher,
     Valencian Community, Spain, pau.notari@gmail.com. PMR requires one sentence giving each
     author's role and affiliation; with no institution behind the work, the accurate version

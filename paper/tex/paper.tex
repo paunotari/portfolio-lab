@@ -219,8 +219,7 @@ the twenty-year 1/N debate on a single axis, the opportunity set.
 \item \textbf{A fully instrumented adjudication.} We run the following as
 standing diagnostics on every build: \citet{ledoit2008} bootstrap Sharpe
 inference (the robust successor to the Jobson-Korkie test of \citeyear{jobson1981} that the prior replication uses), deflated Sharpe ratios \citep{bailey2014}, a Friedman-Nemenyi joint test
-\citep{demsar2006}, CSCV backtest-overfitting probability \citep{bailey2017},
-leave-one-region-out re-races, and sensitivity grids over costs, refit cadence,
+\citep{demsar2006}, the combinatorially symmetric cross-validation (CSCV) probability of backtest overfitting \citep{bailey2017}, leave-one-region-out re-races, and sensitivity grids over costs, refit cadence,
 constraints, block length and the covariance estimator. Under it, all three
 published ``beat-1/N'' rules we field fail. \citeauthor{yuan2023}'s
 \citeyearpar{yuan2023} combination loses outright, \citeauthor{brodie2009}'s
@@ -334,7 +333,7 @@ re-sequenced-history assumption, not forecasts.
 The factor tilts are justified by documented return premia and not by
 diversification: value and size \citep{fama1993}, momentum \citep{jegadeesh1993}
 and quality \citep{asness2019}, with \citet{asness2013} supplying the strongest
-anti-data-mining defence. We call each index line, one per region and factor, a sleeve. On our own sleeves every
+anti-data-mining defence. We call each index line, one per region and factor, a sleeve; a region's Reference sleeve is its plain market index, carrying no factor tilt. On our own sleeves every
 factor beats its regional Reference in compound annual growth over the full window (Enhanced Value
 $+3.70$pt, Momentum $+2.88$pt, Quality $+1.47$pt, winning in 7 of 7, 7 of 7 and
 6 of 6 regions). Restricted to the backfill-free live-index era (2015 onward) the premia shrink but survive, with
@@ -345,9 +344,10 @@ is the magnitude a prospective investor should plan around. Section 6 measures
 that in long-only form these tilts do not diversify.
 
 \head{Sources.} The modern menu is 28 MSCI region-by-factor indices (ACWI, World,
-World ex-USA, USA, EM, Europe, AC Asia ex-Japan, Japan, crossed with Reference,
-Momentum, Enhanced Value and Quality where available), monthly net-USD total
-returns, common window January 1999 to June 2026 (330 months). The menu is redundant by
+World ex-USA, USA, EM, Europe, AC Asia ex-Japan, Japan, crossed with Reference, Momentum, Enhanced Value and Quality), monthly net-USD total returns,
+common window January 1999 to June 2026 (330 months). Four of the 32 possible combinations have
+no index, which is why the menu is 28 rather than 32: Europe has no Quality sleeve, World none
+for Enhanced Value, and World ex-USA neither Momentum nor Quality. The menu is redundant by
 construction, with a mean pairwise correlation of 0.76 and a first principal component
 explaining 77\% of variance.
 
@@ -426,12 +426,10 @@ asset-class and no-counterpart cases, is in the repository.
 \subsection{Contestants, protocol and inference}
 
 We field equal weight (1/N), minimum variance, equal risk contribution and
-hierarchical risk parity (all on \citet{ledoit2004} shrunk covariances), a
-mean-variance-derived balanced blend around a Black-Litterman posterior,
+hierarchical risk parity (all on \citet{ledoit2004} shrunk covariances), a mean-variance blend built around a Black-Litterman posterior, which the exhibits label the Black-Litterman blend,
 cross-sectional momentum (12-1, top 6), unlevered volatility targeting
 \citep{moreira2017}, binary trend overlays \citep{faber2007,antonacci2014},
-worst-quadrant maximin both unconstrained and under diversified caps (per-sleeve
-at most 25\%, look-through geographic at most 40\%, factor at most 40\%), and an
+worst-quadrant maximin, which maximizes the mean return in whichever of the four macro states turns out worst, both unconstrained and under diversified caps (per-sleeve at most 25\%, look-through geographic at most 40\%, factor at most 40\%), and an
 all-weather diversified maximin on the menu extended with Treasury, gold and cash
 proxies. We also field the three most-cited ``beat-1/N'' rules as contestants: the
 \citet{yuan2023} global minimum-variance combination, the \citet{brodie2009}
@@ -447,8 +445,7 @@ shifted-start variants, hand-dated episode replays, and a regime-persistent
 stationary bootstrap used as forward validator and never as objective. Inference
 is \citet{ledoit2008} heteroskedasticity- and autocorrelation-consistent
 delta-method plus a studentized circular block bootstrap ($B = 4999$,
-$b \approx T^{1/3}$, sensitivity $b \in \{3,6,10\}$) for every contestant against
-1/N and against the incumbent winner, deflated Sharpe with the fielded-roster
+$b \approx T^{1/3}$, sensitivity $b \in \{3,6,10\}$) for every contestant against 1/N and against minimum variance as the incumbent winner, deflated Sharpe with the fielded-roster
 trial count, and CSCV probability of backtest overfitting ($S = 16$, 12,870
 half-splits). We use the bootstrap rather than the classical Sharpe test because
 monthly Sharpe differences carry heavy tails and autocorrelation, which that test
@@ -486,7 +483,7 @@ HERC (single linkage)         & 10.7\% & 14.1\% & 0.80 & $-27$\% & $-0.03$ & 0.5
 GMV combination (Yuan-Zhou)   &  9.8\% & 14.2\% & 0.74 & $-30$\% & $-0.10$ & 0.449 & 0.98 \\
 Momentum 12-1 (top 6)         & 10.8\% & 16.0\% & 0.72 & $-29$\% & $-0.11$ & 0.235 & 0.97 \\
 Maximin (worst quadrant)      & 12.4\% & 18.9\% & 0.71 & $-28$\% & $-0.12$ & 0.235 & 0.98 \\
-Balanced sliders              & 11.2\% & 17.3\% & 0.70 & $-27$\% & $-0.13$ & 0.070 & 0.97 \\
+Black-Litterman blend & 11.2\% & 17.3\% & 0.70 & $-27$\% & $-0.13$ & 0.070 & 0.97 \\
 1/N + vol-target              &  8.5\% & 12.9\% & 0.70 & $-26$\% & $-0.13$ & \textbf{0.009} & 0.96 \\
 1/N + trend (10m SMA)         &  6.8\% & 11.0\% & 0.66 & $-20$\% & $-0.17$ & 0.326 & 0.95 \\
 Dual momentum                 &  5.4\% & 13.3\% & 0.46 & $-27$\% & $-0.37$ & \textbf{0.034} & 0.81 \\
@@ -520,8 +517,7 @@ headline test, meaning the chance it would have flagged an edge of that size as
 significant had one really existed, computed on the same standard error the test
 uses. Against the largest gap
 in Exhibit~\ref{ex:race}, minimum variance's $+0.20$ annualized Sharpe, the design
-has 56\% power at the 5\% level. The smallest gap the design could detect at a given target power follows from the same standard
-error. Writing $\pi$ for that target and $\alpha$ for the significance level,
+has 56\% power at the 5\% level. The smallest gap the design could detect at a given target power, its minimum detectable effect size, follows from the same standard error. Writing $\pi$ for that target and $\alpha$ for the significance level,
 
 \begin{equation}
 \mathrm{MDES} \;=\; \left(z_{1-\alpha/2} + z_{\pi}\right) \mathrm{se},
@@ -736,8 +732,7 @@ restores the floor at half the volatility, with century-scale shape evidence
 behind it: a static all-weather archetype returned $+9.8$\% through the 1973--74
 oil shock while a 60/40 portfolio lost 28.5\%. As a walk-forward contestant the
 resulting flagship, a capped worst-quadrant portfolio over equities, Treasuries
-and gold, delivers a Sharpe ratio of 0.95 at 8.7\% volatility with a $-16.7$\% maximum drawdown, is statistically indistinguishable from the
-era-flagged winner ($p = 0.70$) at two thirds of its volatility, and holds the
+and gold, delivers a Sharpe ratio of 0.95 at 8.7\% volatility with a $-16.7$\% maximum drawdown, is statistically indistinguishable from minimum variance, the modern winner, at $p = 0.70$ and two thirds of its volatility, and holds the
 lowest drawdown in Exhibit~\ref{ex:race}.
 
 Those numbers stand. Their explanation does not. The worst-quadrant objective maximizes the
