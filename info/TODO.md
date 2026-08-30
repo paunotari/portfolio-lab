@@ -554,9 +554,10 @@ Check items off as completed. Add new ones as they come up; keep entries short a
     The acknowledgments already declared no funding and no conflicts, which is now consistent.
     - [ ] **`[URL on publication]` is the ONLY placeholder left in the paper.** Fills in once
       the repository goes public.
-    - [ ] **BLOCKER — the repository stays PRIVATE until the pre-publication sign-off is
-      complete.** A hosting-side check is outstanding and is tracked outside the repository;
-      do not flip visibility, and do not fill in the paper's repository URL, until it clears.
+        - [x] **Pre-publication sign-off complete, 2026-08-30.** The hosting side was rebuilt from
+      the local history so the remote holds only what is in this tree: 133 commits, first
+      commit dated 2026-07-04, no licensed data at any point, credential sweep clean. Safe to
+      make public; the paper's repository URL can be filled in.
     - [x] **PRE-PUBLICATION CHECK OF THE REPO — DONE 2026-08-30.** Licensed MSCI index data is
       kept out of version control (gitignored; each user supplies their own from their MSCI
       access), and the tree was checked against a fresh clone of the remote rather than the
