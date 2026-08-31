@@ -577,6 +577,21 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       Nothing secret, and the code caches rather than hammers it — but shipping a fetcher sits
       slightly against the repo's own reason for not carrying the data. Keep, or drop the
       `msci_api` source and leave only `msci_local`.
+  - [x] **SUBMITTED TO SSRN, 2026-08-30.** Preprint, All Rights Reserved (not a Creative
+    Commons licence: CC is irrevocable, and PMR requires removal from all prior venues on
+    acceptance — withdrawing a PDF is possible, withdrawing a granted CC licence is not).
+    Four classifications: Capital Markets: Asset Pricing & Valuation; Global Equities,
+    Exchanges & Investments; Econometric Modeling: Capital Markets - Portfolio Theory (the
+    network is defined by JEL G11, which the paper declares); Household Finance. JEL G11, C58.
+    - Two extraction defects caught in the final review and fixed before submitting: SSRN had
+      truncated the abstract's closing line to "...with measurable evidence", dropping
+      "behind it", and had concatenated the JEL line into the last keyword, leaving
+      "backtest overfitting JEL classification: G11, C58" as a keyword.
+    - Now in the moderation queue; a few days to appear. Next: ORCID, then a Google Scholar
+      profile once SSRN is indexed (Scholar cannot be set up before something exists to claim).
+    - **On acceptance anywhere, the SSRN version must come down.** SSRN's terms keep the right
+      to remove, which is the reason this went to SSRN and not arXiv.
+
   - [x] **Abstract rewritten before the SSRN upload, 2026-08-30.** It was 163 words against
     PMR's 160 limit, so it had to be touched anyway, and the owner's reading caught three
     things worth more than the word count:
