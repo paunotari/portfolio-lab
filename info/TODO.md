@@ -577,6 +577,27 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       Nothing secret, and the code caches rather than hammers it — but shipping a fetcher sits
       slightly against the repo's own reason for not carrying the data. Keep, or drop the
       `msci_api` source and leave only `msci_local`.
+  - [x] **Abstract rewritten before the SSRN upload, 2026-08-30.** It was 163 words against
+    PMR's 160 limit, so it had to be touched anyway, and the owner's reading caught three
+    things worth more than the word count:
+    - **"something neither side measures" was not defensible.** Section 2 cites Ilmanen and
+      Kizer (2012) for measuring exactly that — near-zero correlation across factor
+      constituents against roughly 0.4 across asset classes — and the paper uses the
+      Choueifaty-Coignard ratio a whole literature built. A referee could have knocked the
+      claim down with one of our own citations. Replaced with the reconciliation the paper
+      actually delivers: both sides are right on their own data, and the menu is what divides
+      them. Stronger as well as safer.
+    - **The closing line was a truism.** "What goes on the menu matters more than how it is
+      weighted" is something a reader already believes before opening the paper. The finding
+      is not about importance, it is about evidence: the menu effect clears significance at
+      $p = 0.0002$ and no weighting rule clears it at all. Now closes on that.
+    - **Rhythm:** two six- and nine-word sentences ran back to back. Joined with a colon,
+      which the causal relation wanted anyway. Sentence lengths now 30/15/15/35/18.
+    - Also: "equity" moved into the first line of the body paragraph rather than arriving at
+      the end, and the scale of the evidence (seventeen rules, 210 months, significance on
+      every comparison) is now stated, so a skimmer can tell a study from an opinion.
+      Verified against the body: Exhibit 1 carries 17 contestants and 210 months appears
+      three times.
   - [x] **Fourth PDF read, owner-annotated, 2026-08-30 — 26 highlights plus a naming defect
     the highlights led to.** The defect: the same contestant appeared as *Black-Litterman
     blend* in the hand-typeset Exhibit 1 and as *Balanced sliders (5/5/5)* in the generated
