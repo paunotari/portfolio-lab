@@ -341,12 +341,16 @@ def romano_wolf(monthly: pd.DataFrame, models: list[str], bench: str = BENCH,
         signed.append(np.concatenate(parts))
     signed = np.array(signed)
     q_lo, q_hi = np.nanpercentile(signed, [2.5, 97.5], axis=0)
+    # minimum detectable alpha at 80% power from the bootstrap t* (round 3: 2.8 x HAC s.e. was
+    # ~10% optimistic, the t* having s.d. ~1.1): critical |t*| at 5% + 0.8416 s.d. of t*
+    crit = np.nanpercentile(np.abs(signed), 95, axis=0)
+    mde_boot = (crit + 0.8416 * np.nanstd(signed, axis=0)) * se_obs * 12
     return pd.DataFrame({"portfolio": [c[0] for c in cells], "model": [c[1] for c in cells],
                          "T": T, "alpha_vs_1N_ann": a_obs * 12, "t": t_obs,
                          "p_hac": 2 * norm.sf(np.abs(t_obs)), "p_boot": p_single, "p_rw": p_adj,
                          "ci_lo_ann": (a_obs - q_hi * se_obs) * 12,
                          "ci_hi_ann": (a_obs - q_lo * se_obs) * 12,
-                         "mde80_ann": 2.80 * se_obs * 12})
+                         "mde80_ann": 2.80 * se_obs * 12, "mde80_boot_ann": mde_boot})
 
 
 def alpha_decomposition(monthly: pd.DataFrame, model: str, name: str = "Min-variance",

@@ -257,7 +257,8 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
         rows.append(dict(portfolio=name, oos_CAGR=p["CAGR"], oos_ann_vol=p["ann_vol"],
                          oos_sharpe_rf0=p["sharpe_rf0"], oos_max_drawdown=p["max_drawdown"],
                          oos_sharpe_gross=gp["sharpe_rf0"],
-                         mean_turnover_per_refit=float(turn[name].sum() / max(1, len(refit_dates)))))
+                         mean_turnover_per_refit=float(
+                             turn[name].sum() / max(1, len(whist.get(name, refit_dates))))))
     summary = pd.DataFrame(rows).sort_values("oos_sharpe_rf0", ascending=False)
     meta = dict(warmup_months=warmup, refit_months=refit, n_refits=len(refit_dates),
                 oos_start=str(oos_index[0].date()), oos_end=str(oos_index[-1].date()),

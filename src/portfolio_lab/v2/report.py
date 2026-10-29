@@ -380,7 +380,8 @@ def run(rerun: bool = False) -> dict:
     rw_family = R.romano_wolf(base, models_all)
     # studentized single-cell bootstrap p for every alpha cell of the 120 race (round-2 R4)
     alphas["exp120"] = alphas["exp120"].merge(
-        rw_family[["portfolio", "model", "p_boot", "p_rw", "ci_lo_ann", "ci_hi_ann", "mde80_ann"]],
+        rw_family[["portfolio", "model", "p_boot", "p_rw", "ci_lo_ann", "ci_hi_ann", "mde80_ann",
+                   "mde80_boot_ann"]],
         on=["portfolio", "model"], how="left")
     decomp = R.alpha_decomposition(base, P)
     fac0 = R.factor_frame(base)

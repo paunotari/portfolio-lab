@@ -1278,9 +1278,9 @@ every refit; v1's FF-international run re-checked by the reviewer: 26/26).
 ## M54 — What min-variance's edge is, restated with its uncertainty (amends M49; round-2 R2, F8, F10)
 **Claim (measured, 120 race, min-variance − 1/N):**
 - Under P: **α = +0.24%/yr, percentile-t 95% CI [−1.43, +1.77]**, studentized bootstrap p 0.76,
-  minimum detectable alpha at 80% power **2.0%/yr** — non-rejection, not "zero" (M38's lesson
-  in the other direction).
-- Decomposition of the **+1.23%/yr raw gap** under P: regional terms **net +0.13** (USA +3.47,
+  minimum detectable alpha at 80% power **2.3%/yr** from the bootstrap t* (2.0% on the HAC s.e.,
+  ~10% optimistic — round 3) — non-rejection, not "zero" (M38's lesson in the other direction).
+- Decomposition of the **+1.23%/yr raw gap** under P: regional terms **net +0.12** (USA +3.47,
   Japan +0.72; EM −1.84, Asia −1.31, Europe −0.91), **RMW +0.66**, **BAB +0.51** (loading 0.07,
   t 1.4), WML −0.38, SMB +0.08, α +0.24. Realised regional returns are not a premium; the
   explained part is profitability + low beta.
@@ -1300,14 +1300,22 @@ tilt, nor that tilt from 1/N. **Status:** OOS modern.
 **Claim (measured):** 1/N + vol-target: Sharpe vs 1/N p 0.067 (seeded start; 0.009 with v1's
 forced full exposure — the reviewer verified the seeded version is what a running overlay would
 have held, bit-identical to the 60 race through 2009); without H1-2009 p 0.020, without the GFC
-(60 race) p 0.044; CER γ = 1 −3.6% (p 0.009); studentized alpha p 0.049 under P but Romano-Wolf
-0.76. Reading: **it loses steadily outside crashes, one crash compensates, and nothing survives
+(60 race) p 0.044; live era only (2015+) p 0.018; CER γ = 1 −3.6% (p 0.009); studentized alpha
+p 0.049 under P but Romano-Wolf 0.47 over the pre-specified family (16 contestants under P) and
+0.76 over the full 16 × 11 family. Reading: **it loses steadily outside crashes, one crash compensates, and nothing survives
 multiplicity.** Dual momentum with Antonacci's own T-bill gate: Sharpe 0.467 vs 1/N p 0.12 (the
 zero-threshold contestant 0.428, p 0.083). Second crash, dot-com tail (warmup-36 race,
 2002-01→2003-03, cumulative): trend −5.6%, vol-target −10.3%, **1/N −14.3%, min-variance −19.1%**,
 dual momentum −23.2%; GFC: trend −21%, all-weather −32%, vol-target −39%, min-var −45%, 1/N −55%.
-Min-variance's crash protection is not universal. Live-index era only (2015+): min-var 0.824 vs
+Min-variance's crash protection is not universal — though in that race it was fitted on only 36
+months, the setting M50 shows wipes out its edge, so the two are confounded. Live-index era only (2015+): min-var 0.824 vs
 1/N 0.681, p 0.25; the hierarchy holds as point estimates. Single-cell alpha p-values are now
 studentized-bootstrap (HAC-normal was ~2× anti-conservative with 11 regressors, R4); the only
 cells below 5% are min-var/Brodie/all-weather under 4F+EM and vol-target under P/P-QMJ, none
-surviving Romano-Wolf. **Status:** OOS modern + windows.
+surviving Romano-Wolf (minimum family p 0.28). **For any exhibit:** the warmup-36 race scores the
+maximins over 270 months (they start 2004-01) against 294 for the rest — label it; in the
+rolling-36 race the unconstrained GMV combination is outside its own domain (η = 28/36: Sharpe
+−0.10, maxDD −83%) and the maximins are absent (14 contestants) — footnote it.
+**Review status:** the adversarial reviewer's round-3 verdict (2026-10-29): "the research is now
+sound enough to rewrite the paper from the ledger"; residual items were wording only, applied
+here. **Status:** OOS modern + windows.

@@ -2418,7 +2418,8 @@
       "p_rw": 0.5142,
       "ci_lo_ann": -0.0028266572,
       "ci_hi_ann": -0.0001924431,
-      "mde80_ann": 0.0017378078
+      "mde80_ann": 0.0017378078,
+      "mde80_boot_ann": 0.0018870635
     },
     {
       "portfolio": "HRP",
@@ -2431,7 +2432,8 @@
       "p_rw": 0.7414,
       "ci_lo_ann": -0.006862646,
       "ci_hi_ann": 0.0012704842,
-      "mde80_ann": 0.0048060368
+      "mde80_ann": 0.0048060368,
+      "mde80_boot_ann": 0.0057425124
     },
     {
       "portfolio": "Min-variance",
@@ -2444,7 +2446,8 @@
       "p_rw": 0.8842,
       "ci_lo_ann": -0.0142894731,
       "ci_hi_ann": 0.0177012223,
-      "mde80_ann": 0.0204430022
+      "mde80_ann": 0.0204430022,
+      "mde80_boot_ann": 0.0227536217
     },
     {
       "portfolio": "Balanced sliders (5/5/5)",
@@ -2457,7 +2460,8 @@
       "p_rw": 0.6598,
       "ci_lo_ann": -0.0002281902,
       "ci_hi_ann": 0.0187904311,
-      "mde80_ann": 0.0130281772
+      "mde80_ann": 0.0130281772,
+      "mde80_boot_ann": 0.013515929
     },
     {
       "portfolio": "Momentum 12-1 (top 6)",
@@ -2470,7 +2474,8 @@
       "p_rw": 0.8842,
       "ci_lo_ann": -0.0347657663,
       "ci_hi_ann": 0.0099631405,
-      "mde80_ann": 0.0331289855
+      "mde80_ann": 0.0331289855,
+      "mde80_boot_ann": 0.0320714641
     },
     {
       "portfolio": "GMV combo (Yuan-Zhou)",
@@ -2483,7 +2488,8 @@
       "p_rw": 0.8842,
       "ci_lo_ann": -0.0565403495,
       "ci_hi_ann": 0.0183012594,
-      "mde80_ann": 0.0453541319
+      "mde80_ann": 0.0453541319,
+      "mde80_boot_ann": 0.0529437641
     },
     {
       "portfolio": "Sparse Markowitz (Brodie 2009)",
@@ -2496,7 +2502,8 @@
       "p_rw": 0.8842,
       "ci_lo_ann": -0.0260692227,
       "ci_hi_ann": 0.0089053683,
-      "mde80_ann": 0.0204319144
+      "mde80_ann": 0.0204319144,
+      "mde80_boot_ann": 0.0246527899
     },
     {
       "portfolio": "HERC (Ward linkage)",
@@ -2509,7 +2516,8 @@
       "p_rw": 0.6898,
       "ci_lo_ann": -0.000770451,
       "ci_hi_ann": 0.0204485083,
-      "mde80_ann": 0.0124184192
+      "mde80_ann": 0.0124184192,
+      "mde80_boot_ann": 0.0149862363
     },
     {
       "portfolio": "HERC (single linkage)",
@@ -2522,7 +2530,8 @@
       "p_rw": 0.8842,
       "ci_lo_ann": -0.0182091443,
       "ci_hi_ann": 0.0026552058,
-      "mde80_ann": 0.0099664557
+      "mde80_ann": 0.0099664557,
+      "mde80_boot_ann": 0.0164250204
     },
     {
       "portfolio": "Maximin (worst quadrant)",
@@ -2535,7 +2544,8 @@
       "p_rw": 0.6708,
       "ci_lo_ann": -0.0035224105,
       "ci_hi_ann": 0.0491561418,
-      "mde80_ann": 0.0314367841
+      "mde80_ann": 0.0314367841,
+      "mde80_boot_ann": 0.0373521737
     },
     {
       "portfolio": "Maximin (diversified)",
@@ -2548,7 +2558,8 @@
       "p_rw": 0.721,
       "ci_lo_ann": -0.0020314625,
       "ci_hi_ann": 0.019223691,
-      "mde80_ann": 0.0123032264
+      "mde80_ann": 0.0123032264,
+      "mde80_boot_ann": 0.0153760444
     },
     {
       "portfolio": "Maximin (all-weather div)",
@@ -2561,7 +2572,8 @@
       "p_rw": 0.7886,
       "ci_lo_ann": -0.0158252264,
       "ci_hi_ann": 0.0545056243,
-      "mde80_ann": 0.0402151014
+      "mde80_ann": 0.0402151014,
+      "mde80_boot_ann": 0.0498005932
     },
     {
       "portfolio": "1/N + vol-target",
@@ -2574,7 +2586,8 @@
       "p_rw": 0.4694,
       "ci_lo_ann": -0.0499889951,
       "ci_hi_ann": -0.0062940953,
-      "mde80_ann": 0.0289234107
+      "mde80_ann": 0.0289234107,
+      "mde80_boot_ann": 0.0325827325
     },
     {
       "portfolio": "Min-variance + vol-target",
@@ -2587,7 +2600,8 @@
       "p_rw": 0.8842,
       "ci_lo_ann": -0.0320208988,
       "ci_hi_ann": 0.0089476924,
-      "mde80_ann": 0.0285927117
+      "mde80_ann": 0.0285927117,
+      "mde80_boot_ann": 0.0290093178
     },
     {
       "portfolio": "1/N + trend (Faber 10m SMA)",
@@ -2600,7 +2614,8 @@
       "p_rw": 0.8842,
       "ci_lo_ann": -0.0277470763,
       "ci_hi_ann": 0.0706858431,
-      "mde80_ann": 0.0634388
+      "mde80_ann": 0.0634388,
+      "mde80_boot_ann": 0.0707940985
     },
     {
       "portfolio": "Dual momentum (Antonacci)",
@@ -2613,7 +2628,8 @@
       "p_rw": 0.8842,
       "ci_lo_ann": -0.0672886037,
       "ci_hi_ann": 0.0374839618,
-      "mde80_ann": 0.0642905598
+      "mde80_ann": 0.0642905598,
+      "mde80_boot_ann": 0.0750721568
     }
   ],
   "romano_wolf_primary_roll60": [
@@ -2628,7 +2644,8 @@
       "p_rw": 0.8774,
       "ci_lo_ann": -0.0032155626,
       "ci_hi_ann": 0.0005454672,
-      "mde80_ann": 0.0024960327
+      "mde80_ann": 0.0024960327,
+      "mde80_boot_ann": 0.002699439
     },
     {
       "portfolio": "HRP",
@@ -2641,7 +2658,8 @@
       "p_rw": 0.9952,
       "ci_lo_ann": -0.0041420905,
       "ci_hi_ann": 0.0024800559,
-      "mde80_ann": 0.0047099216
+      "mde80_ann": 0.0047099216,
+      "mde80_boot_ann": 0.0047550961
     },
     {
       "portfolio": "Min-variance",
@@ -2654,7 +2672,8 @@
       "p_rw": 0.9598,
       "ci_lo_ann": -0.0105830237,
       "ci_hi_ann": 0.0287665717,
-      "mde80_ann": 0.0266285356
+      "mde80_ann": 0.0266285356,
+      "mde80_boot_ann": 0.0278398749
     },
     {
       "portfolio": "Balanced sliders (5/5/5)",
@@ -2667,7 +2686,8 @@
       "p_rw": 0.9268,
       "ci_lo_ann": -0.0038617856,
       "ci_hi_ann": 0.016486379,
-      "mde80_ann": 0.0131111885
+      "mde80_ann": 0.0131111885,
+      "mde80_boot_ann": 0.0145241358
     },
     {
       "portfolio": "Momentum 12-1 (top 6)",
@@ -2680,7 +2700,8 @@
       "p_rw": 0.9488,
       "ci_lo_ann": -0.0347657663,
       "ci_hi_ann": 0.0099631405,
-      "mde80_ann": 0.0331289855
+      "mde80_ann": 0.0331289855,
+      "mde80_boot_ann": 0.0320714641
     },
     {
       "portfolio": "GMV combo (Yuan-Zhou)",
@@ -2693,7 +2714,8 @@
       "p_rw": 0.2088,
       "ci_lo_ann": -0.1248951387,
       "ci_hi_ann": -0.0140735945,
-      "mde80_ann": 0.065431868
+      "mde80_ann": 0.065431868,
+      "mde80_boot_ann": 0.0785573271
     },
     {
       "portfolio": "Sparse Markowitz (Brodie 2009)",
@@ -2706,7 +2728,8 @@
       "p_rw": 0.9956,
       "ci_lo_ann": -0.0195079165,
       "ci_hi_ann": 0.0172026701,
-      "mde80_ann": 0.0241527594
+      "mde80_ann": 0.0241527594,
+      "mde80_boot_ann": 0.0261819821
     },
     {
       "portfolio": "HERC (Ward linkage)",
@@ -2719,7 +2742,8 @@
       "p_rw": 0.9866,
       "ci_lo_ann": -0.0191401541,
       "ci_hi_ann": 0.0097005394,
-      "mde80_ann": 0.0197879661
+      "mde80_ann": 0.0197879661,
+      "mde80_boot_ann": 0.0204409223
     },
     {
       "portfolio": "HERC (single linkage)",
@@ -2732,7 +2756,8 @@
       "p_rw": 0.8856,
       "ci_lo_ann": -0.0044221444,
       "ci_hi_ann": 0.0329942242,
-      "mde80_ann": 0.0252865225
+      "mde80_ann": 0.0252865225,
+      "mde80_boot_ann": 0.0266125798
     },
     {
       "portfolio": "Maximin (worst quadrant)",
@@ -2745,7 +2770,8 @@
       "p_rw": 0.892,
       "ci_lo_ann": -0.0599983681,
       "ci_hi_ann": 0.0157026169,
-      "mde80_ann": 0.0490205659
+      "mde80_ann": 0.0490205659,
+      "mde80_boot_ann": 0.0540408364
     },
     {
       "portfolio": "Maximin (diversified)",
@@ -2758,7 +2784,8 @@
       "p_rw": 0.9996,
       "ci_lo_ann": -0.02709478,
       "ci_hi_ann": 0.0246364039,
-      "mde80_ann": 0.0301070885
+      "mde80_ann": 0.0301070885,
+      "mde80_boot_ann": 0.0369270513
     },
     {
       "portfolio": "Maximin (all-weather div)",
@@ -2771,7 +2798,8 @@
       "p_rw": 0.9956,
       "ci_lo_ann": -0.0447124503,
       "ci_hi_ann": 0.0309905814,
-      "mde80_ann": 0.0450729634
+      "mde80_ann": 0.0450729634,
+      "mde80_boot_ann": 0.0545990332
     },
     {
       "portfolio": "1/N + vol-target",
@@ -2784,7 +2812,8 @@
       "p_rw": 0.3898,
       "ci_lo_ann": -0.0499889951,
       "ci_hi_ann": -0.0062940953,
-      "mde80_ann": 0.0289234107
+      "mde80_ann": 0.0289234107,
+      "mde80_boot_ann": 0.0325827325
     },
     {
       "portfolio": "Min-variance + vol-target",
@@ -2797,7 +2826,8 @@
       "p_rw": 0.9952,
       "ci_lo_ann": -0.0362638991,
       "ci_hi_ann": 0.020826444,
-      "mde80_ann": 0.0378479938
+      "mde80_ann": 0.0378479938,
+      "mde80_boot_ann": 0.0412790884
     },
     {
       "portfolio": "1/N + trend (Faber 10m SMA)",
@@ -2810,7 +2840,8 @@
       "p_rw": 0.9866,
       "ci_lo_ann": -0.0277470763,
       "ci_hi_ann": 0.0706858431,
-      "mde80_ann": 0.0634388
+      "mde80_ann": 0.0634388,
+      "mde80_boot_ann": 0.0707940985
     },
     {
       "portfolio": "Dual momentum (Antonacci)",
@@ -2823,7 +2854,8 @@
       "p_rw": 0.9866,
       "ci_lo_ann": -0.0672886037,
       "ci_hi_ann": 0.0374839618,
-      "mde80_ann": 0.0642905598
+      "mde80_ann": 0.0642905598,
+      "mde80_boot_ann": 0.0750721568
     }
   ],
   "romano_wolf_family_min": [
@@ -2838,7 +2870,8 @@
       "p_rw": 0.2814,
       "ci_lo_ann": 0.008270111,
       "ci_hi_ann": 0.0398865824,
-      "mde80_ann": 0.021444545
+      "mde80_ann": 0.021444545,
+      "mde80_boot_ann": 0.0225664428
     },
     {
       "portfolio": "1/N + vol-target",
@@ -2851,7 +2884,8 @@
       "p_rw": 0.6042,
       "ci_lo_ann": -0.0536110126,
       "ci_hi_ann": -0.0080326604,
-      "mde80_ann": 0.0288695482
+      "mde80_ann": 0.0288695482,
+      "mde80_boot_ann": 0.0335658283
     },
     {
       "portfolio": "ERC (anchor)",
@@ -2864,7 +2898,8 @@
       "p_rw": 0.7238,
       "ci_lo_ann": -0.0030228483,
       "ci_hi_ann": -0.0002997788,
-      "mde80_ann": 0.0017821322
+      "mde80_ann": 0.0017821322,
+      "mde80_boot_ann": 0.0019790354
     },
     {
       "portfolio": "1/N + vol-target",
@@ -2877,7 +2912,8 @@
       "p_rw": 0.7342,
       "ci_lo_ann": -0.0524479334,
       "ci_hi_ann": -0.0080437224,
-      "mde80_ann": 0.0282204677
+      "mde80_ann": 0.0282204677,
+      "mde80_boot_ann": 0.0344287764
     },
     {
       "portfolio": "1/N + vol-target",
@@ -2890,7 +2926,8 @@
       "p_rw": 0.7554,
       "ci_lo_ann": -0.0499889951,
       "ci_hi_ann": -0.0062940953,
-      "mde80_ann": 0.0289234107
+      "mde80_ann": 0.0289234107,
+      "mde80_boot_ann": 0.0325827325
     },
     {
       "portfolio": "Maximin (all-weather div)",
@@ -2903,7 +2940,8 @@
       "p_rw": 0.8002,
       "ci_lo_ann": 0.00119255,
       "ci_hi_ann": 0.0472157639,
-      "mde80_ann": 0.0324313857
+      "mde80_ann": 0.0324313857,
+      "mde80_boot_ann": 0.033551493
     },
     {
       "portfolio": "1/N + vol-target",
@@ -2916,7 +2954,8 @@
       "p_rw": 0.8142,
       "ci_lo_ann": -0.0490395232,
       "ci_hi_ann": -0.0049111372,
-      "mde80_ann": 0.0273549237
+      "mde80_ann": 0.0273549237,
+      "mde80_boot_ann": 0.0331195369
     },
     {
       "portfolio": "ERC (anchor)",
@@ -2929,7 +2968,8 @@
       "p_rw": 0.8142,
       "ci_lo_ann": -0.0028266572,
       "ci_hi_ann": -0.0001924431,
-      "mde80_ann": 0.0017378078
+      "mde80_ann": 0.0017378078,
+      "mde80_boot_ann": 0.0018870635
     }
   ],
   "alpha_stability_P": [
@@ -3351,7 +3391,8 @@
       "p_rw": 1.0,
       "ci_lo_ann": -0.0142894731,
       "ci_hi_ann": 0.0177012223,
-      "mde80_ann": 0.0204430022
+      "mde80_ann": 0.0204430022,
+      "mde80_boot_ann": 0.0227536217
     }
   ],
   "minvar_alpha_dev_minus_em_only": {
