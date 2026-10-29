@@ -108,6 +108,48 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       construction conclusions hold in all three seats; the currency seat moves levels,
       never decisions. C2 deep dive done (`literature/classics/currency-hedging.md`).
 
+### Paper v2.0 — the collaborator's review (2026-10-29)
+
+> A portfolio-optimization researcher (likely collaborator from now on) reviewed the SSRN
+> version. v1.0 is frozen in `paper/v1.0/` (+ git tag `v1.0-ssrn`); v2.0 lives in `paper/v2.0/`
+> (`paper_v2.tex`, red = remove / green = new / blue = Spanish notes) with its experiments in
+> `src/portfolio_lab/v2/` run by `scripts/run_v2.py`. Findings: MILESTONES M42–M47.
+
+- [x] CAPM and multi-factor alphas on Ken French GLOBAL factors (developed + EM), 6 models,
+      Newey-West + pairs block bootstrap — **M44: min-var's alpha over 1/N is resolvable once
+      EM exposure is netted out (p 0.0015), 2/5 of it is RMW (profitability).**
+- [x] Shorter training window (60 and 80 months; OOS from 2004-01 / 2005-09) — **M47**.
+- [x] Sortino, Treynor (M43), information + appraisal ratios and rolling 3/5/10y consistency
+      (M45) — the owner added IR/appraisal after the collaborator's Sortino/Treynor.
+- [x] Excess-return Sharpe over the full window — the M40 "148 months" was a date-alignment
+      artefact (**M42**).
+- [x] Descriptive-statistics exhibit (28 sleeves; factors in Appendix B) and Appendix A defining
+      all 17 contestants in plain terms.
+- [x] Figure removed: Exhibit 2 (duplicated Exhibit 1's Δ/p columns). Exhibit 7 (LORO bump
+      chart) PROPOSED for removal in red — owner to confirm.
+- [x] Illustrative ETF fees (TER) on the weights held (M45) — prompted by a second opinion the
+      owner pasted; no conclusion changes.
+- [x] Accessibility pass: short green glosses at first use of every advanced concept, a
+      "Reading the statistics" paragraph, formulas-in-words for each ratio (collaborator: v1 was
+      readable only by specialists).
+- [ ] **Regional sub-analysis — deliberately NOT done** (collaborator: per-region menus of 4
+      sleeves leave nothing to diversify). Only if a referee asks.
+- [ ] Decide how much weight M44 gets (abstract/title of §5.3) — the blue note in §5.3 asks.
+- [ ] Collaborator: acknowledgment or co-authorship? (blue note in the disclosures).
+- [ ] Regenerate §7–8 numbers (LORO, 2-month label lag, live era, all-weather 0.93→1.18/1.11)
+      in the excess convention with the 17-contestant roster; they are v1 rf=0 July runs.
+- [ ] Regenerate Exhibit 3 (sensitivity grids) in excess returns, or drop its block-length panel
+      (now 0.054/0.065/0.079).
+- [ ] Verify the 12 new references (Carhart, Fama-French 2012/2015/2017, Goodwin, Grinold-Kahn,
+      Jensen, Newey-West, Novy-Marx, Sortino-van der Meer, Treynor, Treynor-Black) against
+      Crossref, as done for v1.
+- [ ] Add a low-volatility factor (AQR "Betting Against Beta", free download) to the alpha models:
+      is min-var's residual +1.5% the low-vol premium the six models do not name? (M44 open end)
+- [ ] Fix v1 `ingest/ff_factors._parse_monthly` (`replace([...], pd.NA)` raises under pandas 3 on
+      some files — caveat #21) before the next full v1 pipeline re-run.
+- [ ] Clean-up pass for submission: drop red, turn green black, delete blue notes, renumber
+      Exhibits, re-check the 160-word abstract (now 158) and the three takeaways.
+
 ### Paper track — toward a publishable contribution (owner goal, 2026-07)
 
 > Honest assessment: the replications (DeMiguel, constraints-as-shrinkage) are solid but not

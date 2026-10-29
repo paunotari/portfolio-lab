@@ -26,8 +26,8 @@ For what the code does and how it's structured, read **[info/CLAUDE.md](info/CLA
      readable) in the same turn you finish the work.
 
 4. **Commit and push automatically once a change is implemented and verified working** — i.e.
-   after the relevant tests pass (`python tests/test_pipeline.py` and
-   `python tests/test_optimizer.py`) and, if applicable, the pipeline runs clean
+   after the relevant tests pass (`python tests/test_pipeline.py`,
+   `python tests/test_optimizer.py` and `python tests/test_v2.py`) and, if applicable, the pipeline runs clean
    (`python scripts/run_pipeline.py`). Do not ask for permission to commit/push
    for routine work in this repo — that confirmation is pre-authorized here. Write a descriptive
    commit message (what changed and why, not just "update"). Push to `main` (this repo's
@@ -41,4 +41,9 @@ For what the code does and how it's structured, read **[info/CLAUDE.md](info/CLA
 python scripts/run_pipeline.py      # rebuild processed data, analytics, optimizer, dashboard
 python tests/test_pipeline.py       # data-integrity checks — must pass before committing
 python tests/test_optimizer.py      # optimizer-stack unit tests — must pass before committing
+python tests/test_v2.py             # v2.0 unit tests — must pass before committing
+python scripts/run_v2.py            # v2.0 experiments (collaborator review) -> outputs/v2.0, paper/v2.0/tables
 ```
+The interpreter is the system `python3` (the `.venv` has no packages). The paper lives in
+`paper/v1.0/` (frozen SSRN version) and `paper/v2.0/` (current, colour-coded); the owner compiles
+the LaTeX — write the `.tex`, do not deliver PDFs.

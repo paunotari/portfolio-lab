@@ -3,7 +3,7 @@
 One figure per file in paper/figures/, matched to paper/draft.md Appendix B. Rerunnable any
 time the pipeline/CLI probes have refreshed their CSVs; nothing here computes new results.
 
-Run:  python paper/make_figures.py        (from the repo root)
+Run:  python paper/v1.0/make_figures.py        (from the repo root)
 """
 from __future__ import annotations
 
@@ -17,11 +17,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 from portfolio_lab import config as C  # noqa: E402
 
-OUT = ROOT / "paper" / "figures"
+OUT = ROOT / "paper" / "v1.0" / "figures"
 OUT.mkdir(parents=True, exist_ok=True)
 
 INK, MUT, LINE = "#1D1D1F", "#6E6E73", "#D8D8DE"

@@ -1027,3 +1027,115 @@ further highly-correlated equity sleeves, including them would push DR² DOWN. T
 is if anything generous to the menu.
 **See:** `inference.dr2_bootstrap` on the disjoint column subset. **Data:** 330 months,
 1999-01→2026-06. **Status:** measured.
+
+---
+
+# v2.0 — the collaborator's review (2026-10-29)
+
+A portfolio-optimization researcher read the SSRN version and asked for: alphas against a
+one-factor (CAPM, the minimum) and a multi-factor model (SMB/HML/WML) on Ken French's GLOBAL
+factors; a shorter training window (60–80 months) so the race starts before 2009; measures other
+than Sharpe (Sortino, Treynor; later the owner added information and appraisal ratios);
+descriptive statistics; a contestant annex; one figure fewer; and NO regional sub-analysis.
+Everything below is produced by `scripts/run_v2.py` (code in `src/portfolio_lab/v2/`) into
+`outputs/v2.0/` and `paper/v2.0/tables/` (`numbers.json` holds every quoted value). v1 code is
+untouched; the v2 120-month baseline reproduces v1's cached OOS returns exactly
+(`tests/test_v2.py::test_v2_baseline_reproduces_v1_walkforward`).
+
+## M42 — M40 closed: the "missing" risk-free months were a date-alignment artefact
+**Claim (measured):** M40 said the T-bill covers only 148 of the 210 OOS months, so a
+full-window excess-return restatement was impossible. False: MSCI levels are stamped on business
+month-ends (2009-01-30), Ken French on calendar month-ends (2009-01-31); an exact-date join keeps
+only the 148 months where the two coincide. Matched by month PERIOD, rf covers all 210.
+
+| full window, 210 months | rf = 0 (v1) | excess over T-bill (v2) |
+|---|---|---|
+| min-variance / 1/N Sharpe | 1.031 / 0.830 | **0.935 / 0.745** |
+| Δ, p_boot (b=6) | +0.20, 0.055 | **+0.19, 0.065** |
+| p by block 3 / 6 / 10 | 0.042 / 0.055 / 0.066 | **0.054 / 0.065 / 0.079** |
+| power at observed / MDES | 56% / 0.27 | **52% / 0.27** |
+| Friedman χ² / PBO | 46.6 / 33% | **38.4 (p 0.001) / 30%** |
+
+**⇒ Consequence.** v2 uses excess returns throughout. No conclusion changes; the one
+borderline cell of M17 (block = 3 crossing 5%) no longer crosses. Two overlays stay
+significantly worse (1/N + vol-target p 0.005, dual momentum 0.030). **Rule kept for good:**
+every join of MSCI data with any calendar-stamped series goes through `v2.factors.align`
+(period match), same as `optimizer.load_returns` already did for the proxies.
+**See:** `outputs/v2.0/race_excess_warmup120.csv`, `paper/v2.0/tables/tab_race_excess.tex`.
+**Code:** `v2/factors.py::align`, `v2/report.py::race_table`. **Status:** OOS modern, measured.
+
+## M43 — Sortino and Treynor change nothing at the top; Treynor rewards holding bonds
+**Claim (measured, 2009–2026, excess, net of costs):** min-variance leads on Sortino (1.49 vs
+1/N 1.20, paired block-bootstrap p 0.167) and among equity-only rules on Treynor (14.9% vs 11.9%,
+p 0.077). The highest Treynor is the all-weather maximin (16.6%, β 0.40) — the measure crediting
+a low beta that comes from holding bonds/gold, not a better portfolio. Only significant
+differences: 1/N + vol-target WORSE (Sortino p 0.005, Treynor p 0.014).
+**Code:** `v2/risk_adjusted.py::ratio_table`. **See:** `tab_riskadj.tex`. **Status:** OOS modern.
+
+## M44 — THE v2 HEADLINE: min-variance's alpha over 1/N is resolvable once EM exposure is netted out
+**Claim (measured):** alpha of (min-variance − 1/N), Ken French global factors, Newey-West (4 lags):
+
+| model | α vs 1/N (%/yr) | p (HAC) | p (pairs block bootstrap) |
+|---|---|---|---|
+| CAPM (developed mkt) | +2.5 | 0.081 | 0.087 |
+| CAPM (MSCI ACWI) | +2.6 | 0.062 | 0.071 |
+| Carhart 4F | +2.4 | 0.062 | 0.072 |
+| **4F + EM market** | **+2.4** | **0.0015** | **0.0012** |
+| FF5 + WML | +1.4 | 0.260 | 0.273 |
+| FF5 + WML + EM | +1.5 | 0.049 | 0.047 |
+
+Mechanism: the difference loads +0.27 on developed (t 11.6) and **−0.40 on EM (t −15.0)** — 1/N
+holds ~30% in EM/Asia sleeves, min-var ~0 (2009 refit: 84% USA+World Quality). That regional bet
+adds little mean and most of the variance; the EM factor removes the variance and the same +2.4%
+becomes precise. Robust: t 3.1–3.7 for NW lags 0–12; Holm over 16 contestants → p 0.024; 60/80
+warmups → bootstrap p 0.0004/0.0006; pre-2009 alpha same sign (+1.8%, t 1.4, 60 months).
+Own RMW (profitability) loading 0.25 (t 3.5) absorbs ~2/5 of it. Own CAPM alpha vs the market
++3.0% (t 2.7) — the low-vol anomaly. Other "wins": Brodie (4F+EM only, p 0.04), all-weather
+(4F and 4F+EM, p 0.04/0.03 — bonds/gold equity factors do not price, R² 0.52); none survives a
+multiplicity correction. Losers robust: 1/N + vol-target significantly worse under all 6 models;
+dual momentum under the 4 multifactor ones.
+**⇒ Consequence.** Qualifies M14/M38: "nothing beats 1/N" holds in TOTAL-RISK terms (what a
+long-only investor experiences), not in factor-adjusted terms. The resolvable edge is a defensive
+quality/low-vol tilt (M21's 82% Quality, now in regression form), not optimizer skill — the menu
+thesis (M27/M36/M39) stands. Open: no low-vol (BAB) factor in the model, so part of the residual
++1.5% may be the low-vol premium (TODO).
+**Code:** `v2/risk_adjusted.py::alpha_table`, `alpha_block_bootstrap`. **See:**
+`tab_alpha_vs_1n.tex`, `tab_loadings.tex`, `outputs/v2.0/alphas_warmup*.csv`. **Status:** OOS
+modern + OOS windows (60/80/120 warmups).
+
+## M45 — Information ratio: consistent but small; it penalizes low beta. Fees change nothing
+**Claim (measured):** vs 1/N, min-variance's active return +1.2%/yr, tracking error 5.7%, IR 0.22
+(HAC p 0.43) — yet ahead of 1/N in 96% / 97% / 100% of rolling 3/5/10-year windows (overlapping;
+descriptive). IR's blind spot measured: all-weather IR −0.48 (p 0.04) with a Sharpe level with
+1/N — raw-return gaps punish low beta. Appraisal ratio (α/σ_ε) of (min-var − 1/N) under 4F+EM:
+0.77, highest. **Fees:** illustrative TERs (`config.V2_TER_BPS`: plain 15 bps, factor 30, +10
+EM/Asia; proxies 10–15) on the weights held lower every Sharpe by ~0.02; min-var vs 1/N p 0.065 →
+0.070. Equal weight over the 28 sleeves vs a plain ACWI fund (15 bps): IR 0.09 (p 0.72) 2009–26,
+0.34 (p 0.14) 2004–26 — factor premia survive fees as point estimates, unresolved.
+**Code:** `v2/risk_adjusted.py::information_table`, `v2/fees.py`. **See:** `tab_active.tex`,
+`tab_fees.tex`. **Status:** OOS modern; fee levels are assumptions.
+
+## M46 — CORRECTION: v1's Exhibit 1 all-weather row and §7.1 figures were stale
+**Claim (measured):** v1 Exhibit 1 was typed by hand. Its all-weather row (CAGR 8.0%, Sharpe 0.93,
+p 0.611) did not match the cached run behind the paper (7.8%, 0.91, p_boot 0.691 — Exhibit 2 had
+0.691 right); 0.611 is the HAC p against MIN-VARIANCE, a different column. §7.1's "Sharpe 0.95,
+−16.7% maxDD, p = 0.70 vs min-variance" came from an earlier run (cached: 0.91, −17.9%,
+p 0.62). The placebo's "80 runs" vs Exhibit 6's "40 replicates" is consistent (40 per scrambling
+scheme × 2) but unexplained in v1. No conclusion depended on any of these.
+**⇒ Consequence.** v2 exhibits are `\input` from generated tables, so they cannot drift; v2
+§7.1 says excess Sharpe 0.76, −18%, p 0.48. **Status:** corrected in paper_v2.tex (red/green).
+
+## M47 — Bringing 2008 into the race: the construction verdict holds, the overlay verdict flips
+**Claim (measured, same protocol, warmup 120 / 80 / 60 → OOS 2009-01 / 2005-09 / 2004-01,
+210 / 250 / 270 months):** min-variance first in all three; vs 1/N p 0.065 / **0.050** / 0.068 (the
+80 value on the boundary — read as not resolved); power 52 / 52 / 48% (MDES 0.27 → 0.22, the gap
+shrinks too). Shorter training costs structural rules nothing: on the shared 2009+ months
+min-var's Sharpe is 0.935 in both the 60 and 120 races. The added months flip the overlays:
+1/N + vol-target (p 0.005 → 0.61) and dual momentum (0.030 → 0.60) are no longer significantly
+worse; GFC (2007-11→2009-02) cumulative: trend −22%, dual momentum −24%, all-weather −32%,
+min-var −45%, 1/N −55%. 2004–2008: min-var Sharpe 0.10 vs 1/N 0.18 (missed the EM rally, MSCI
+EM +37%/yr 2004–07). Alphas on the 60 race: nothing on CAPM/4F, min-var under 4F+EM p 0.0004.
+**⇒ Consequence.** The v1 limitation "one post-crisis regime" is answered for the
+construction-rule verdict; the overlay verdict of v1 §5.1 was a property of a bull-only window.
+**Code:** `v2/short_warmup.py` (uses `validation.walk_forward(warmup=...)`), `v2/report.py`.
+**See:** `tab_warmup.tex`, `outputs/v2.0/subperiods.csv`. **Status:** OOS windows.

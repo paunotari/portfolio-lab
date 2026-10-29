@@ -257,6 +257,36 @@ FF_INTL_MONTHLY = PROCESSED_DIR / "ff_intl_monthly.csv"
 FF_INTL_DIR = ANALYTICS_DIR / "ff_intl"
 FF_INTL_REPORT = FF_INTL_DIR / "REPORT_ff_intl.md"
 FF_INTL_AB = FF_INTL_DIR / "ff_intl_ab.csv"
+
+# --- v2.0: the collaborator's review (2026-10) ------------------------------
+# v2 is ADDITIVE: nothing above changes, the v1 pipeline still reproduces the SSRN paper, and
+# every v2 artefact lands under outputs/v2.0/ (run by scripts/run_v2.py, code in
+# src/portfolio_lab/v2/). The paper's generated LaTeX tables go to paper/v2.0/tables/.
+V2_DIR = OUTPUT_DIR / "v2.0"
+V2_REPORT = V2_DIR / "REPORT_v2.md"
+V2_PAPER_TABLES = PROJECT_ROOT / "paper" / "v2.0" / "tables"
+# Ken French GLOBAL factors: "Developed" = 23 developed markets (the global set), plus the
+# emerging-markets set, both July 1990+. A menu spanning ACWI/World/EM is priced against
+# these, not against the US factors in FF_SOURCES.
+FF_GLOBAL_BASE = "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/{}_CSV.zip"
+FF_GLOBAL_FILES = {                      # key -> Ken French file stem
+    "dev5": "Developed_5_Factors",       # Mkt-RF SMB HML RMW CMA RF (3-factor columns are a subset)
+    "dev_mom": "Developed_Mom_Factor",    # WML
+    "em5": "Emerging_5_Factors",
+    "em_mom": "Emerging_MOM_Factor",
+}
+FF_GLOBAL_MONTHLY = PROCESSED_DIR / "ff_global_factors_monthly.csv"
+# shorter training windows: OOS starts 2004-01 (60) / 2005-09 (80) instead of 2009-01 (120),
+# so the race contains the 2007-09 bear market. 120 is re-run alongside as the baseline.
+V2_WARMUPS = (60, 80)
+V2_BASELINE_WARMUP = 120
+# Illustrative ETF expense ratios (annual, basis points) for the net-of-fees check
+# (v2/fees.py). ASSUMPTIONS, not quotes: typical 2026 UCITS levels — plain market-cap index
+# ETFs ~0.07-0.20%, MSCI factor ETFs ~0.25-0.40%, emerging/Asian lines dearer. Charged on the
+# weights held between refits; overlay cash earns zero and pays nothing.
+V2_TER_BPS = {"Reference": 15.0, "factor": 30.0, "em_asia_extra": 10.0,
+              "Asset | US Treasury 10y": 10.0, "Asset | Gold": 15.0,
+              "Asset | Cash (T-bill)": 10.0}
 FF_INTL_INFERENCE = FF_INTL_DIR / "ff_intl_inference.csv"
 
 # A/B instrument for the confirmatory test ONLY: False disables ALL long-history anchoring
