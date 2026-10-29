@@ -280,6 +280,25 @@ FF_GLOBAL_MONTHLY = PROCESSED_DIR / "ff_global_factors_monthly.csv"
 # so the race contains the 2007-09 bear market. 120 is re-run alongside as the baseline.
 V2_WARMUPS = (60, 80)
 V2_BASELINE_WARMUP = 120
+# ---- PRE-REGISTERED 2026-10-29 (round 2 of the v2 review), committed BEFORE any result with
+# these factors was computed. See MILESTONES "PR-2". Do not edit after the run; add variants.
+# Primary alpha model P: the menu's own regional markets (MSCI Reference sleeves of the five
+# disjoint regions, excess of the T-bill) + global style premia (Ken French developed SMB, HML,
+# RMW, CMA, WML) + AQR global Betting-Against-Beta.
+V2_PRIMARY_MODEL = "P: regional markets + styles + BAB"
+V2_PRIMARY_REGIONS = ["USA", "Europe", "Japan", "AC_Asia_ex_Japan", "EM"]
+V2_PRIMARY_STYLES = ["dev_smb", "dev_hml", "dev_rmw", "dev_cma", "dev_wml", "aqr_bab"]
+# Family-wise inference: Romano-Wolf step-down, studentized (HAC) max-|t| circular block
+# bootstrap, block 6, B = 4999, over the 16 contestants under P (primary) and over
+# contestants x all models (secondary, reported).
+V2_RW_B = 4999
+V2_RW_BLOCK = 6
+# Rolling (fixed-length) estimation windows, the DeMiguel design: scored 2009-01 -> 2026-06.
+V2_ROLLING_WINDOWS = (36, 60, 80, 120)
+AQR_BASE = "https://www.aqr.com/-/media/AQR/Documents/Insights/Data-Sets/{}.xlsx"
+AQR_FILES = {"aqr_bab": ("Betting-Against-Beta-Equity-Factors-Monthly", "BAB Factors"),
+             "aqr_qmj": ("Quality-Minus-Junk-Factors-Monthly", "QMJ Factors")}
+
 # Illustrative ETF expense ratios (annual, basis points) for the net-of-fees check
 # (v2/fees.py). ASSUMPTIONS, not quotes: typical 2026 UCITS levels — plain market-cap index
 # ETFs ~0.07-0.20%, MSCI factor ETFs ~0.25-0.40%, emerging/Asian lines dearer. Charged on the

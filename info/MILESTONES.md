@@ -1139,3 +1139,27 @@ EM +37%/yr 2004–07). Alphas on the 60 race: nothing on CAPM/4F, min-var under 
 construction-rule verdict; the overlay verdict of v1 §5.1 was a property of a bull-only window.
 **Code:** `v2/short_warmup.py` (uses `validation.walk_forward(warmup=...)`), `v2/report.py`.
 **See:** `tab_warmup.tex`, `outputs/v2.0/subperiods.csv`. **Status:** OOS windows.
+
+---
+
+## PR-2 — PRE-REGISTRATION (2026-10-29, committed before the run): the alpha question, settled one way
+
+**Why:** an adversarial review of v2 (round 1) showed M44's headline model (4F + EM) was chosen
+after seeing results, and that the alpha it reports needs three things at once — an EM hedge,
+crediting the difference's negative net beta (low-beta anomaly), and leaving out RMW. Before
+computing anything with new data, the primary model and the decision rule are fixed here.
+
+- **Primary model P:** contestant − 1/N regressed on the MSCI Reference sleeves of the five
+  disjoint regions (USA, Europe, Japan, AC Asia ex Japan, EM; excess of the T-bill — the menu's
+  own markets, which net out any regional allocation in investable units) + Ken French developed
+  SMB, HML, RMW, CMA, WML + AQR global BAB. Newey-West, 4 lags. (`config.V2_PRIMARY_*`)
+- **Family-wise inference:** Romano-Wolf step-down (studentized max-|t| circular block bootstrap,
+  b = 6, B = 4999) over the 16 contestants under P (primary); over contestants × all models
+  (secondary, reported).
+- **Decision rule:** "resolvable alpha over 1/N" is claimed only if (i) the Romano-Wolf p < 0.05
+  under P on the 120-month expanding race AND (ii) the same sign with HAC p < 0.10 on the rolling
+  60-month race. Otherwise the claim is "no alpha beyond the documented premia".
+- **Declared prediction:** min-variance's alpha under P is below +1%/yr and not significant
+  (the round-1 mechanism: low beta + profitability).
+- **Also fixed before the run:** the overlay signal bug and the cash-earns-T-bill convention
+  (round-1 F1, F6). Rolling 36/60/80/120-month estimation windows scored 2009-01 → 2026-06.
