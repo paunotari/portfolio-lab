@@ -68,6 +68,9 @@ def factor_frame(monthly: pd.DataFrame) -> pd.DataFrame:
     """Global factors on `monthly`'s months, plus the all-country market built from the MSCI
     ACWI Reference sleeve (developed + emerging, the menu's own widest market) minus rf."""
     fac = F.align(monthly)
+    if C.FF_FACTORS_MONTHLY.exists():       # ONE risk-free source: the series overlay cash earns
+        us = pd.read_csv(C.FF_FACTORS_MONTHLY, index_col=0, parse_dates=True)
+        fac["rf"] = F.align(monthly, factors=us[["rf"]])["rf"].fillna(fac["rf"])
     lv = pd.read_csv(C.LEVELS_WIDE, index_col=0, parse_dates=True).sort_index()
     acwi = lv["ACWI | Reference"].pct_change()
     acwi.index = acwi.index.to_period("M")
@@ -295,19 +298,20 @@ def romano_wolf(monthly: pd.DataFrame, models: list[str], bench: str = BENCH,
     fac = factor_frame(monthly)
     names = [c for c in monthly.columns if c != bench]
     D = monthly[names].sub(monthly[bench], axis=0)
-    cells, alphas, ts, Ys, Zs = [], [], [], [], []
+    regs = sorted({c for m in models for c in MODELS[m]})
+    d = pd.concat([D, fac[regs]], axis=1).dropna()           # ONE common calendar for all models
+    T = len(d)
+    Y = d[names].to_numpy(float)
+    cells, alphas, ses, Zs = [], [], [], []
     for m in models:
-        d = pd.concat([D, fac[MODELS[m]]], axis=1).dropna()
-        Y = d[names].to_numpy(float)
-        Z = np.column_stack([np.ones(len(d)), d[MODELS[m]].to_numpy(float)])
-        a, se = _intercept_t_matrix(Y, Z, nw_lags(len(d)))
-        t = a / se
+        Z = np.column_stack([np.ones(T), d[MODELS[m]].to_numpy(float)])
+        a, se = _intercept_t_matrix(Y, Z, nw_lags(T))
         cells += [(n, m) for n in names]
-        alphas.append(a); ts.append(t); Ys.append(Y); Zs.append(Z)
-    T = min(len(Y) for Y in Ys)
-    Ys = [Y[-T:] for Y in Ys]; Zs = [Z[-T:] for Z in Zs]
+        alphas.append(a); ses.append(se); Zs.append(Z)
+    Ys = [Y] * len(models)
     a_obs = np.concatenate(alphas)
-    t_obs = np.concatenate(ts)
+    se_obs = np.concatenate(ses)
+    t_obs = a_obs / se_obs
     idx = _block_indices(T, B, b, seed)
     tstar = np.empty((B, len(cells)))
     for i, ix in enumerate(idx):
@@ -325,8 +329,44 @@ def romano_wolf(monthly: pd.DataFrame, models: list[str], bench: str = BENCH,
         p = (1 + np.sum(mx >= abs(t_obs[c]))) / (B + 1)
         prev = max(prev, p)
         p_adj[c] = prev
+    # single-cell studentized bootstrap p (round-2 R4: HAC-normal p is ~2x anti-conservative
+    # with 11 regressors and T = 210) and percentile-t 95% intervals for each alpha
+    p_single = (1 + (tstar >= np.abs(t_obs)[None, :]).sum(axis=0)) / (B + 1)
+    signed = []
+    for i, ix in enumerate(idx[:min(B, 1999)]):
+        parts = []
+        for Y_, Z, a0 in zip(Ys, Zs, alphas):
+            a_b, se_b = _intercept_t_matrix(Y_[ix], Z[ix], nw_lags(T))
+            parts.append((a_b - a0) / se_b)
+        signed.append(np.concatenate(parts))
+    signed = np.array(signed)
+    q_lo, q_hi = np.nanpercentile(signed, [2.5, 97.5], axis=0)
     return pd.DataFrame({"portfolio": [c[0] for c in cells], "model": [c[1] for c in cells],
-                         "alpha_vs_1N_ann": a_obs * 12, "t": t_obs, "p_rw": p_adj})
+                         "T": T, "alpha_vs_1N_ann": a_obs * 12, "t": t_obs,
+                         "p_hac": 2 * norm.sf(np.abs(t_obs)), "p_boot": p_single, "p_rw": p_adj,
+                         "ci_lo_ann": (a_obs - q_hi * se_obs) * 12,
+                         "ci_hi_ann": (a_obs - q_lo * se_obs) * 12,
+                         "mde80_ann": 2.80 * se_obs * 12})
+
+
+def alpha_decomposition(monthly: pd.DataFrame, model: str, name: str = "Min-variance",
+                        bench: str = BENCH) -> pd.DataFrame:
+    """Raw mean gap to 1/N = alpha + sum_k b_k * mean(F_k): where the gap comes from, factor
+    by factor (round-2 R2). Annualized; rows sum to the raw gap."""
+    fac = factor_frame(monthly)
+    cols = MODELS[model]
+    d = pd.concat([(monthly[name] - monthly[bench]).rename("y"), fac[cols]], axis=1).dropna()
+    r = hac_ols(d["y"].to_numpy(float), d[cols].to_numpy(float))
+    rows = [dict(component="alpha", loading=np.nan, factor_mean_ann=np.nan,
+                 contribution_ann=float(r["coef"][0] * 12), t=float(r["t"][0]))]
+    for k, c in enumerate(cols, start=1):
+        rows.append(dict(component=c, loading=float(r["coef"][k]),
+                         factor_mean_ann=float(d[c].mean() * 12),
+                         contribution_ann=float(r["coef"][k] * d[c].mean() * 12),
+                         t=float(r["t"][k])))
+    rows.append(dict(component="raw gap", loading=np.nan, factor_mean_ann=np.nan,
+                     contribution_ann=float(d["y"].mean() * 12), t=np.nan))
+    return pd.DataFrame(rows)
 
 
 # ------------------------------------------------------------------ the tables

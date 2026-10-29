@@ -134,7 +134,18 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       readable only by specialists).
 - [ ] **Regional sub-analysis — deliberately NOT done** (collaborator: per-region menus of 4
       sleeves leave nothing to diversify). Only if a referee asks.
-- [ ] Decide how much weight M44 gets (abstract/title of §5.3) — the blue note in §5.3 asks.
+- [x] **Adversarial review, rounds 1–3 (2026-10-29)** — a reviewer agent re-implemented the race
+      and found: the trend-overlay warm-up bug (M48), misdated chunks (M53), the M44 specification
+      search (withdrawn → PR-2 pre-specification → M49/M54), the expanding-window tautology (→
+      rolling windows, M50), the fee test confound (M52), anti-conservative HAC p (→ studentized
+      bootstrap p + Romano-Wolf). Ledger PR-2, M48–M55.
+- [ ] **REWRITE paper_v2.tex from the ledger, not from the v2 draft** — the draft's abstract,
+      takeaway 2, §5.3, §5.4 and §10 rest on M44/M47 claims that are withdrawn. Headline now:
+      no rule resolvably beats 1/N in any window or measure; no robust losers either; the leader's
+      edge = profitability + low beta, CI ±1.6%/yr; tilt vs skill unresolved (M54).
+- [ ] Investable benchmarks for the tilt question: MSCI World/ACWI Minimum Volatility and
+      Quality indices (need data; would sharpen M54's "tilt vs skill").
+- [~] ~~Decide how much weight M44 gets~~ — superseded: M44 withdrawn (M49).
 - [ ] Collaborator: acknowledgment or co-authorship? (blue note in the disclosures).
 - [ ] Regenerate §7–8 numbers (LORO, 2-month label lag, live era, all-weather 0.93→1.18/1.11)
       in the excess convention with the 17-contestant roster; they are v1 rf=0 July runs.
@@ -143,8 +154,7 @@ Check items off as completed. Add new ones as they come up; keep entries short a
 - [ ] Verify the 12 new references (Carhart, Fama-French 2012/2015/2017, Goodwin, Grinold-Kahn,
       Jensen, Newey-West, Novy-Marx, Sortino-van der Meer, Treynor, Treynor-Black) against
       Crossref, as done for v1.
-- [ ] Add a low-volatility factor (AQR "Betting Against Beta", free download) to the alpha models:
-      is min-var's residual +1.5% the low-vol premium the six models do not name? (M44 open end)
+- [x] Low-volatility factor added (AQR global BAB, plus QMJ) — in the pre-specified model P (M49).
 - [ ] Fix v1 `ingest/ff_factors._parse_monthly` (`replace([...], pd.NA)` raises under pandas 3 on
       some files — caveat #21) before the next full v1 pipeline re-run.
 - [ ] Clean-up pass for submission: drop red, turn green black, delete blue notes, renumber

@@ -1142,7 +1142,12 @@ construction-rule verdict; the overlay verdict of v1 §5.1 was a property of a b
 
 ---
 
-## PR-2 — PRE-REGISTRATION (2026-10-29, committed before the run): the alpha question, settled one way
+## PR-2 — PRE-SPECIFICATION (2026-10-29, committed before the run): the alpha question, settled one way
+
+> **Round-2 caveat (R3):** not a blind test. Round 1 had already shown P-without-BAB
+> (α 0.73%, p 0.18) and the beta-neutral result before this commit, so the prediction was close
+> to certain. PR-2 blocks further specification search; it is not confirmatory evidence.
+> Rule (ii)'s "HAC p" should read "studentized bootstrap p" (round-2 R4).
 
 **Why:** an adversarial review of v2 (round 1) showed M44's headline model (4F + EM) was chosen
 after seeing results, and that the alpha it reports needs three things at once — an EM hedge,
@@ -1189,7 +1194,7 @@ earns the Ken French rf (period-aligned). Regression test
 | Dual momentum Sharpe, p | 0.362, **0.030** | **0.428, 0.083** |
 | 1/N + vol-target Sharpe, p | 0.599, **0.005** | **0.614, 0.067** |
 
-**The vol-target p is fragile, measured:** same Sharpe (0.616) and gap (−0.131), p = 0.009 if
+**The vol-target p is fragile, measured:** same Sharpe (0.614) and gap (−0.131), p = 0.009 if
 the first six months are forced to full exposure (v1's `fillna(max_lev)`) vs 0.067 when the
 leverage is seeded with 2008's volatility (lev 0.44 in Jan 2009 — what a real investor would
 have held). Without the GFC months (60 race) it is p 0.044 again.
@@ -1198,7 +1203,7 @@ have held). Without the GFC months (60 race) it is p 0.044 again.
 implementation. Nothing is significantly worse than 1/N on Sharpe in the 120 race any more.
 **Status:** corrected, OOS modern.
 
-## M49 — PR-2 RESOLVED: no alpha over 1/N beyond documented premia (supersedes M44's headline)
+## M49 — PR-2 RESOLVED: no RESOLVABLE alpha over 1/N beyond min-variance's stable exposures (supersedes M44; wording amended after round 2, see M54)
 **Claim (pre-registered model P, run after the PR-2 commit):** min-variance − 1/N under P (five
 regional MSCI markets + SMB/HML/RMW/CMA/WML + AQR BAB): **α = +0.24%/yr, t 0.33, HAC p 0.75**.
 Romano-Wolf over the 16 contestants under P: smallest adjusted p 0.47 (120 expanding) and 0.21
@@ -1210,9 +1215,11 @@ Romano-Wolf over the 16 contestants under P: smallest adjusted p 0.47 (120 expan
 the raw gap plus a credit for the difference's negative net beta (low-beta anomaly) plus an
 unpriced RMW exposure, made precise by hedging EM. With (dev − EM) alone α = +0.69% (t 0.61).
 **⇒ Consequence.** M44's headline and the v2 draft's abstract/takeaway 2/§5.3/§10 claims of a
-"resolvable 2.4% alpha" are withdrawn. What survives: min-variance's edge is fully accounted for
+"resolvable 2.4% alpha" are withdrawn. ~~What survives: min-variance's edge is fully accounted for
 by its regional allocation, low beta and profitability tilt — documented premia, not
-construction skill. **Status:** pre-registered, OOS modern + rolling.
+construction skill.~~ Over-claimed (round 2, R2) — the null is wide and the regional terms net
+to ~0; restated in M54. **Status:** pre-specified after exploratory evidence (round 2, R3),
+OOS modern + rolling.
 
 ## M50 — Estimation window: rolling 60–120 months cost ~0.02–0.03 Sharpe, 36 months the whole edge (replaces M47's tautology)
 **Claim (measured):** round 1's "shorter training costs nothing" was an identity — expanding
@@ -1239,13 +1246,68 @@ over the 16 contestants within γ = 10 leaves only that loss. Min-variance's CER
 at every γ (round-1 F8). **⇒ Consequence.** The "left of the risk-return plane" concern has a
 precise answer: whether lower volatility is worth it depends on risk aversion; for a very
 risk-averse investor the risk-based rules are better point estimates, not resolvably so.
-**Status:** OOS modern.
+**Round-2 caveat:** a γ = 10 investor would not hold a fully-invested equity portfolio; with
+optimal T-bill mixing the high-γ ranking collapses to the Sharpe ranking. The γ = 10 column
+compares portfolios such an investor would not hold. **Status:** OOS modern.
 
-## M52 — CORRECTION of M45's fee reading: region-neutral factor premia ARE resolved net of fees
+## M52 — CORRECTION of M45's fee reading: region-neutral factor premia are resolved net of fees in index history INCLUDING back-fill; borderline in the live era
 **Claim (measured):** M45 tested 1/N against ACWI, which mixes the factor tilts with equal-
 weighting the regions (equal-weighted regional Reference sleeves minus ACWI: −1.0%/yr since
 2009). The clean test — each region's factor sleeves minus its own Reference, minus the 15 bp
 fee gap, pooled — gives **+2.08%/yr (t 3.42) from 2004, +1.67% (t 2.30) from 2009, +1.96%
 (t 1.86) in the live-index era from 2015**. **⇒ Consequence.** The factor premia of §3 survive
 ETF fees and are resolved except in the post-launch era; M45's "unresolved net of fees" is
-withdrawn. **Code:** `v2/fees.py::factor_premium_net`. **Status:** OOS-free (descriptive premia).
+withdrawn. **Round-2 caveat (R6):** the 2004+/2009+ windows are mostly MSCI's pre-launch
+back-test; the live-era cell (2015+) is t 1.86, p 0.062, and the 15 bp TER gap understates the
+trading cost of high-turnover factor ETFs (momentum). **Code:** `v2/fees.py::factor_premium_net`.
+**Status:** descriptive premia, back-fill-dependent.
+
+---
+
+# v2.0 round 3 — after the second review (2026-10-29)
+
+## M53 — CORRECTION (v1 bug): returns of contestants skipped at early refits were misdated
+**Claim (verified):** `validation.walk_forward` stamped each contestant's concatenated OOS chunks
+from the FIRST OOS month. A contestant skipped at early refits (maximins need ≥ 2 quadrants)
+had every later return shifted earlier — in the warmup-36 race by 24 months (correlation with
+the 60 race on the same dates −0.03 before, **1.00 after**). Fixed: each chunk carries its own
+dates. No ledger number cited a skipped contestant (all 120/80/60 runs have every contestant at
+every refit; v1's FF-international run re-checked by the reviewer: 26/26).
+**Code:** `validation.py` (chunk dates). **Status:** corrected.
+
+## M54 — What min-variance's edge is, restated with its uncertainty (amends M49; round-2 R2, F8, F10)
+**Claim (measured, 120 race, min-variance − 1/N):**
+- Under P: **α = +0.24%/yr, percentile-t 95% CI [−1.43, +1.77]**, studentized bootstrap p 0.76,
+  minimum detectable alpha at 80% power **2.0%/yr** — non-rejection, not "zero" (M38's lesson
+  in the other direction).
+- Decomposition of the **+1.23%/yr raw gap** under P: regional terms **net +0.13** (USA +3.47,
+  Japan +0.72; EM −1.84, Asia −1.31, Europe −0.91), **RMW +0.66**, **BAB +0.51** (loading 0.07,
+  t 1.4), WML −0.38, SMB +0.08, α +0.24. Realised regional returns are not a premium; the
+  explained part is profitability + low beta.
+- Naive ex-ante tilts (`v2/benchmarks.py`): 1/N over the 7 Quality sleeves Sharpe 0.824 (vs 1/N
+  p 0.26); min-variance vs it **p 0.17** (0.16 in the 60 race); inverse-variance 0.778, min-var vs
+  it p 0.063 (**0.038** in the 60 race); the hindsight USA+World Quality pair 0.957 (min-var vs it
+  p 0.63).
+- Power, not redundancy, explains the leader's non-significance (round-1 F8): risk-based rules
+  collapse onto 1/N (ERC TE 0.9%, HRP 1.7%) because of the menu (DR² 1.31), but min-variance
+  departs with a 5.7% tracking error over 17.5 years.
+**⇒ Consequence.** Correct wording: *"no resolvable alpha beyond min-variance's stable
+profitability, low-beta and regional exposures (α +0.24%/yr, 95% CI ≈ −1.4 to +1.8)"*. Whether
+the tilt is "skill" is NOT settled: min-variance is not distinguishable from an ex-ante Quality
+tilt, nor that tilt from 1/N. **Status:** OOS modern.
+
+## M55 — The overlays, one consistent reading; and a second crash
+**Claim (measured):** 1/N + vol-target: Sharpe vs 1/N p 0.067 (seeded start; 0.009 with v1's
+forced full exposure — the reviewer verified the seeded version is what a running overlay would
+have held, bit-identical to the 60 race through 2009); without H1-2009 p 0.020, without the GFC
+(60 race) p 0.044; CER γ = 1 −3.6% (p 0.009); studentized alpha p 0.049 under P but Romano-Wolf
+0.76. Reading: **it loses steadily outside crashes, one crash compensates, and nothing survives
+multiplicity.** Dual momentum with Antonacci's own T-bill gate: Sharpe 0.467 vs 1/N p 0.12 (the
+zero-threshold contestant 0.428, p 0.083). Second crash, dot-com tail (warmup-36 race,
+2002-01→2003-03, cumulative): trend −5.6%, vol-target −10.3%, **1/N −14.3%, min-variance −19.1%**,
+dual momentum −23.2%; GFC: trend −21%, all-weather −32%, vol-target −39%, min-var −45%, 1/N −55%.
+Min-variance's crash protection is not universal. Live-index era only (2015+): min-var 0.824 vs
+1/N 0.681, p 0.25; the hierarchy holds as point estimates. Single-cell alpha p-values are now
+studentized-bootstrap (HAC-normal was ~2× anti-conservative with 11 regressors, R4); the only
+cells below 5% are min-var/Brodie/all-weather under 4F+EM and vol-target under P/P-QMJ, none
+surviving Romano-Wolf. **Status:** OOS modern + windows.

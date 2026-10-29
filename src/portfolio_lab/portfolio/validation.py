@@ -113,14 +113,16 @@ def _cash_series() -> pd.Series | float:
     return pd.read_csv(C.FF_FACTORS_MONTHLY, index_col=0, parse_dates=True)["rf"].dropna()
 
 
-def _base_history(name: str, rets: pd.DataFrame, t: int, lookback: int = 12) -> pd.Series:
+def _base_history(name: str, rets: pd.DataFrame, t: int, lookback: int = 12,
+                  window: int = None) -> pd.Series:
     """Causal pre-sample returns of an overlay's base portfolio over the `lookback` months
     before the first out-of-sample month `t`, so trend/vol signals exist from month one. Each
     base is formed exactly as the contestant would have been, using data before the window."""
     pre = rets.iloc[max(0, t - lookback):t]
     if name == "1/N":
         return pre.mean(axis=1)
-    fit = rets.iloc[:max(1, t - lookback)]
+    end = max(1, t - lookback)
+    fit = rets.iloc[max(0, end - window):end] if window else rets.iloc[:end]
     if name.startswith("Momentum"):
         w = rules.momentum_weights(fit)
     elif name == "Min-variance":
@@ -178,7 +180,8 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
         refit_dates.append(str(rets.index[t - 1].date()))
         oos = rets.iloc[t:t + refit].values
         diag: dict = {}
-        entries = [(name, w, oos, rets.columns)
+        oos_dates = rets.index[t:t + refit]
+        entries = [(name, w, oos, rets.columns, oos_dates)
                    for name, w in _contestants(inp, n_starts, seed, diag).items()]
         diags[refit_dates[-1]] = diag
         if rets_aw is not None:                             # flagship on its own universe
@@ -192,25 +195,27 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
                     if inp_aw["mu_q"] is not None:
                         w_aw = opt.optimize(maximin=True, inputs=inp_aw,
                                             n_starts=n_starts, seed=seed, **div_kw)["w"]
-                        entries.append((AW_NAME, w_aw, oos_aw.values, rets_aw.columns))
+                        entries.append((AW_NAME, w_aw, oos_aw.values, rets_aw.columns,
+                                        oos_aw.index))
                 except Exception as e:
                     print(f"[validation] WARN all-weather refit at {rets.index[t - 1].date()} "
                           f"skipped ({e})")
-        for name, w, oos_m, cols in entries:
+        for name, w, oos_m, cols, dates in entries:
             whist.setdefault(name, []).append((rets.index[t], pd.Series(w, index=cols)))
             chunk = oos_m @ w
             tmonth = np.zeros(len(chunk))
             if name in prev_w:                              # trading happens on the first month
                 tmonth[0] = float(np.abs(w - prev_w[name]).sum() / 2)
             prev_w[name] = w
-            gross_chunks.setdefault(name, []).append(chunk)
-            turn_chunks.setdefault(name, []).append(tmonth)
+            gross_chunks.setdefault(name, []).append(pd.Series(chunk, index=dates[:len(chunk)]))
+            turn_chunks.setdefault(name, []).append(pd.Series(tmonth, index=dates[:len(chunk)]))
 
+    # Each chunk carries its own dates: a contestant skipped at early refits (e.g. a maximin
+    # before two quadrants exist) must not have its later returns stamped from the first OOS
+    # month — the round-2 review bug (MILESTONES M53) that shifted them 24 months early.
     oos_index = rets.index[warmup:]
-    gross = {n: pd.Series(np.concatenate(c), index=oos_index[:sum(map(len, c))])
-             for n, c in gross_chunks.items()}
-    turn = {n: pd.Series(np.concatenate(c), index=oos_index[:sum(map(len, c))])
-            for n, c in turn_chunks.items()}
+    gross = {n: pd.concat(c).reindex(oos_index) for n, c in gross_chunks.items()}
+    turn = {n: pd.concat(c).reindex(oos_index) for n, c in turn_chunks.items()}
 
     # volatility-targeting overlays on selected bases (their own leverage-change turnover is
     # charged on top of the base's rebalancing turnover)
@@ -222,7 +227,7 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
         if base not in gross:
             continue
         managed, extra_turn, lev = rules.vol_managed(
-            gross[base], cash=cash, history=_base_history(base, rets, warmup),
+            gross[base], cash=cash, history=_base_history(base, rets, warmup, window=window),
             return_exposure=True)
         vt = f"{base} + vol-target"
         gross[vt] = managed
@@ -233,8 +238,8 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
         if base not in gross:
             continue
         managed, extra_turn, expo = rules.trend_overlay(
-            gross[base], mode=mode, cash=cash, history=_base_history(base, rets, warmup),
-            return_exposure=True)
+            gross[base], mode=mode, cash=cash,
+            history=_base_history(base, rets, warmup, window=window), return_exposure=True)
         gross[label] = managed
         turn[label] = turn[base] + extra_turn
         exposure[label] = expo

@@ -134,6 +134,20 @@ def test_v2_baseline_reproduces_v1_walkforward():
     assert np.allclose(a[cols].to_numpy(), b.to_numpy(), equal_nan=True), "v2 baseline != v1 race"
 
 
+def test_skipped_contestants_keep_their_own_dates():
+    """M53 regression: a contestant skipped at early refits (maximins before two quadrants
+    exist) must have its missing months at the START of the race, not the end."""
+    p = C.V2_DIR / "wf_returns_warmup36.csv"
+    if not p.exists():
+        return
+    m = pd.read_csv(p, index_col=0, parse_dates=True)
+    for c in m.columns:
+        s = m[c]
+        if s.isna().any():
+            first_valid = s.first_valid_index()
+            assert s.loc[first_valid:].notna().all(), f"{c}: gap after its first return (misdated)"
+
+
 def test_vectorized_intercept_t_matches_hac_ols():
     """romano_wolf's vectorized intercept s.e. must equal hac_ols's, column by column."""
     fac, rng = _toy()

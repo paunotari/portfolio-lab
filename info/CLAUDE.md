@@ -133,6 +133,7 @@ python -m portfolio_lab.dashboard.build
 | `v2/short_warmup.py` | Runs `validation.walk_forward(warmup=w)` for 120 (baseline, reproduces v1 exactly), 80 and 60 months → `outputs/v2.0/wf_{returns,summary,attribution,gross,turnover,weights}_warmup{w}.*` (~1 min each). |
 | `v2/risk_adjusted.py` | Sharpe/Sortino/Treynor on excess returns with paired circular block bootstrap p vs 1/N; **alphas** under 6 models (`MODELS`: CAPM, CAPM (ACWI), Carhart 4F, 4F + EM market, FF5 + WML, FF5 + WML + EM) with Newey-West HAC t (`hac_ols`), alpha vs 1/N = intercept of the difference regression; `alpha_block_bootstrap` (pairs block bootstrap); **information / appraisal ratios** + rolling 3/5/10y ahead-of-1/N shares (`information_table`). |
 | `v2/fees.py` | Illustrative ETF TER schedule (`config.V2_TER_BPS`) charged on the per-refit weights held (overlays pay only on invested exposure) → net-of-fees Sharpe/p vs 1/N, IR vs 1/N and vs a plain MSCI ACWI fund. |
+| `v2/benchmarks.py` | Naive ex-ante tilt benchmarks (1/N over the Quality sleeves, inverse-variance, the hindsight USA+World Quality pair) and dual momentum with Antonacci's T-bill gate — the tests behind "tilt vs skill" (M54, M55). |
 | `v2/descriptives.py` | Descriptive statistics of the 28 sleeves and the factors (excess mean, vol, Sharpe, skew, ex-kurt, worst month, maxDD, β). |
 | `v2/report.py` | v2 orchestrator (`scripts/run_v2.py`): all of the above → `outputs/v2.0/*.csv` + `REPORT_v2.md`, the paper's generated tables `paper/v2.0/tables/tab_*.tex` and `numbers.json`. Findings: MILESTONES M42–M47. |
 | `dashboard/build.py` | Bakes all data as JSON into `outputs/dashboard.html`. Macro, macro-state and scenario data are each optional — their tabs degrade gracefully when the files are absent (e.g. after `--no-macro`). |
@@ -315,6 +316,10 @@ is 14 steps; see
 21. **pandas 3 `replace([...], pd.NA)` can raise** (`IndexError` in `replace_list`) on some Ken
     French files. `v2/factors.py` masks with `where`; v1's `ingest/ff_factors._parse_monthly`
     still uses `replace` and may hit it on the next v1 re-ingest (TODO).
+23. **Walk-forward OOS chunks carry their own dates** (`validation.walk_forward`): before M53,
+    a contestant skipped at early refits had its returns stamped from the first OOS month.
+    **Overlay signals are NaN-masked and seeded with causal pre-sample history; overlay cash
+    earns the T-bill** (M48). `walk_forward(window=...)` runs a ROLLING estimation window.
 22. **The paper's v2 exhibits are generated** (`paper/v2.0/tables/`), never typed: v1's
     hand-typed Exhibit 1 had drifted from the run behind it (M46).
 

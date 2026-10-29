@@ -21,6 +21,8 @@ import pandas as pd
 
 from portfolio_lab import config as C
 from portfolio_lab.portfolio import inference as I
+from portfolio_lab.portfolio import rules
+from portfolio_lab.v2 import benchmarks as BM
 from portfolio_lab.v2 import descriptives as D
 from portfolio_lab.v2 import factors as F
 from portfolio_lab.v2 import fees as FE
@@ -178,7 +180,7 @@ def tex_alpha_vs_1n(al: pd.DataFrame, order: list[str]) -> str:
         cells = []
         for mdl in models:
             x = a.loc[(name, mdl)]
-            pv = x.p_vs_1N
+            pv = x.p_boot if "p_boot" in x and np.isfinite(x.p_boot) else x.p_vs_1N
             ps = f"{pv:.2f}" if pv >= 0.01 else (f"{pv:.3f}" if pv >= 0.001 else "$<$0.001")
             s = f"{_num(100 * x.alpha_vs_1N_ann, 1, sign=True)} ({ps})"
             cells.append(f"\\textbf{{{s}}}" if x.p_vs_1N < 0.05 else s)
@@ -376,6 +378,42 @@ def run(rerun: bool = False) -> dict:
     rw_primary = R.romano_wolf(base, [P])
     rw_primary_roll = R.romano_wolf(roll["roll60_w120"], [P])
     rw_family = R.romano_wolf(base, models_all)
+    # studentized single-cell bootstrap p for every alpha cell of the 120 race (round-2 R4)
+    alphas["exp120"] = alphas["exp120"].merge(
+        rw_family[["portfolio", "model", "p_boot", "p_rw", "ci_lo_ann", "ci_hi_ann", "mde80_ann"]],
+        on=["portfolio", "model"], how="left")
+    decomp = R.alpha_decomposition(base, P)
+    fac0 = R.factor_frame(base)
+    dme = R.hac_ols((base["Min-variance"] - base["1/N"]).to_numpy(float),
+                    (fac0["dev_mkt_rf"] - fac0["em_mkt_rf"]).to_numpy(float)[:, None])
+    print("[v2] naive tilts, dual-momentum gate, live era, crashes ...")
+    tilt_tabs = {}
+    for k, m in (("exp120", base), ("exp60", exp[60])):
+        tl = BM.naive_tilts(m.index)
+        both = pd.concat([m[["1/N", "Min-variance"]], tl], axis=1)
+        t = race_table(both)
+        exb = R.excess_returns(both)
+        t["p_minvar_vs_this"] = [np.nan if c == "Min-variance" else
+                                 I.sharpe_diff_test(exb["Min-variance"], exb[c])["p_boot"]
+                                 for c in t.portfolio]
+        tilt_tabs[k] = t
+    dm = BM.dual_momentum_tbill_gate("warmup120", base, 120)
+    dm_tab = race_table(pd.concat([base[["1/N", "Dual momentum (Antonacci)"]],
+                                   dm.rename("Dual momentum (T-bill gate)")], axis=1))
+    live = race_table(base.loc["2015-01-01":])
+    crash = {}
+    for lab, (a, b_) in (("dotcom_2002_01_2003_03", ("2002-01-01", "2003-03-31")),
+                         ("gfc_2007_11_2009_02", GFC)):
+        g = exp[36].loc[a:b_]
+        crash[lab] = {c: float((1 + g[c].dropna()).prod() - 1) for c in g.columns
+                      if g[c].notna().sum() >= len(g) - 1}
+    gross120 = pd.read_csv(C.V2_DIR / "wf_gross_warmup120.csv", index_col=0, parse_dates=True)
+    turn120 = pd.read_csv(C.V2_DIR / "wf_turnover_warmup120.csv", index_col=0, parse_dates=True)
+    rf_us = pd.read_csv(C.FF_FACTORS_MONTHLY, index_col=0, parse_dates=True)["rf"]
+    mg, et = rules.vol_managed(gross120["1/N"], cash=rf_us)            # v1-style forced start
+    forced = mg - C.OPTIMIZER_TC_BPS / 1e4 * (turn120["1/N"] + et)
+    exf = R.excess_returns(pd.concat([base[["1/N"]], forced.rename("forced")], axis=1))
+    vt_forced_p = I.sharpe_diff_test(exf["forced"], exf["1/N"])["p_boot"]
     print("[v2] CER, premia, GFC-out, stability, fees ...")
     cer = cer_table(base)
     premia = [FE.factor_premium_net(s) for s in ("2004-01-01", "2009-01-01", "2015-01-01")]
@@ -404,7 +442,10 @@ def run(rerun: bool = False) -> dict:
                      ("rw_primary_roll60", rw_primary_roll), ("rw_family_exp120", rw_family),
                      ("cer_exp120", cer), ("gfc_out_exp60", gfc_out), ("alpha_stability_P", stab),
                      ("net_of_fees_exp120", feetab), ("descriptives_sleeves", sleeves),
-                     ("descriptives_factors", facs), ("premia_net", pd.DataFrame(premia))):
+                     ("descriptives_factors", facs), ("premia_net", pd.DataFrame(premia)),
+                     ("alpha_decomposition_P_minvar", decomp), ("naive_tilts_exp120", tilt_tabs["exp120"]),
+                     ("naive_tilts_exp60", tilt_tabs["exp60"]), ("dual_momentum_gate", dm_tab),
+                     ("race_live_2015", live)):
         df.to_csv(C.V2_DIR / f"{name}.csv", index=False)
 
     # ---- generated LaTeX (the paper is rewritten later; tables stay current)
@@ -443,6 +484,13 @@ def run(rerun: bool = False) -> dict:
         romano_wolf_primary_exp120=recs(rw_primary), romano_wolf_primary_roll60=recs(rw_primary_roll),
         romano_wolf_family_min=recs(rw_family.sort_values("p_rw").head(8)),
         alpha_stability_P=recs(stab), cer_exp120=recs(cer), premia_net=premia,
+        alpha_decomposition_P_minvar=recs(decomp),
+        minvar_alpha_P=recs(rw_family.query("portfolio == 'Min-variance' and model == @P")),
+        minvar_alpha_dev_minus_em_only=dict(alpha_ann=float(dme["coef"][0] * 12),
+                                            t=float(dme["t"][0])),
+        naive_tilts_exp120=recs(tilt_tabs["exp120"]), naive_tilts_exp60=recs(tilt_tabs["exp60"]),
+        dual_momentum_gate=recs(dm_tab), race_live_2015=recs(live), crash_returns_exp36=crash,
+        voltarget_forced_start_p=vt_forced_p,
         gfc_out_exp60=recs(gfc_out), information_exp120=recs(infos["exp120"]),
         net_of_fees_exp120=recs(feetab),
         friedman_chi2=fried["chi2_friedman"], friedman_p=fried["p_friedman"],
@@ -474,6 +522,14 @@ def run(rerun: bool = False) -> dict:
           "## Romano-Wolf — full family (16 contestants x all models), 15 smallest", "",
           _md(rw_family.sort_values("p_rw").head(15)), "",
           "## Alpha of min-variance over 1/N under P, by span", "", _md(stab), "",
+          "## Min-variance - 1/N under P: decomposition of the raw gap", "", _md(decomp), "",
+          f"(dev - EM) only: alpha {dme['coef'][0]*12:+.4f}, t {dme['t'][0]:.2f}", "",
+          "## Naive ex-ante tilts (exp120)", "", _md(tilt_tabs["exp120"]), "",
+          "## Naive ex-ante tilts (exp60)", "", _md(tilt_tabs["exp60"]), "",
+          "## Dual momentum with the T-bill gate", "", _md(dm_tab), "",
+          "## Live-index era only (2015+)", "", _md(live), "",
+          f"## Crash returns (warmup-36 race): {json.dumps(crash, indent=1)}", "",
+          f"1/N + vol-target with v1's forced full-exposure start: p {vt_forced_p:.4f}", "",
           "## Certainty equivalent (exp120)", "", _md(cer), "",
           "## Region-neutral factor premium net of the fee gap", "", _md(pd.DataFrame(premia)), "",
           "## Overlays vs 1/N without the GFC months (exp60)", "", _md(gfc_out), ""]
