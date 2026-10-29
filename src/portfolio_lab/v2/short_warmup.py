@@ -25,37 +25,45 @@ from portfolio_lab import config as C
 from portfolio_lab.portfolio import validation
 
 
-def returns_path(warmup: int):
-    return C.V2_DIR / f"wf_returns_warmup{warmup}.csv"
+def tag(warmup: int, window: int = None) -> str:
+    """File tag: 'warmup60' (expanding) or 'roll60_warmup120' (rolling estimation window)."""
+    return f"roll{window}_warmup{warmup}" if window else f"warmup{warmup}"
 
 
-def run_one(warmup: int) -> pd.DataFrame:
-    """One full walk-forward at this warmup; caches returns, summary, attribution, meta."""
+def returns_path(warmup: int, window: int = None):
+    return C.V2_DIR / f"wf_returns_{tag(warmup, window)}.csv"
+
+
+def run_one(warmup: int, window: int = None) -> pd.DataFrame:
+    """One full walk-forward (expanding, or rolling `window` months); caches returns, summary,
+    attribution, gross, turnover, overlay exposure, weights and meta."""
     C.V2_DIR.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
-    summary, meta, monthly = validation.walk_forward(warmup=warmup)
-    monthly.to_csv(returns_path(warmup))
-    summary.to_csv(C.V2_DIR / f"wf_summary_warmup{warmup}.csv", index=False)
+    summary, meta, monthly = validation.walk_forward(warmup=warmup, window=window)
+    warmup_tag = tag(warmup, window)
+    monthly.to_csv(returns_path(warmup, window))
+    summary.to_csv(C.V2_DIR / f"wf_summary_{warmup_tag}.csv", index=False)
     validation.sleeve_attribution(meta).to_csv(
-        C.V2_DIR / f"wf_attribution_warmup{warmup}.csv", index=False)
+        C.V2_DIR / f"wf_attribution_{warmup_tag}.csv", index=False)
     # pre-cost pieces and per-refit weights, so fee schedules (v2/fees.py) can be charged
     # without re-running the optimization
-    meta["_gross"].to_csv(C.V2_DIR / f"wf_gross_warmup{warmup}.csv")
-    meta["_turnover"].to_csv(C.V2_DIR / f"wf_turnover_warmup{warmup}.csv")
+    meta["_gross"].to_csv(C.V2_DIR / f"wf_gross_{warmup_tag}.csv")
+    meta["_turnover"].to_csv(C.V2_DIR / f"wf_turnover_{warmup_tag}.csv")
+    meta["_exposure"].to_csv(C.V2_DIR / f"wf_exposure_{warmup_tag}.csv")
     pd.concat({n: w for n, w in meta["_weights"].items()}, names=["portfolio", "refit"]) \
-        .to_csv(C.V2_DIR / f"wf_weights_warmup{warmup}.csv")
+        .to_csv(C.V2_DIR / f"wf_weights_{warmup_tag}.csv")
     info = {k: v for k, v in meta.items() if not k.startswith("_")}
     info["runtime_s"] = round(time.time() - t0, 1)
-    (C.V2_DIR / f"wf_meta_warmup{warmup}.json").write_text(json.dumps(info, indent=2))
-    print(f"[v2.short_warmup] warmup {warmup}: OOS {info['oos_start']} -> {info['oos_end']} "
+    (C.V2_DIR / f"wf_meta_{warmup_tag}.json").write_text(json.dumps(info, indent=2))
+    print(f"[v2.short_warmup] {warmup_tag}: OOS {info['oos_start']} -> {info['oos_end']} "
           f"({info['oos_months']} months, {info['n_refits']} refits) in {info['runtime_s']}s")
     return monthly
 
 
-def load(warmup: int) -> pd.DataFrame:
-    p = returns_path(warmup)
+def load(warmup: int, window: int = None) -> pd.DataFrame:
+    p = returns_path(warmup, window)
     if not p.exists():
-        return run_one(warmup)
+        return run_one(warmup, window)
     return pd.read_csv(p, index_col=0, parse_dates=True)
 
 
@@ -67,5 +75,10 @@ def run(warmups=None):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="v2 shorter-warmup walk-forwards")
     ap.add_argument("warmups", nargs="*", type=int)
+    ap.add_argument("--window", type=int, default=None, help="rolling estimation window")
     args = ap.parse_args()
-    run(tuple(args.warmups) or None)
+    if args.window:
+        for w in args.warmups or (C.V2_BASELINE_WARMUP,):
+            run_one(w, args.window)
+    else:
+        run(tuple(args.warmups) or None)

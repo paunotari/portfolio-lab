@@ -55,7 +55,7 @@ def test_alpha_vs_1n_is_the_difference_of_alphas():
     fac, rng = _toy()
     x = pd.Series(rng.normal(0.008, 0.04, len(fac)), index=fac.index)
     y = pd.Series(rng.normal(0.006, 0.04, len(fac)), index=fac.index)
-    for model in R.MODELS:
+    for model in R.available_models(fac):
         d = R.alpha(x - y, fac, model)["alpha_ann"]
         assert abs(d - (R.alpha(x, fac, model)["alpha_ann"] - R.alpha(y, fac, model)["alpha_ann"])) < 1e-12
 
@@ -116,16 +116,47 @@ def test_align_matches_business_to_calendar_month_ends():
 
 # ------------------------------------------------------------------ integration
 
+OVERLAYS = ["1/N + vol-target", "Min-variance + vol-target", "1/N + trend (Faber 10m SMA)",
+            "Dual momentum (Antonacci)"]
+
+
 def test_v2_baseline_reproduces_v1_walkforward():
-    """The v2 120-month baseline is the v1 race, recomputed: it must match v1's cached
-    returns exactly, or every v1-vs-v2 comparison is comparing two different races."""
-    v1 = C.OPTIMIZER_WALKFORWARD_RETURNS
+    """The v2 120-month baseline is the v1 race, recomputed: every contestant the M48 overlay
+    fix does not touch must match v1's frozen returns exactly (outputs/v1.0), or v1-vs-v2
+    comparisons compare two different races. The four overlays are expected to differ."""
+    v1 = C.OUTPUT_DIR / "v1.0" / "optimizer" / "optimizer_walkforward_returns.csv"
     v2 = C.V2_DIR / f"wf_returns_warmup{C.V2_BASELINE_WARMUP}.csv"
     if not (v1.exists() and v2.exists()):
         return
     a = pd.read_csv(v1, index_col=0, parse_dates=True)
-    b = pd.read_csv(v2, index_col=0, parse_dates=True)[a.columns]
-    assert np.allclose(a.to_numpy(), b.to_numpy(), equal_nan=True), "v2 baseline != v1 race"
+    cols = [c for c in a.columns if c not in OVERLAYS]
+    b = pd.read_csv(v2, index_col=0, parse_dates=True)[cols]
+    assert np.allclose(a[cols].to_numpy(), b.to_numpy(), equal_nan=True), "v2 baseline != v1 race"
+
+
+def test_vectorized_intercept_t_matches_hac_ols():
+    """romano_wolf's vectorized intercept s.e. must equal hac_ols's, column by column."""
+    fac, rng = _toy()
+    X = fac[["dev_mkt_rf", "dev_smb", "dev_hml"]].to_numpy()
+    Y = np.column_stack([0.001 * k + X @ rng.normal(0, 1, 3) + rng.normal(0, 0.01, len(X))
+                         for k in range(4)])
+    Z = np.column_stack([np.ones(len(X)), X])
+    a, se = R._intercept_t_matrix(Y, Z, 4)
+    for j in range(4):
+        r = R.hac_ols(Y[:, j], X, lags=4)
+        assert abs(a[j] - r["coef"][0]) < 1e-12 and abs(se[j] - r["se"][0]) < 1e-12
+
+
+def test_cer_by_hand():
+    e = np.array([0.02, -0.01, 0.03, 0.00])
+    assert abs(R.cer(e, 5) - (e.mean() - 2.5 * e.var(ddof=1)) * 12) < 1e-15
+
+
+def test_rolling_ahead_share_compares_cumulative_returns():
+    idx = pd.date_range("2010-01-31", periods=24, freq="ME")
+    x = pd.Series(0.02, index=idx)
+    b = pd.Series(0.01, index=idx)
+    assert R.rolling_ahead_share(x, b, 12) == 1.0 and R.rolling_ahead_share(b, x, 12) == 0.0
 
 
 if __name__ == "__main__":

@@ -70,6 +70,31 @@ def fetch() -> pd.DataFrame:
     return out.astype(float)
 
 
+def fetch_aqr() -> pd.DataFrame:
+    """AQR global Betting-Against-Beta and Quality-Minus-Junk factors (monthly, USD, the
+    'Global' column of each workbook's first sheet; header on row 19). Free research data;
+    AQR's terms of use apply."""
+    import tempfile
+    import urllib.request
+    import ssl
+    import certifi
+    ctx = ssl.create_default_context(cafile=certifi.where())
+    cols = {}
+    for key, (stem, sheet) in C.AQR_FILES.items():
+        req = urllib.request.Request(C.AQR_BASE.format(stem), headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, context=ctx, timeout=120) as r, \
+                tempfile.NamedTemporaryFile(suffix=".xlsx") as tmp:
+            tmp.write(r.read())
+            tmp.flush()
+            d = pd.read_excel(tmp.name, sheet_name=sheet, header=18)
+        d["DATE"] = pd.to_datetime(d["DATE"])
+        cols[key] = d.set_index("DATE")["Global"].astype(float)
+    out = pd.DataFrame(cols)
+    out.index = out.index.to_period("M").to_timestamp("M")
+    out.index.name = "date"
+    return out
+
+
 def run() -> pd.DataFrame | None:
     C.ensure_dirs()
     try:
@@ -78,6 +103,10 @@ def run() -> pd.DataFrame | None:
         print(f"[v2.factors] WARN fetch failed ({e}) — "
               + ("keeping existing file" if C.FF_GLOBAL_MONTHLY.exists() else "no file written"))
         return None
+    try:                                                     # AQR BAB / QMJ (optional)
+        df = df.join(fetch_aqr(), how="left")
+    except Exception as e:
+        print(f"[v2.factors] WARN AQR fetch failed ({e}) — BAB/QMJ models will be skipped")
     df.to_csv(C.FF_GLOBAL_MONTHLY)
     print(f"[v2.factors] wrote {C.FF_GLOBAL_MONTHLY} ({len(df)} months, "
           f"{df.index[0].date()} -> {df.index[-1].date()}, cols: {', '.join(df.columns)})")

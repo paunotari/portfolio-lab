@@ -164,8 +164,12 @@ def tex_riskadj(rt: pd.DataFrame, al: pd.DataFrame) -> str:
     return _tabular("lrrrrrrrrrr", head, rows)
 
 
+TEX_ALPHA_MODELS = ["CAPM", "Carhart 4F", "4F + EM market", "FF5 + WML + EM",
+                    C.V2_PRIMARY_MODEL]
+
+
 def tex_alpha_vs_1n(al: pd.DataFrame, order: list[str]) -> str:
-    models = list(R.MODELS)
+    models = [m for m in TEX_ALPHA_MODELS if m in set(al.model)]
     a = al.set_index(["portfolio", "model"])
     rows = []
     for name in order:
@@ -179,10 +183,9 @@ def tex_alpha_vs_1n(al: pd.DataFrame, order: list[str]) -> str:
             s = f"{_num(100 * x.alpha_vs_1N_ann, 1, sign=True)} ({ps})"
             cells.append(f"\\textbf{{{s}}}" if x.p_vs_1N < 0.05 else s)
         rows.append(" & ".join([DISPLAY[name]] + cells))
-    head = "Contestant & " + " & ".join(
-        {"CAPM": "CAPM", "CAPM (ACWI)": "CAPM (ACWI)", "Carhart 4F": "Carhart 4F",
-         "4F + EM market": "4F + EM", "FF5 + WML": "FF5 + WML",
-         "FF5 + WML + EM": "FF5 + WML + EM"}[m] for m in models)
+    short = {"CAPM": "CAPM", "Carhart 4F": "Carhart 4F", "4F + EM market": "4F + EM",
+             "FF5 + WML + EM": "FF5 + WML + EM", C.V2_PRIMARY_MODEL: "P (primary)"}
+    head = "Contestant & " + " & ".join(short[m] for m in models)
     return _tabular("l" + "r" * len(models), head, rows)
 
 
@@ -201,7 +204,7 @@ def tex_loadings(al: pd.DataFrame, order: list[str]) -> str:
 
 
 def tex_warmup(runs: dict, races: dict, sub: pd.DataFrame, powers: dict, order: list[str]) -> str:
-    ws = sorted(runs, reverse=True)                                       # 120, 80, 60
+    ws = [w for w in (120, 80, 60) if w in runs]
     g = sub[sub.warmup == min(ws)].set_index("portfolio")["gfc_return"]
     rows = []
     for name in order:
@@ -289,149 +292,205 @@ def _md(df: pd.DataFrame) -> str:
     return "\n".join(lines)
 
 
+EXPANDING = (120, 80, 60, 36)                     # warmups (expanding windows)
+ROLLING = [(120, w) for w in C.V2_ROLLING_WINDOWS] + [(60, 60)]   # (warmup, window)
+
+
+def _cell(df, name, col):
+    return float(df.set_index("portfolio").loc[name, col])
+
+
+def gfc_out_test(monthly: pd.DataFrame, names: list[str]) -> pd.DataFrame:
+    """Sharpe test vs 1/N with the 2007-11 -> 2009-02 crisis months removed (round-2 F5)."""
+    ex = R.excess_returns(monthly)
+    keep = ~((ex.index >= GFC[0]) & (ex.index <= GFC[1]))
+    rows = []
+    for n in names:
+        t = I.sharpe_diff_test(ex.loc[keep, n], ex.loc[keep, "1/N"])
+        rows.append(dict(portfolio=n, months=int(keep.sum()), d_sharpe=t["delta"] * np.sqrt(12),
+                         p_boot=t["p_boot"]))
+    return pd.DataFrame(rows)
+
+
+def cer_table(monthly: pd.DataFrame, gammas=(1, 3, 5, 10)) -> pd.DataFrame:
+    """Certainty-equivalent excess return per contestant and its gap to 1/N (paired block
+    bootstrap p), DeMiguel et al.'s second metric (round-2 F8)."""
+    ex = R.excess_returns(monthly)
+    rows = []
+    for n in monthly.columns:
+        row = dict(portfolio=n)
+        d = pd.concat([ex[n], ex["1/N"]], axis=1).dropna()
+        x, y = d.iloc[:, 0].to_numpy(float), d.iloc[:, 1].to_numpy(float)
+        for g in gammas:
+            row[f"cer_{g}"] = R.cer(x, g)
+            if n != "1/N":
+                t = R.ratio_diff_test(x, y, x, f"cer{g}")
+                row[f"d_cer_{g}"], row[f"p_cer_{g}"] = t["delta"], t["p_boot"]
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
+def alpha_stability(monthly: pd.DataFrame, model: str, spans: dict,
+                    name: str = "Min-variance") -> pd.DataFrame:
+    fac = R.factor_frame(monthly)
+    y = monthly[name] - monthly["1/N"]
+    rows = []
+    for lab, (a, b) in spans.items():
+        yy = y.loc[a:b].dropna()
+        if len(yy) < 36:
+            continue
+        r = R.alpha(yy, fac.loc[yy.index], model)
+        rows.append(dict(span=lab, months=len(yy), alpha_ann=r["alpha_ann"], t=r["t_alpha"],
+                         p=r["p_alpha"]))
+    return pd.DataFrame(rows)
+
+
 def run(rerun: bool = False) -> dict:
     C.V2_DIR.mkdir(parents=True, exist_ok=True)
-    F.load()                                                    # fetch factors if absent
-    warmups = (C.V2_BASELINE_WARMUP,) + tuple(C.V2_WARMUPS)
-    runs = {w: (SW.run_one(w) if rerun else SW.load(w)) for w in warmups}
-    base = runs[C.V2_BASELINE_WARMUP]
+    F.load()
+    exp = {w: (SW.run_one(w) if rerun else SW.load(w)) for w in EXPANDING}
+    roll = {f"roll{win}_w{wu}": (SW.run_one(wu, win) if rerun else SW.load(wu, win))
+            for wu, win in ROLLING}
+    base = exp[120]
+    w0 = 120
+    P = C.V2_PRIMARY_MODEL
 
-    print("[v2] race tables (excess returns) ...")
-    races = {w: race_table(m) for w, m in runs.items()}
-    powers = {w: R.power_vs_bench(m) for w, m in runs.items()}
-    print("[v2] Sortino / Treynor / alphas ...")
-    ratios = {w: R.ratio_table(m) for w, m in runs.items()}
-    alphas = {w: R.alpha_table(m) for w, m in runs.items()}
-    sub = subperiods(runs)
-    infos = {w: R.information_table(m) for w, m in runs.items()}
-    feetabs = {w: FE.net_of_fees_table(w, m)[0] for w, m in runs.items()
-               if (C.V2_DIR / f"wf_weights_warmup{w}.csv").exists()}
+    print("[v2] races ...")
+    races = {w: race_table(m) for w, m in exp.items()}
+    races_roll = {k: race_table(m.loc["2009-01-01":] if k.endswith("w120") else m)
+                  for k, m in roll.items()}
+    powers = {w: R.power_vs_bench(m) for w, m in exp.items()}
+    print("[v2] ratios / alphas / information ...")
+    main = {"exp120": exp[120], "exp60": exp[60], "roll60_w120": roll["roll60_w120"]}
+    ratios = {k: R.ratio_table(m) for k, m in main.items()}
+    alphas = {k: R.alpha_table(m) for k, m in main.items()}
+    infos = {k: R.information_table(m) for k, m in main.items()}
+    sub = subperiods({w: exp[w] for w in (120, 80, 60, 36)})
     ex_base = R.excess_returns(base)
     fried = I.friedman_nemenyi(ex_base)
     pbo = I.pbo_cscv(ex_base)
     block_p = {b: I.sharpe_diff_test(ex_base["Min-variance"], ex_base["1/N"], block=b)["p_boot"]
                for b in (3, 6, 10)}
-    boot = {w: {m: R.alpha_block_bootstrap(runs[w]["Min-variance"] - runs[w]["1/N"],
-                                           R.factor_frame(runs[w]), m)
-                for m in R.MODELS} for w in warmups}
+    print("[v2] Romano-Wolf (primary, then the full family) ...")
+    models_all = R.available_models(R.factor_frame(base))
+    rw_primary = R.romano_wolf(base, [P])
+    rw_primary_roll = R.romano_wolf(roll["roll60_w120"], [P])
+    rw_family = R.romano_wolf(base, models_all)
+    print("[v2] CER, premia, GFC-out, stability, fees ...")
+    cer = cer_table(base)
+    premia = [FE.factor_premium_net(s) for s in ("2004-01-01", "2009-01-01", "2015-01-01")]
+    overlays = ["1/N + vol-target", "Min-variance + vol-target", "1/N + trend (Faber 10m SMA)",
+                "Dual momentum (Antonacci)", "Min-variance"]
+    gfc_out = gfc_out_test(exp[60], overlays)
+    stab = pd.concat([
+        alpha_stability(base, P, {"2009-2017": ("2009-01-01", "2017-12-31"),
+                                  "2018-2026": ("2018-01-01", "2026-12-31"),
+                                  "2009-2026": ("2009-01-01", "2026-12-31")}).assign(race="exp120"),
+        alpha_stability(exp[60], P, {"2004-2008": ("2004-01-01", "2008-12-31")}).assign(race="exp60")])
+    feetab = FE.net_of_fees_table(SW.tag(w0), base)[0]
     sleeves = D.sleeve_table()
     facs = D.factor_table(opt_index())
 
-    for w in warmups:
+    # ---- CSVs
+    for w in EXPANDING:
         races[w].to_csv(C.V2_DIR / f"race_excess_warmup{w}.csv", index=False)
-        ratios[w].to_csv(C.V2_DIR / f"ratios_warmup{w}.csv", index=False)
-        alphas[w].to_csv(C.V2_DIR / f"alphas_warmup{w}.csv", index=False)
-        infos[w].to_csv(C.V2_DIR / f"information_warmup{w}.csv", index=False)
-        if w in feetabs:
-            feetabs[w].to_csv(C.V2_DIR / f"net_of_fees_warmup{w}.csv", index=False)
-    sub.to_csv(C.V2_DIR / "subperiods.csv", index=False)
-    sleeves.to_csv(C.V2_DIR / "descriptives_sleeves.csv", index=False)
-    facs.to_csv(C.V2_DIR / "descriptives_factors.csv", index=False)
+    for k, t in races_roll.items():
+        t.to_csv(C.V2_DIR / f"race_excess_{k}.csv", index=False)
+    for k in main:
+        ratios[k].to_csv(C.V2_DIR / f"ratios_{k}.csv", index=False)
+        alphas[k].to_csv(C.V2_DIR / f"alphas_{k}.csv", index=False)
+        infos[k].to_csv(C.V2_DIR / f"information_{k}.csv", index=False)
+    for name, df in (("subperiods", sub), ("rw_primary_exp120", rw_primary),
+                     ("rw_primary_roll60", rw_primary_roll), ("rw_family_exp120", rw_family),
+                     ("cer_exp120", cer), ("gfc_out_exp60", gfc_out), ("alpha_stability_P", stab),
+                     ("net_of_fees_exp120", feetab), ("descriptives_sleeves", sleeves),
+                     ("descriptives_factors", facs), ("premia_net", pd.DataFrame(premia))):
+        df.to_csv(C.V2_DIR / f"{name}.csv", index=False)
 
-    # ---- generated LaTeX
-    order = list(races[C.V2_BASELINE_WARMUP].portfolio)
-    w0 = C.V2_BASELINE_WARMUP
+    # ---- generated LaTeX (the paper is rewritten later; tables stay current)
+    order = list(races[w0].portfolio)
     _write("tab_race_excess.tex", tex_race(races[w0]))
-    _write("tab_riskadj.tex", tex_riskadj(ratios[w0], alphas[w0]))
-    _write("tab_alpha_vs_1n.tex", tex_alpha_vs_1n(alphas[w0], order))
-    _write("tab_loadings.tex", tex_loadings(alphas[w0], order))
-    _write("tab_warmup.tex", tex_warmup(runs, races, sub, powers, order))
+    _write("tab_riskadj.tex", tex_riskadj(ratios["exp120"], alphas["exp120"]))
+    _write("tab_alpha_vs_1n.tex", tex_alpha_vs_1n(alphas["exp120"], order))
+    _write("tab_loadings.tex", tex_loadings(alphas["exp120"], order))
+    _write("tab_warmup.tex", tex_warmup(exp, races, sub, powers, order))
     _write("tab_descriptives.tex", tex_descriptives(sleeves))
-    _write("tab_active.tex", tex_active(infos[w0], order))
-    if w0 in feetabs:
-        _write("tab_fees.tex", tex_fees(feetabs[w0]))
+    _write("tab_active.tex", tex_active(infos["exp120"], order))
+    _write("tab_fees.tex", tex_fees(feetab))
     _write("tab_factors.tex", tex_factors(facs))
 
-    # ---- the numbers the prose quotes
-    def pick(df, name, col):
-        return float(df.set_index("portfolio").loc[name, col])
-    a0 = alphas[w0].set_index(["portfolio", "model"])
+    # ---- numbers
+    def recs(df):
+        return json.loads(df.to_json(orient="records"))
+    mv = "Min-variance"
     nums = dict(
-        oos={w: dict(start=f"{runs[w].index[0]:%Y-%m}", end=f"{runs[w].index[-1]:%Y-%m}",
-                     months=len(runs[w])) for w in warmups},
-        minvar_vs_1n={w: dict(sharpe_mv=pick(races[w], "Min-variance", "sharpe"),
-                              sharpe_1n=pick(races[w], "1/N", "sharpe"),
-                              d_sharpe=pick(races[w], "Min-variance", "d_sharpe"),
-                              p=pick(races[w], "Min-variance", "p_boot"),
-                              power=powers[w]["power_at_observed"], mdes=powers[w]["mdes_ann"],
-                              p_sortino=pick(ratios[w], "Min-variance", "p_sortino"),
-                              p_treynor=pick(ratios[w], "Min-variance", "p_treynor"),
-                              alpha_capm_vs_1n=float(alphas[w].set_index(["portfolio", "model"])
-                                                     .loc[("Min-variance", "CAPM"), "alpha_vs_1N_ann"]),
-                              p_alpha_capm_vs_1n=float(alphas[w].set_index(["portfolio", "model"])
-                                                       .loc[("Min-variance", "CAPM"), "p_vs_1N"]),
-                              alpha_4f_vs_1n=float(alphas[w].set_index(["portfolio", "model"])
-                                                   .loc[("Min-variance", "Carhart 4F"), "alpha_vs_1N_ann"]),
-                              p_alpha_4f_vs_1n=float(alphas[w].set_index(["portfolio", "model"])
-                                                     .loc[("Min-variance", "Carhart 4F"), "p_vs_1N"]))
-                      for w in warmups},
-        significant_vs_1n={w: {
-            "sharpe": races[w].query("p_boot < 0.05").portfolio.tolist(),
-            "sortino": ratios[w].query("p_sortino < 0.05").portfolio.tolist(),
-            "treynor": ratios[w].query("p_treynor < 0.05").portfolio.tolist(),
-            **{f"alpha_{m}": alphas[w].query("model == @m and p_vs_1N < 0.05").portfolio.tolist()
-               for m in R.MODELS}} for w in warmups},
-        minvar_alpha_own={m: dict(alpha=float(a0.loc[("Min-variance", m), "alpha_ann"]),
-                                  t=float(a0.loc[("Min-variance", m), "t_alpha"]))
-                          for m in R.MODELS},
-        minvar_alpha_vs_1n_boot={w: {m: dict(alpha=v["alpha_ann"], p_boot=v["p_boot"])
-                                     for m, v in boot[w].items()} for w in warmups},
-        alpha_vs_1n_all_models={w: {m: {name: dict(alpha=float(r.alpha_vs_1N_ann), p=float(r.p_vs_1N))
-                                        for name, r in alphas[w].query("model == @m and portfolio != '1/N'")
-                                        .set_index("portfolio").iterrows()}
-                                    for m in R.MODELS} for w in warmups},
-        information={w: {r.portfolio: {k: (None if pd.isna(v) else float(v))
-                                       for k, v in r._asdict().items() if k != "portfolio"}
-                         for r in infos[w].rename(columns=lambda c: c.replace(" ", "_"))
-                         .itertuples(index=False)} for w in warmups},
-        net_of_fees={w: {r.portfolio: {k: (None if pd.isna(v) else float(v))
-                                       for k, v in r._asdict().items() if k != "portfolio"}
-                         for r in feetabs[w].itertuples(index=False)} for w in feetabs},
-        minvar_rmw_loading=dict(b=float(a0.loc[("Min-variance", "FF5 + WML"), "b_dev_rmw"]),
-                                t=float(a0.loc[("Min-variance", "FF5 + WML"), "t_dev_rmw"])),
+        oos={str(w): dict(start=f"{m.index[0]:%Y-%m}", end=f"{m.index[-1]:%Y-%m}", months=len(m))
+             for w, m in exp.items()},
+        minvar_vs_1n_expanding={str(w): dict(sharpe_mv=_cell(races[w], mv, "sharpe"),
+                                             sharpe_1n=_cell(races[w], "1/N", "sharpe"),
+                                             p=_cell(races[w], mv, "p_boot"),
+                                             power=powers[w]["power_at_observed"],
+                                             mdes=powers[w]["mdes_ann"]) for w in EXPANDING},
+        minvar_vs_1n_rolling={k: dict(sharpe_mv=_cell(t, mv, "sharpe"),
+                                      sharpe_1n=_cell(t, "1/N", "sharpe"),
+                                      p=_cell(t, mv, "p_boot")) for k, t in races_roll.items()},
+        races_exp120=recs(races[w0]), races_exp60=recs(races[60]),
+        significant_sharpe={str(w): races[w].query("p_boot < 0.05").portfolio.tolist()
+                            for w in EXPANDING},
+        ratios_exp120=recs(ratios["exp120"]),
+        alphas_vs_1n_exp120=recs(alphas["exp120"][["portfolio", "model", "alpha_ann", "t_alpha",
+                                                   "alpha_vs_1N_ann", "t_vs_1N", "p_vs_1N"]]),
+        romano_wolf_primary_exp120=recs(rw_primary), romano_wolf_primary_roll60=recs(rw_primary_roll),
+        romano_wolf_family_min=recs(rw_family.sort_values("p_rw").head(8)),
+        alpha_stability_P=recs(stab), cer_exp120=recs(cer), premia_net=premia,
+        gfc_out_exp60=recs(gfc_out), information_exp120=recs(infos["exp120"]),
+        net_of_fees_exp120=recs(feetab),
         friedman_chi2=fried["chi2_friedman"], friedman_p=fried["p_friedman"],
         nemenyi_above_1n=(fried["table"].query("`differs_from_1/N` and `gap_to_1/N` < 0")
                           .portfolio.tolist() if "table" in fried else []),
         pbo=pbo["pbo"], block_p=block_p,
         gfc_return={k: float(v) for k, v in
-                    sub[sub.warmup == min(warmups)].set_index("portfolio").gfc_return.items()},
-        sharpe_2009plus={w: {k: float(v) for k, v in
-                             sub[sub.warmup == w].set_index("portfolio").sharpe_2009plus.items()}
-                         for w in warmups},
-        sharpe_pre2009={w: {k: float(v) for k, v in
-                            sub[sub.warmup == w].set_index("portfolio").sharpe_pre2009.items()}
-                        for w in warmups if w != C.V2_BASELINE_WARMUP},
+                    sub[sub.warmup == 60].set_index("portfolio").gfc_return.items()},
     )
     C.V2_PAPER_TABLES.mkdir(parents=True, exist_ok=True)
     (C.V2_PAPER_TABLES / "numbers.json").write_text(json.dumps(nums, indent=2, default=float))
 
     # ---- markdown report
-    L = ["# v2.0 report — the collaborator's review, measured", "",
-         "Generated by `src/portfolio_lab/v2/report.py`. Sharpe, Sortino, Treynor and alphas "
-         "on returns in EXCESS of the Ken French one-month T-bill (month-period aligned).", ""]
-    for w in warmups:
-        o = nums["oos"][w]
-        L += [f"## Warmup {w} — OOS {o['start']} -> {o['end']} ({o['months']} months)", "",
-              "### Race (excess Sharpe)", "", _md(races[w]), "",
-              f"Power of min-variance vs 1/N: {powers[w]['power_at_observed']:.0%}; "
-              f"MDES {powers[w]['mdes_ann']:.3f} annualized Sharpe.", "",
-              "### Sortino / Treynor", "", _md(ratios[w]), "",
-              "### Information / appraisal ratios vs 1/N", "", _md(infos[w]), "",
-              *(["### Net of illustrative ETF fees (config.V2_TER_BPS)", "", _md(feetabs[w]), ""]
-                if w in feetabs else []),
-              "### Alpha vs 1/N (all models)", "",
-              _md(alphas[w][["portfolio", "model", "alpha_ann", "t_alpha", "alpha_vs_1N_ann",
+    L = ["# v2.0 report — round 2 (after the adversarial review)", "",
+         "Generated by `src/portfolio_lab/v2/report.py`. Excess returns over the Ken French "
+         "T-bill (month-period aligned); overlay cash earns the T-bill; overlay signals fixed "
+         "(M48). Primary alpha model pre-registered (MILESTONES PR-2).", ""]
+    L += ["## Expanding races (warmup 120/80/60/36)", ""]
+    for w in EXPANDING:
+        o = nums["oos"][str(w)]
+        L += [f"### Warmup {w}: {o['start']} -> {o['end']} ({o['months']} months)", "",
+              _md(races[w]), "", f"Power min-var vs 1/N {powers[w]['power_at_observed']:.0%}, "
+              f"MDES {powers[w]['mdes_ann']:.3f}.", ""]
+    L += ["## Rolling estimation windows", ""]
+    for k, t in races_roll.items():
+        L += [f"### {k}", "", _md(t), ""]
+    L += ["## Romano-Wolf — primary model P, 120 expanding", "", _md(rw_primary), "",
+          "## Romano-Wolf — primary model P, rolling 60", "", _md(rw_primary_roll), "",
+          "## Romano-Wolf — full family (16 contestants x all models), 15 smallest", "",
+          _md(rw_family.sort_values("p_rw").head(15)), "",
+          "## Alpha of min-variance over 1/N under P, by span", "", _md(stab), "",
+          "## Certainty equivalent (exp120)", "", _md(cer), "",
+          "## Region-neutral factor premium net of the fee gap", "", _md(pd.DataFrame(premia)), "",
+          "## Overlays vs 1/N without the GFC months (exp60)", "", _md(gfc_out), ""]
+    for k in main:
+        L += [f"## Ratios — {k}", "", _md(ratios[k]), "",
+              f"## Information/appraisal — {k}", "", _md(infos[k]), "",
+              f"## Alphas vs 1/N — {k}", "",
+              _md(alphas[k][["portfolio", "model", "alpha_ann", "t_alpha", "alpha_vs_1N_ann",
                              "t_vs_1N", "p_vs_1N", "r2"]]), ""]
-    L += ["## Sub-periods and the GFC", "", _md(sub), "",
-          f"## Baseline extras (excess)", "",
+    L += ["## Net of fees (exp120)", "", _md(feetab), "",
+          "## Sub-periods and the GFC", "", _md(sub), "",
           f"- Friedman chi2 = {fried['chi2_friedman']:.1f} (p = {fried['p_friedman']:.2g}); "
-          f"Nemenyi above 1/N: {nums['nemenyi_above_1n'] or 'none'}",
-          f"- PBO (CSCV) = {pbo['pbo']:.1%}",
-          f"- min-var vs 1/N p by block length: {block_p}", "",
-          "## Descriptive statistics — sleeves", "", _md(sleeves), "",
-          "## Descriptive statistics — factors", "", _md(facs), ""]
+          f"Nemenyi above 1/N: {nums['nemenyi_above_1n'] or 'none'}; PBO = {pbo['pbo']:.1%}; "
+          f"block p {block_p}", "",
+          "## Descriptives", "", _md(sleeves), "", _md(facs), ""]
     C.V2_REPORT.write_text("\n".join(L))
-    print(f"[v2] wrote {C.V2_REPORT}, tables in {C.V2_PAPER_TABLES}")
+    print(f"[v2] wrote {C.V2_REPORT}")
     return nums
 
 

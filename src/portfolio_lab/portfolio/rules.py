@@ -62,24 +62,42 @@ def momentum_weights(rets_train: pd.DataFrame, k: int = None, lookback: int = No
     return w
 
 
-def vol_managed(gross: pd.Series, target_ann: float = None, window: int = None,
-                max_lev: float = None) -> tuple[pd.Series, pd.Series]:
-    """Apply the unlevered volatility-targeting overlay to a base portfolio's monthly return
-    series. Returns (managed_gross_returns, extra_turnover) where extra_turnover is the trading
-    the overlay itself generates (leverage changes), so the caller can charge it.
+def _align_cash(cash, index: pd.Index) -> pd.Series:
+    """The uninvested sleeve's monthly return on `index`: a scalar, or a Series matched by month
+    period (MSCI business month-ends vs Ken French calendar month-ends — caveat #20)."""
+    if np.isscalar(cash):
+        return pd.Series(float(cash), index=index)
+    c = pd.Series(cash).copy()
+    c.index = pd.DatetimeIndex(c.index).to_period("M")
+    out = c.reindex(pd.DatetimeIndex(index).to_period("M"))
+    out.index = index
+    return out.fillna(0.0)
 
-    leverage_t = min(max_lev, target_monthly_vol / trailing_vol_{t-1}); managed_t = lev_t * gross_t
-    (the (1 - lev) cash sleeve earns 0). Trailing vol uses only past months -> causal.
+
+def vol_managed(gross: pd.Series, target_ann: float = None, window: int = None,
+                max_lev: float = None, cash=0.0, history: pd.Series = None,
+                return_exposure: bool = False):
+    """Apply the unlevered volatility-targeting overlay to a base portfolio's monthly return
+    series. Returns (managed_gross_returns, extra_turnover[, exposure]) where extra_turnover is
+    the trading the overlay itself generates (leverage changes), so the caller can charge it.
+
+    leverage_t = min(max_lev, target_monthly_vol / trailing_vol_{t-1});
+    managed_t = lev_t * gross_t + (1 - lev_t) * cash_t. Trailing vol uses only past months ->
+    causal. `cash`: return of the uninvested part (0 = v1 convention; pass the T-bill whenever
+    performance is measured in excess of it, else the overlay is charged -rf on its cash).
+    `history`: the base portfolio's returns BEFORE `gross` starts (causal pre-sample), used
+    only to seed the trailing volatility so the first months are not left at full exposure.
     """
     target_ann = target_ann or C.OPTIMIZER_VOLTARGET_ANN
     window = window or C.OPTIMIZER_VOLTARGET_WINDOW
     max_lev = C.OPTIMIZER_VOLTARGET_MAXLEV if max_lev is None else max_lev
     target_m = target_ann / np.sqrt(12.0)
-    trailing = gross.shift(1).rolling(window, min_periods=max(3, window // 2)).std()
-    lev = (target_m / trailing).clip(upper=max_lev).fillna(max_lev)
-    managed = lev * gross
+    full = pd.concat([history, gross]) if history is not None else gross
+    trailing = full.shift(1).rolling(window, min_periods=max(3, window // 2)).std()
+    lev = (target_m / trailing).clip(upper=max_lev).fillna(max_lev).reindex(gross.index)
+    managed = lev * gross + (1.0 - lev) * _align_cash(cash, gross.index)
     extra_turnover = lev.diff().abs().fillna(0.0)          # |Δ exposure| = trading to re-lever
-    return managed, extra_turnover
+    return (managed, extra_turnover, lev) if return_exposure else (managed, extra_turnover)
 
 
 def gmv_combo_weights(rets_train: pd.DataFrame, sigma: np.ndarray = None
@@ -203,7 +221,8 @@ def brodie_weights(rets_train: pd.DataFrame, target: float = None) -> np.ndarray
 
 
 def trend_overlay(gross: pd.Series, mode: str = "sma", months: int = None,
-                  threshold=0.0) -> tuple[pd.Series, pd.Series]:
+                  threshold=0.0, cash=0.0, history: pd.Series = None,
+                  return_exposure: bool = False):
     """Binary trend-following overlay on a base portfolio's monthly gross return series.
     Returns (managed_gross, extra_turnover) — the same contract as ``vol_managed``.
 
@@ -228,15 +247,24 @@ def trend_overlay(gross: pd.Series, mode: str = "sma", months: int = None,
     """
     months = months or (C.OPTIMIZER_TREND_SMA_MONTHS if mode == "sma"
                         else C.OPTIMIZER_TREND_MOM_MONTHS)
+    # `history` = the base's causal pre-sample returns, so the signal exists from month one
+    full = pd.concat([history, gross]) if history is not None else gross
+    # A comparison with NaN returns False, not NaN (caveat #14): mask the months where the
+    # SMA / trailing return does not exist yet, or the overlay sits in cash for its whole
+    # warm-up — the v2-review bug (MILESTONES M48) that had both overlays out of the market
+    # for months 2-10 / 2-12 of every walk-forward.
     if mode == "sma":
-        level = (1.0 + gross).cumprod()
+        level = (1.0 + full).cumprod()
         sma = level.rolling(months, min_periods=months).mean()
-        signal = (level > sma).shift(1)                     # decided on last month's close
+        raw = (level > sma).where(sma.notna())
     elif mode == "absmom":
-        trail = (1.0 + gross).rolling(months).apply(np.prod, raw=True) - 1.0
-        thr = threshold if np.isscalar(threshold) else pd.Series(threshold).reindex(gross.index)
-        signal = (trail > thr).shift(1)
+        trail = (1.0 + full).rolling(months).apply(np.prod, raw=True) - 1.0
+        thr = threshold if np.isscalar(threshold) else pd.Series(threshold).reindex(full.index)
+        raw = (trail > thr).where(trail.notna())
     else:
         raise ValueError(f"unknown trend mode {mode!r} (sma | absmom)")
-    exposure = signal.fillna(True).astype(float)            # invested until the signal exists
-    return exposure * gross, exposure.diff().abs().fillna(0.0)
+    signal = raw.shift(1).reindex(gross.index)              # decided on last month's close
+    exposure = signal.astype(float).fillna(1.0)             # invested until the signal exists
+    managed = exposure * gross + (1.0 - exposure) * _align_cash(cash, gross.index)
+    turnover = exposure.diff().abs().fillna(0.0)
+    return (managed, turnover, exposure) if return_exposure else (managed, turnover)

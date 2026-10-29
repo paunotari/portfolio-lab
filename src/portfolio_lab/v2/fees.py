@@ -11,7 +11,7 @@ refits, and re-runs the comparisons on the net-of-fees returns:
   "naive factor menu versus the market" question the factor-ETF debate is usually about.
 
 Overlays (vol-target, trend) pay the base portfolio's fee only on the share they hold
-invested: exposure_t = overlay gross / base gross, cash pays nothing.
+invested (the exposure series the walk-forward records); cash pays nothing.
 """
 from __future__ import annotations
 
@@ -39,22 +39,24 @@ def sleeve_ter(sleeve: str) -> float:
     return bps / 1e4
 
 
-def fee_drag(warmup: int, monthly: pd.DataFrame) -> pd.DataFrame:
-    """Monthly fee (fraction) per contestant, aligned to `monthly`."""
-    W = pd.read_csv(C.V2_DIR / f"wf_weights_warmup{warmup}.csv", index_col=[0, 1],
-                    parse_dates=[1])
-    gross = pd.read_csv(C.V2_DIR / f"wf_gross_warmup{warmup}.csv", index_col=0, parse_dates=True)
+def fee_drag(tag: str, monthly: pd.DataFrame) -> pd.DataFrame:
+    """Monthly fee (fraction) per contestant, aligned to `monthly`. `tag` names the cached
+    walk-forward (e.g. 'warmup120', see v2/short_warmup.tag)."""
+    W = pd.read_csv(C.V2_DIR / f"wf_weights_{tag}.csv", index_col=[0, 1], parse_dates=[1])
+    expo_path = C.V2_DIR / f"wf_exposure_{tag}.csv"
+    expo_all = (pd.read_csv(expo_path, index_col=0, parse_dates=True)
+                if expo_path.exists() else None)
     out = pd.DataFrame(index=monthly.index)
     for name in W.index.get_level_values(0).unique():
         w = W.loc[name].dropna(axis=1, how="all").fillna(0.0)
         ter = pd.Series({c: sleeve_ter(c) for c in w.columns})
         annual = (w * ter).sum(axis=1)                      # fee rate per refit interval
         out[name] = annual.reindex(monthly.index, method="ffill") / 12.0
-    for ov, base in OVERLAY_BASE.items():
+    for ov, base in OVERLAY_BASE.items():               # overlays pay on invested exposure only
         if ov in monthly.columns and base in out.columns:
-            g = gross[base].reindex(monthly.index)
-            expo = (gross[ov].reindex(monthly.index) / g.where(g.abs() > 1e-12)).ffill().fillna(1.0)
-            out[ov] = expo.clip(0.0, 1.0) * out[base]
+            expo = (expo_all[ov].reindex(monthly.index).fillna(1.0)
+                    if expo_all is not None and ov in expo_all else 1.0)
+            out[ov] = expo * out[base]
     return out[monthly.columns]
 
 
@@ -67,10 +69,28 @@ def acwi_benchmark(index: pd.DatetimeIndex) -> pd.Series:
     return r - sleeve_ter("ACWI | Reference") / 12.0
 
 
-def net_of_fees_table(warmup: int, monthly: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+def factor_premium_net(start: str, fee_gap: float = None) -> dict:
+    """Region-neutral factor premium net of the fee difference (round-2 review, F9): in each
+    region, equal-weight its factor sleeves minus its own Reference sleeve, minus the TER gap
+    between factor and plain ETFs; pooled across regions in equal weight. Newey-West t."""
+    from portfolio_lab.portfolio import optimizer as opt
+    rets = opt.load_returns().loc[start:]
+    gap = (C.V2_TER_BPS["factor"] - C.V2_TER_BPS["Reference"]) / 1e4 if fee_gap is None else fee_gap
+    spreads = []
+    for reg in sorted({c.split(" | ")[0] for c in rets.columns}):
+        f = [c for c in rets.columns if c.startswith(reg + " | ") and not c.endswith("Reference")]
+        if f:
+            spreads.append(rets[f].mean(axis=1) - rets[f"{reg} | Reference"] - gap / 12)
+    x = pd.concat(spreads, axis=1).mean(axis=1).to_numpy(float)
+    h = R.hac_ols(x, np.empty((len(x), 0)))
+    return dict(start=start, months=len(x), premium_ann=float(x.mean() * 12),
+                t=float(h["t"][0]), p=float(h["p"][0]))
+
+
+def net_of_fees_table(tag: str, monthly: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     """(table, net monthly returns). Columns: average TER, Sharpe net of fees (excess), its gap
     and p against 1/N, information ratio against 1/N and against the plain ACWI ETF."""
-    fees = fee_drag(warmup, monthly)
+    fees = fee_drag(tag, monthly)
     net = monthly - fees
     acwi = acwi_benchmark(monthly.index)
     fac = R.factor_frame(monthly)

@@ -421,6 +421,29 @@ def test_trend_overlay_is_causal_binary_and_sits_out_bears():
     assert np.allclose(a.iloc[:-1].fillna(0), b.iloc[:-1].fillna(0)), "overlay peeked ahead"
 
 
+def test_trend_overlay_invested_until_signal_exists_and_cash_earns_rate():
+    """Regression test for M48: a NaN SMA / trailing return compared with > gives False, not
+    NaN, which parked both trend overlays in cash for months 2-10 / 2-12 of every walk-forward.
+    The overlay must be invested until its signal exists, seedable from causal pre-sample
+    history, and its uninvested part must earn the cash rate it is given."""
+    import pandas as pd
+    from portfolio_lab.portfolio import rules
+    idx = pd.date_range("2009-01-31", periods=30, freq="ME")
+    up = pd.Series(0.01, index=idx)
+    for mode in ("sma", "absmom"):
+        _, _, expo = rules.trend_overlay(up, mode=mode, return_exposure=True)
+        assert (expo == 1.0).all(), f"{mode}: a steadily rising base must never be in cash"
+    hist = pd.Series(-0.03, index=pd.date_range("2008-01-31", periods=12, freq="ME"))
+    _, _, expo = rules.trend_overlay(up, mode="absmom", history=hist, return_exposure=True)
+    assert expo.iloc[0] == 0.0, "a falling pre-sample history must switch the gate off at once"
+    down = pd.Series(-0.02, index=idx)
+    managed, _, expo = rules.trend_overlay(down, mode="sma", cash=0.003, return_exposure=True)
+    out = expo == 0.0
+    assert out.any() and np.allclose(managed[out], 0.003), "cash must earn the given rate"
+    m2, _, lev = rules.vol_managed(down * 5, cash=0.003, return_exposure=True)
+    assert np.allclose(m2, lev * down * 5 + (1 - lev) * 0.003), "vol-target cash must earn rf"
+
+
 def test_nonlinear_shrinkage_recovers_a_known_identity():
     """LW-2020 analytical nonlinear shrinkage must beat the sample covariance when the truth is
     known, and must dispatch through the config switch like the linear variants."""

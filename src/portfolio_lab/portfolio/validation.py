@@ -105,15 +105,41 @@ def _drop_region(rets: pd.DataFrame, region: str) -> pd.DataFrame:
     return rets[keep]
 
 
+def _cash_series() -> pd.Series | float:
+    """The T-bill (Ken French rf) that overlay cash earns; 0.0 if the factor file is absent."""
+    if not C.FF_FACTORS_MONTHLY.exists():
+        print("[validation] WARN no ff_factors_monthly.csv — overlay cash earns 0")
+        return 0.0
+    return pd.read_csv(C.FF_FACTORS_MONTHLY, index_col=0, parse_dates=True)["rf"].dropna()
+
+
+def _base_history(name: str, rets: pd.DataFrame, t: int, lookback: int = 12) -> pd.Series:
+    """Causal pre-sample returns of an overlay's base portfolio over the `lookback` months
+    before the first out-of-sample month `t`, so trend/vol signals exist from month one. Each
+    base is formed exactly as the contestant would have been, using data before the window."""
+    pre = rets.iloc[max(0, t - lookback):t]
+    if name == "1/N":
+        return pre.mean(axis=1)
+    fit = rets.iloc[:max(1, t - lookback)]
+    if name.startswith("Momentum"):
+        w = rules.momentum_weights(fit)
+    elif name == "Min-variance":
+        w = opt.build_inputs(fit)["anchors"]["Min-variance"]
+    else:
+        return None
+    return pd.Series(pre.values @ w, index=pre.index)
+
+
 def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
-                 seed: int = None, drop_region: str = None, rets: pd.DataFrame = None
-                 ) -> tuple[pd.DataFrame, dict, pd.DataFrame]:
+                 seed: int = None, drop_region: str = None, rets: pd.DataFrame = None,
+                 window: int = None) -> tuple[pd.DataFrame, dict, pd.DataFrame]:
     """Expanding-window backtest. Returns (summary DataFrame, dict, monthly OOS returns
     DataFrame — one column per contestant, used by portfolio/visualize.py for the cumulative
     comparison curves). drop_region: run on the menu WITHOUT that region's sleeves (the
     leave-one-region-out probe — M12). rets: run on a CUSTOM returns universe instead of the
     MSCI menu (the FF-international confirmatory test — M16); the all-weather contestant is
-    skipped there, its extended universe being MSCI-specific."""
+    skipped there, its extended universe being MSCI-specific. window: ROLLING estimation window
+    of that many months (None = expanding, the v1 protocol). Overlay cash earns the T-bill."""
     warmup = warmup or C.OPTIMIZER_WF_WARMUP_MONTHS
     refit = refit or C.OPTIMIZER_WF_REFIT_MONTHS
     n_starts = n_starts or C.OPTIMIZER_WF_N_STARTS
@@ -148,7 +174,7 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
     refit_dates = []
     diags: dict[str, dict] = {}                             # refit date -> rule diagnostics
     for t in range(warmup, T, refit):
-        inp = opt.build_inputs(rets.iloc[:t])
+        inp = opt.build_inputs(rets.iloc[max(0, t - window):t] if window else rets.iloc[:t])
         refit_dates.append(str(rets.index[t - 1].date()))
         oos = rets.iloc[t:t + refit].values
         diag: dict = {}
@@ -157,8 +183,10 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
         diags[refit_dates[-1]] = diag
         if rets_aw is not None:                             # flagship on its own universe
             train_aw = rets_aw.loc[:rets.index[t - 1]]
+            if window:
+                train_aw = train_aw.iloc[-window:]
             oos_aw = rets_aw.loc[rets.index[t]:rets.index[min(t + refit, T) - 1]]
-            if len(train_aw) >= warmup - 12 and len(oos_aw):
+            if len(train_aw) >= min(warmup, window or warmup) - 12 and len(oos_aw):
                 try:
                     inp_aw = opt.build_inputs(train_aw)
                     if inp_aw["mu_q"] is not None:
@@ -186,20 +214,30 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
 
     # volatility-targeting overlays on selected bases (their own leverage-change turnover is
     # charged on top of the base's rebalancing turnover)
+    # Overlay cash earns the T-bill (performance is measured in excess of it — M48), and each
+    # overlay's signal is seeded with its base's causal pre-sample history.
+    cash = _cash_series()
+    exposure: dict[str, pd.Series] = {}
     for base in VOLTARGET_BASES:
         if base not in gross:
             continue
-        managed, extra_turn = rules.vol_managed(gross[base])
+        managed, extra_turn, lev = rules.vol_managed(
+            gross[base], cash=cash, history=_base_history(base, rets, warmup),
+            return_exposure=True)
         vt = f"{base} + vol-target"
         gross[vt] = managed
         turn[vt] = turn[base] + extra_turn
+        exposure[vt] = lev
 
     for base, label, mode in TREND_OVERLAYS:               # Faber / Antonacci
         if base not in gross:
             continue
-        managed, extra_turn = rules.trend_overlay(gross[base], mode=mode)
+        managed, extra_turn, expo = rules.trend_overlay(
+            gross[base], mode=mode, cash=cash, history=_base_history(base, rets, warmup),
+            return_exposure=True)
         gross[label] = managed
         turn[label] = turn[base] + extra_turn
+        exposure[label] = expo
 
     cost = C.OPTIMIZER_TC_BPS / 10_000.0
     rows, monthly = [], {}
@@ -223,6 +261,7 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
                 # pre-cost pieces, so the sensitivity grid can re-net at any cost level
                 # without re-running the optimization (weights never depend on costs)
                 _gross=pd.DataFrame(gross), _turnover=pd.DataFrame(turn),
+                _exposure=pd.DataFrame(exposure), window=window,
                 # per-refit weights (overlays excluded — they scale a base), for attribution
                 _weights={n: pd.DataFrame({d: s for d, s in ws}).T for n, ws in whist.items()},
                 # per-refit rule diagnostics (currently the GMV combo's λ*)

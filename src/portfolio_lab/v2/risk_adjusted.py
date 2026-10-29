@@ -49,6 +49,15 @@ MODELS = {
     "FF5 + WML": ["dev_mkt_rf", "dev_smb", "dev_hml", "dev_rmw", "dev_cma", "dev_wml"],
     "FF5 + WML + EM": ["dev_mkt_rf", "dev_smb", "dev_hml", "dev_rmw", "dev_cma", "dev_wml",
                        "em_mkt_rf"],
+    # ---- round 2 (after the adversarial review; P is pre-registered, MILESTONES PR-2)
+    "FF5 + WML + EM + BAB": ["dev_mkt_rf", "dev_smb", "dev_hml", "dev_rmw", "dev_cma",
+                             "dev_wml", "em_mkt_rf", "aqr_bab"],
+    "Regional 5": [f"reg_{r}" for r in C.V2_PRIMARY_REGIONS],
+    "Regional 5 + FF5 styles + WML": [f"reg_{r}" for r in C.V2_PRIMARY_REGIONS]
+                                     + ["dev_smb", "dev_hml", "dev_rmw", "dev_cma", "dev_wml"],
+    C.V2_PRIMARY_MODEL: [f"reg_{r}" for r in C.V2_PRIMARY_REGIONS] + list(C.V2_PRIMARY_STYLES),
+    "P with QMJ for RMW+CMA": [f"reg_{r}" for r in C.V2_PRIMARY_REGIONS]
+                              + ["dev_smb", "dev_hml", "dev_wml", "aqr_bab", "aqr_qmj"],
 }
 PRIMARY_MODELS = ("CAPM", "Carhart 4F")
 
@@ -64,7 +73,17 @@ def factor_frame(monthly: pd.DataFrame) -> pd.DataFrame:
     acwi.index = acwi.index.to_period("M")
     acwi = acwi.reindex(monthly.index.to_period("M"))
     fac["acwi_mkt_rf"] = acwi.to_numpy() - fac["rf"].to_numpy()
+    # the menu's own regional markets (Reference sleeves of the disjoint regions), excess of rf
+    for reg in C.V2_PRIMARY_REGIONS:
+        r = lv[f"{reg} | Reference"].pct_change()
+        r.index = r.index.to_period("M")
+        fac[f"reg_{reg}"] = r.reindex(monthly.index.to_period("M")).to_numpy() - fac["rf"].to_numpy()
     return fac
+
+
+def available_models(fac: pd.DataFrame) -> list[str]:
+    """Models whose regressors are all present (AQR columns are optional)."""
+    return [m for m, cols in MODELS.items() if all(c in fac.columns for c in cols)]
 
 
 def excess_returns(monthly: pd.DataFrame, fac: pd.DataFrame = None) -> pd.DataFrame:
@@ -91,6 +110,12 @@ def sharpe(e: np.ndarray) -> float:
 def sortino(e: np.ndarray) -> float:
     dd = downside_deviation(e)
     return float(e.mean() * 12 / (dd * np.sqrt(12))) if dd > 0 else np.nan
+
+
+def cer(e: np.ndarray, gamma: float) -> float:
+    """Certainty-equivalent excess return (annualized) of a mean-variance investor with risk
+    aversion gamma: mean - gamma/2 * variance (DeMiguel et al. 2009's second metric)."""
+    return float((e.mean() - gamma / 2.0 * e.var(ddof=1)) * 12)
 
 
 def treynor(e: np.ndarray, m: np.ndarray) -> float:
@@ -158,7 +183,11 @@ def ratio_diff_test(x: np.ndarray, y: np.ndarray, m: np.ndarray, stat: str,
     T = len(x)
     b = block or C.OPTIMIZER_INFER_BLOCK or max(3, round(T ** (1 / 3)))
     seed = C.OPTIMIZER_SEED if seed is None else seed
-    f = {"sortino": lambda e, mm: sortino(e), "treynor": treynor}[stat]
+    if stat.startswith("cer"):
+        g = float(stat[3:])
+        f = lambda e, mm: cer(e, g)                                   # noqa: E731
+    else:
+        f = {"sortino": lambda e, mm: sortino(e), "treynor": treynor}[stat]
     obs = f(x, m) - f(y, m)
     draws = []
     for i in _block_indices(T, B, b, seed):
@@ -190,14 +219,15 @@ def alpha_block_bootstrap(y: pd.Series, fac: pd.DataFrame, model: str, B: int = 
     return dict(model=model, alpha_ann=a0 * 12, p_boot=float(p), block=b, B=len(draws))
 
 
-def rolling_ahead_share(active: pd.Series, months: int) -> float:
-    """Share of rolling windows of `months` in which the cumulative active return is positive.
-    Overlapping windows are not independent observations — descriptive, never a test."""
-    a = active.dropna()
-    if len(a) < months:
+def rolling_ahead_share(x: pd.Series, b: pd.Series, months: int) -> float:
+    """Share of rolling windows of `months` in which strategy x's cumulative return beats
+    benchmark b's. Overlapping windows are not independent observations — descriptive only."""
+    d = pd.concat([x, b], axis=1).dropna()
+    if len(d) < months:
         return np.nan
-    roll = np.log1p(a).rolling(months).sum().dropna()
-    return float((roll > 0).mean())
+    cx = np.log1p(d.iloc[:, 0]).rolling(months).sum()
+    cb = np.log1p(d.iloc[:, 1]).rolling(months).sum()
+    return float((cx - cb).dropna().gt(0).mean())
 
 
 def information_table(monthly: pd.DataFrame, bench: str = BENCH,
@@ -232,9 +262,71 @@ def information_table(monthly: pd.DataFrame, bench: str = BENCH,
             resid = d["y"].to_numpy(float) - Z @ r["coef"]
             row["appraisal_vs_1N_4FEM"] = float(r["coef"][0] * 12 / (resid.std(ddof=Z.shape[1]) * np.sqrt(12)))
             for w in windows:
-                row[f"ahead_{w}m"] = rolling_ahead_share(act, w)
+                row[f"ahead_{w}m"] = rolling_ahead_share(monthly[name], monthly[bench], w)
         rows.append(row)
     return pd.DataFrame(rows)
+
+
+def _intercept_t_matrix(Y: np.ndarray, Z: np.ndarray, lags: int) -> tuple[np.ndarray, np.ndarray]:
+    """Vectorized OLS intercepts and Newey-West t-statistics for many dependent variables
+    sharing one regressor matrix Z (T x k, first column ones). Identical to hac_ols's
+    intercept: with a = (Z'Z)^-1 e0, the intercept's influence is psi_t = (Z_t a) u_t."""
+    ZtZ_inv = np.linalg.inv(Z.T @ Z)
+    Bc = ZtZ_inv @ Z.T @ Y
+    U = Y - Z @ Bc
+    h = Z @ ZtZ_inv[:, 0]
+    P = h[:, None] * U
+    var = (P ** 2).sum(axis=0)
+    for j in range(1, lags + 1):
+        var += 2 * (1 - j / (lags + 1)) * (P[j:] * P[:-j]).sum(axis=0)
+    return Bc[0], np.sqrt(var)
+
+
+def romano_wolf(monthly: pd.DataFrame, models: list[str], bench: str = BENCH,
+                B: int = None, block: int = None, seed: int = None) -> pd.DataFrame:
+    """Romano-Wolf step-down family-wise p-values for alpha-over-1/N across every
+    (contestant, model) cell in `models` — the studentized max-|t| circular block bootstrap:
+    months (returns + factors) are resampled in blocks, every cell's t is recentred on its
+    full-sample alpha, and cell k's adjusted p is the share of replicates whose max |t*| over
+    the cells not yet rejected reaches |t_k| (monotonized)."""
+    B = B or C.V2_RW_B
+    b = block or C.V2_RW_BLOCK
+    seed = C.OPTIMIZER_SEED if seed is None else seed
+    fac = factor_frame(monthly)
+    names = [c for c in monthly.columns if c != bench]
+    D = monthly[names].sub(monthly[bench], axis=0)
+    cells, alphas, ts, Ys, Zs = [], [], [], [], []
+    for m in models:
+        d = pd.concat([D, fac[MODELS[m]]], axis=1).dropna()
+        Y = d[names].to_numpy(float)
+        Z = np.column_stack([np.ones(len(d)), d[MODELS[m]].to_numpy(float)])
+        a, se = _intercept_t_matrix(Y, Z, nw_lags(len(d)))
+        t = a / se
+        cells += [(n, m) for n in names]
+        alphas.append(a); ts.append(t); Ys.append(Y); Zs.append(Z)
+    T = min(len(Y) for Y in Ys)
+    Ys = [Y[-T:] for Y in Ys]; Zs = [Z[-T:] for Z in Zs]
+    a_obs = np.concatenate(alphas)
+    t_obs = np.concatenate(ts)
+    idx = _block_indices(T, B, b, seed)
+    tstar = np.empty((B, len(cells)))
+    for i, ix in enumerate(idx):
+        parts = []
+        for Y, Z, a0 in zip(Ys, Zs, alphas):
+            a_b, se_b = _intercept_t_matrix(Y[ix], Z[ix], nw_lags(T))
+            parts.append((a_b - a0) / se_b)
+        tstar[i] = np.abs(np.concatenate(parts))
+    order = np.argsort(-np.abs(t_obs))
+    p_adj = np.empty(len(cells))
+    prev = 0.0
+    for k, c in enumerate(order):
+        remaining = order[k:]
+        mx = np.nanmax(tstar[:, remaining], axis=1)
+        p = (1 + np.sum(mx >= abs(t_obs[c]))) / (B + 1)
+        prev = max(prev, p)
+        p_adj[c] = prev
+    return pd.DataFrame({"portfolio": [c[0] for c in cells], "model": [c[1] for c in cells],
+                         "alpha_vs_1N_ann": a_obs * 12, "t": t_obs, "p_rw": p_adj})
 
 
 # ------------------------------------------------------------------ the tables
@@ -268,7 +360,7 @@ def alpha_table(monthly: pd.DataFrame, bench: str = BENCH, models=None) -> pd.Da
     fac = factor_frame(monthly)
     ex = excess_returns(monthly, fac)
     rows = []
-    for model in models or MODELS:
+    for model in models or available_models(fac):
         for name in monthly.columns:
             own = alpha(ex[name], fac, model)
             row = dict(portfolio=name, **own)
