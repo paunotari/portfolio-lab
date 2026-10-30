@@ -139,10 +139,20 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       search (withdrawn → PR-2 pre-specification → M49/M54), the expanding-window tautology (→
       rolling windows, M50), the fee test confound (M52), anti-conservative HAC p (→ studentized
       bootstrap p + Romano-Wolf). Ledger PR-2, M48–M55.
-- [ ] **REWRITE paper_v2.tex from the ledger, not from the v2 draft** — the draft's abstract,
-      takeaway 2, §5.3, §5.4 and §10 rest on M44/M47 claims that are withdrawn. Headline now:
-      no rule resolvably beats 1/N in any window or measure; no robust losers either; the leader's
-      edge = profitability + low beta, CI ±1.6%/yr; tilt vs skill unresolved (M54).
+- [x] **Computation audit, 2026-10-30 (M56–M61)** — regime layer on 235/330 months (fixed), the
+      "menu decides" claim fails on 12 menus (M57), "three assets add more" false (M58), DR² vs
+      Sharpe apples to oranges → performance test (M59), one-sided/RW, post-hoc power, momentum
+      refit, nested 1/N, 90-year p-values (M60). paper_v2.tex rewritten from the ledger, with the
+      plain-language shrinkage explanation and worked table in §4.1.
+- [ ] **Owner decides: the thesis changed** (blue notes in the abstract and §6.2). Is the title
+      still right? Does the collaborator agree with framing M57 as a finding?
+- [ ] Extend the 12-menu test to the engines the optimization side uses (shorting, estimated
+      means): otherwise the reconciliation stays unproven rather than refuted. Possible paper 2.
+- [ ] Check `rules.gmv_combo_weights`' re-derived λ* against Yuan-Zhou's published eq. (29).
+- [ ] Audit `analytics/macro_link.py` for the same date join (exploratory, not in the paper).
+- [ ] Estimator: remove modern months from the long sample so they are not counted twice, and re-run
+      the gate on non-overlapping eras (M60 open point; expected to change nothing measurable).
+- [ ] Vintage (real-time) FRED replay of the classifier; dashboard not rebuilt since M56.
 - [ ] Investable benchmarks for the tilt question: MSCI World/ACWI Minimum Volatility and
       Quality indices (need data; would sharpen M54's "tilt vs skill").
 - [~] ~~Decide how much weight M44 gets~~ — superseded: M44 withdrawn (M49).

@@ -56,6 +56,7 @@ import numpy as np
 import pandas as pd
 
 from portfolio_lab import config as C
+from portfolio_lab.dates import align_months
 from portfolio_lab.analytics.engine import _perf_stats
 from portfolio_lab.portfolio import optimizer as opt
 
@@ -169,7 +170,7 @@ def _realized_floor(net: pd.Series, real_labels: pd.DataFrame) -> float:
     """Worst mean monthly OOS return across the four REAL macro quadrants (min 3 months)."""
     if real_labels is None:
         return np.nan
-    lab = real_labels.state.reindex(net.index)
+    lab = align_months(real_labels.state, net.index)
     means = net.groupby(lab).agg(["mean", "size"])
     means = means[means["size"] >= 3]["mean"]
     return float(means.min()) if len(means) else np.nan

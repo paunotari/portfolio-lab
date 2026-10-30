@@ -1319,3 +1319,101 @@ rolling-36 race the unconstrained GMV combination is outside its own domain (η 
 **Review status:** the adversarial reviewer's round-3 verdict (2026-10-29): "the research is now
 sound enough to rewrite the paper from the ledger"; residual items were wording only, applied
 here. **Status:** OOS modern + windows.
+
+---
+
+# v2.0 computation audit (2026-10-30)
+
+Run by `src/portfolio_lab/v2/audit.py` (outputs in `outputs/v2.0/audit/`). Asked by the owner:
+"what could a referee criticize, above all in the calculations?" Three of these change what the
+paper can say; M56 and M57 are the most serious findings of the project.
+
+## M56 — CORRECTION (v1 bug): the whole regime layer ran on 235 of 330 months
+**Claim (verified):** `optimizer._load_states` joined the macro-state labels (calendar month-ends)
+onto MSCI returns (business month-ends) by EXACT DATE, the M40/M42 mistake in the place it
+mattered most. 95 of 330 months (29%, those ending on a weekend) silently had no regime, in
+`_state_mean_returns`, the transition matrix, the outlook, Black-Litterman views, the maximin
+objective, the placebo floor, `macro_state.state_performance` / `factor_attribution`,
+`scenario` (cones and bootstrap blocks) and the betas of `long_history.msci_factor_prior` /
+`market_prior`. Fixed in one helper, `portfolio_lab/dates.py::align_months`; regression test
+`test_regime_labels_reach_every_month_of_the_menu`. Now: Reflation 101, Stagflation 82,
+Deflationary bust 76, Goldilocks 71 months.
+**Not affected:** 1/N, min-variance, ERC, HRP, HERC, Brodie, GMV, momentum (no labels), and the FF
+international universe (calendar-stamped, so its pre-registered Δ +0.002/+0.016 reproduces).
+**Changes (120 race, excess):** all-weather Sharpe 0.762 → **0.775**, vol 8.7% → **7.3%**, maxDD
+−18% → **−17%**; diversified maximin 0.757 → **0.722**; worst-quadrant maximin 0.644 → **0.669**.
+Equity stagflation floor +0.31 → **+0.08%/mo**, capped −0.09 (the "+0.31 to +0.02" of the paper was
+the bug's). Horizon cones: equity 5y P(loss) ~11% vs all-weather 0.9%; 20y 1.1% vs 0.0%; median
+CAGR 9.8% vs 6.4%. β 0.21 (value), 0.26 (momentum). **Consequences downstream:** M3 weakened
+(capped beats uncapped by +0.05, p 0.41, and flips without EM: "in every cell, +0.115 to +0.132"
+is withdrawn); the live-era statement "all-weather still second" is false (0.61, below 1/N 0.68).
+**Status:** corrected. Placebos re-run (M60).
+
+## M57 — THE CENTRAL CLAIM DOES NOT SURVIVE ITS OWN TEST: menu dispersion does not decide
+**Claim (measured):** the paper said optimization wins where there is dispersion and loses where
+there is not, "the disagreement in the literature concerns the opportunity set". M36 recorded this
+as a synthesis on two data points. Same rules (long-only, shrunk covariance, annual refit, 10 bps)
+on 12 menus, 1999–2026, and 6 US menus over 1963–2026 (`audit.job_menus`,
+`menus_reconciliation.csv`):
+- **1999–2026, min-variance's Sharpe gap to 1/N vs DR²: Spearman −0.69 (p 0.014), the WRONG sign.**
+  Largest gaps on the most redundant menus (FF 6/25/100 size-value: +0.17 to +0.25, p 0.03–0.04,
+  unadjusted, nested); the dispersed industry menus (DR² 1.7–2.0) +0.04 to +0.08, p > 0.57.
+- **1963–2026: Spearman +0.89 (p 0.02, n = 6, nested) but the gaps are ~0:** −0.03 to +0.05, every
+  p > 0.5. Right sign, no economic size.
+- ERC and HRP stay within ±0.05 of 1/N on every equity menu.
+**⇒ Consequence.** "The menu decides" / "both sides are right on their own data" / "the cause is
+the menu" are withdrawn as findings. We did NOT test the optimization side's engines (shorting,
+means), so the reconciliation is unproven rather than refuted. What holds: on no menu and era do
+these long-only rules resolvably beat 1/N durably; the recent low-vol edge appears across equity
+menus (2009-era), including redundant ones, and is gone over 1963–2026. M36 superseded.
+**Status:** measured; menus nested, n small.
+
+## M58 — "Three assets add more than 28 indices" is arithmetically false; the correct version is stronger
+**Claim (measured, `dr2_menus.csv`):** DR² at 1/N: 28 sleeves 1.31 (+0.31 over one index); adding
+Treasury, gold, cash 1.43 (**+0.12: less**, because 1/N gives them only 3/31 of the weight). The
+v1 abstract, takeaway and §6 were wrong. Correct and stronger: **ACWI + Treasury + gold + cash =
+2.78 at equal weight; one index + Treasury = 2.01**; at each menu's maximum, 1.46 (28 sleeves) vs
+**3.79** (28 + 3). Also: DR² at 1/N ≈ 1/ρ̄ (1.31 vs 1/0.756 = 1.32): it is the mean correlation
+restated, and it describes the weights as well as the menu (1.31 → 1.46 at max on the same menu).
+**Status:** measured.
+
+## M59 — The "menu effect vs method effect" contrast compared different quantities; performance test added
+**Claim (measured, `widen_*.csv`, Sharpe gap to the same baseline, same months):** v1 set a DR² gap
+(p 0.0002) against a Sharpe gap (p 0.055) and concluded the menu matters more; a DR² gap is nearly
+mechanical. Same yardstick: **2009–2026** ACWI + T + gold 1/N Sharpe 0.96 vs 28-sleeve 1/N 0.75
+(+0.22, **p 0.35**), vol 7.2% vs 15.3%, maxDD −16% vs −27%; 28 + T + gold 1/N +0.02 (p 0.07).
+**1972–2026 (653 months, 6 FF portfolios + proxies):** 1/N +0.07 (**p 0.017**), ERC +0.19
+(**p 0.032**), maxDD −22/−40% vs −54%. **⇒** Widening has a resolved Sharpe gain only at long
+horizon, on proxies; over 17 years it is large, unresolved, and clear only in risk. "The only move
+with measurable evidence" becomes "the move with the longest evidence". **Status:** measured.
+
+## M60 — Other referee objections, measured
+- **One-sided test (`sharpe_romano_wolf`):** min-variance p 0.025 one-sided, 0.065 two-sided, but
+  **0.47 family-wise** over 16 contestants; both tails: no rule resolvably better or worse.
+- **"Power at the observed gap" (M38's 56%) is a restatement of p** (Hoenig-Heisey 2001). Replaced
+  by power against gaps fixed in advance: +0.10 18%, +0.20 56%, +0.30 88%; MDES 0.27.
+- **Annual momentum is a straw man:** refit monthly 0.74, quarterly 0.76, annual 0.64 (1/N 0.75);
+  none significant. Dual momentum's base is still annual.
+- **Nested indices in 1/N:** on the 19 non-overlapping sleeves min-var 0.95 vs 1/N 0.73, p 0.064.
+- **90-year race in excess, with p:** HRP 0.56, 1/N 0.56, ERC 0.56, min-var 0.50 (p 0.21). "Falls to
+  last" holds as a point estimate only; "HRP and ERC edge 1/N" does not (p 0.53, 0.46).
+- **Stale figures corrected:** Treasuries −0.115 → −0.114 and gold −0.007 → **+0.047** against 1/N
+  (the old values used an exact-date join); best-worst CAGR spread 10.7 → **9.5** points; contestant
+  correlations "0.93–0.998" → 0.78–0.999 among equity rules without overlays.
+- **Open, cannot be settled here:** `rules.gmv_combo_weights` re-derives λ* rather than transcribing
+  Yuan-Zhou's eq. (29) — must be checked against the published formula before saying "adjudicated
+  with that challenger's mathematics". Vol-targeting uses 12 monthly observations, not Moreira-Muir's
+  daily realized variance. The estimator double-counts modern months (they are inside the long
+  sample) and its gate compares a sample with its own subset.
+**Status:** measured.
+
+## M61 — Regime layer re-tested on all 330 months: the negative results stand
+**Claim (measured after M56):** placebo, 40 rotations + 40 permutations, 12 cells: best p **0.24**
+(was 0.195), real labels below the scrambled mean in 7 of 12; 1/N identical across all runs (leak
+check). "The average random flagship had a better floor" is withdrawn: the real all-weather floor
+(−0.06%/mo) now beats the scrambled means (−0.10, −0.14), not significantly (p 0.44, 0.41).
+Estimator A/B, 20 paired replicates: Δ Sharpe +0.032, +0.031, −0.051, every effect ≤ 1.1 null sd,
+helps in 30–65% of replicates; virgin universe unchanged at Δ +0.002/+0.016. The estimator's
+real-arm effects are larger than before the fix (+0.005, +0.001, −0.004) and still inside the noise.
+**⇒ Consequence.** M32 and M35 stand on correct data. **See:** `outputs/v2.0/audit/placebo_summary.csv`,
+`estimator_ab_summary.csv`. **Status:** OOS modern; rf = 0 in the placebo, each rule against itself.

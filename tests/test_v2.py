@@ -116,20 +116,22 @@ def test_align_matches_business_to_calendar_month_ends():
 
 # ------------------------------------------------------------------ integration
 
-OVERLAYS = ["1/N + vol-target", "Min-variance + vol-target", "1/N + trend (Faber 10m SMA)",
-            "Dual momentum (Antonacci)"]
+# contestants the fixes do not touch: overlays changed in M48, label consumers in M56
+CHANGED_SINCE_V1 = ["1/N + vol-target", "Min-variance + vol-target", "1/N + trend (Faber 10m SMA)",
+                    "Dual momentum (Antonacci)", "Balanced sliders (5/5/5)",
+                    "Maximin (worst quadrant)", "Maximin (diversified)", "Maximin (all-weather div)"]
 
 
 def test_v2_baseline_reproduces_v1_walkforward():
-    """The v2 120-month baseline is the v1 race, recomputed: every contestant the M48 overlay
-    fix does not touch must match v1's frozen returns exactly (outputs/v1.0), or v1-vs-v2
-    comparisons compare two different races. The four overlays are expected to differ."""
+    """The v2 120-month baseline is the v1 race, recomputed: every contestant the M48/M56
+    fixes do not touch must match v1's frozen returns exactly (outputs/v1.0), or v1-vs-v2
+    comparisons compare two different races."""
     v1 = C.OUTPUT_DIR / "v1.0" / "optimizer" / "optimizer_walkforward_returns.csv"
     v2 = C.V2_DIR / f"wf_returns_warmup{C.V2_BASELINE_WARMUP}.csv"
     if not (v1.exists() and v2.exists()):
         return
     a = pd.read_csv(v1, index_col=0, parse_dates=True)
-    cols = [c for c in a.columns if c not in OVERLAYS]
+    cols = [c for c in a.columns if c not in CHANGED_SINCE_V1]
     b = pd.read_csv(v2, index_col=0, parse_dates=True)[cols]
     assert np.allclose(a[cols].to_numpy(), b.to_numpy(), equal_nan=True), "v2 baseline != v1 race"
 
@@ -146,6 +148,28 @@ def test_skipped_contestants_keep_their_own_dates():
         if s.isna().any():
             first_valid = s.first_valid_index()
             assert s.loc[first_valid:].notna().all(), f"{c}: gap after its first return (misdated)"
+
+
+def test_regime_labels_reach_every_month_of_the_menu():
+    """M56 regression: an exact-date join of calendar-stamped labels onto business-stamped MSCI
+    returns silently dropped 95 of 330 months from the whole regime layer."""
+    if not (C.LEVELS_WIDE.exists() and C.MACRO_STATE_MONTHLY.exists()):
+        return
+    from portfolio_lab.portfolio import optimizer as opt
+    r = opt.load_returns()
+    st = opt._load_states(r.index)
+    assert len(st) == len(r), f"labels on {len(st)} of {len(r)} months"
+    assert st.index.equals(r.index), "labels must carry the returns' own stamps"
+    means = opt._state_mean_returns(r, st)
+    assert means.groupby("state").n_months.first().sum() == len(r)
+
+
+def test_align_months_matches_by_month_not_by_date():
+    from portfolio_lab.dates import align_months, to_month_end
+    a = pd.Series([1.0, 2.0], index=pd.to_datetime(["2009-01-31", "2009-02-28"]))
+    idx = pd.to_datetime(["2009-01-30", "2009-02-27"])
+    assert list(align_months(a, idx)) == [1.0, 2.0] and list(align_months(a, idx).index) == list(idx)
+    assert list(to_month_end(pd.Series([1.0], index=idx[:1])).index) == [pd.Timestamp("2009-01-31")]
 
 
 def test_vectorized_intercept_t_matches_hac_ols():

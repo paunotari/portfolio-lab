@@ -28,6 +28,7 @@ import io
 import pandas as pd
 
 from portfolio_lab import config as C
+from portfolio_lab.dates import align_months
 from portfolio_lab.ingest.ff_factors import _ROW, _fetch_csv_lines
 
 _RENAME = {"Mkt-RF": "mkt_rf", "SMB": "smb", "HML": "hml", "RMW": "rmw", "CMA": "cma",
@@ -122,12 +123,7 @@ def load() -> pd.DataFrame:
 def align(frame: pd.DataFrame | pd.Series, factors: pd.DataFrame = None) -> pd.DataFrame:
     """Factor rows for the months of `frame`, matched on the month PERIOD and re-stamped
     with `frame`'s own index (see the module docstring for why an exact-date join is wrong)."""
-    f = load() if factors is None else factors
-    f = f.copy()
-    f.index = f.index.to_period("M")
-    out = f.reindex(frame.index.to_period("M"))
-    out.index = frame.index
-    return out
+    return align_months(load() if factors is None else factors, frame.index)
 
 
 if __name__ == "__main__":

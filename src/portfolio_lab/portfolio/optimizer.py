@@ -55,6 +55,7 @@ import pandas as pd
 from scipy.optimize import minimize
 
 from portfolio_lab import config as C
+from portfolio_lab.dates import align_months
 from portfolio_lab.analytics.engine import _perf_stats
 from portfolio_lab.portfolio import anchors, views as bl
 from portfolio_lab.portfolio.shrinkage import estimate_covariance
@@ -185,7 +186,8 @@ def _load_states(index: pd.DatetimeIndex = None) -> pd.DataFrame | None:
             print(f"[optimizer] WARN long-window states unavailable ({e}) — using the CSV")
     if C.OPTIMIZER_STATE_LAG_MONTHS:            # real-time discipline (M19): know t-k at t
         states = states.shift(C.OPTIMIZER_STATE_LAG_MONTHS).dropna(subset=["state"])
-    return states.reindex(index).dropna(subset=["state"]) if index is not None else states
+    # by MONTH, never by date: labels are stamped on calendar month-ends, MSCI on business ones
+    return align_months(states, index).dropna(subset=["state"]) if index is not None else states
 
 
 def _state_mean_returns(rets: pd.DataFrame, states: pd.DataFrame,
@@ -193,7 +195,7 @@ def _state_mean_returns(rets: pd.DataFrame, states: pd.DataFrame,
     """Long (state, series, mean_monthly_return, n_months) — per-quadrant pooled means,
     computable on any window (walk-forward reuses this on train slices)."""
     rows = []
-    for state, months in rets.index.groupby(states.state.reindex(rets.index)).items():
+    for state, months in rets.index.groupby(align_months(states.state, rets.index)).items():
         sub = rets.loc[months]
         if len(sub) < min_months:
             continue
@@ -283,8 +285,8 @@ def build_inputs(rets: pd.DataFrame = None, include_asset_classes: bool = False,
 
     mu_q, mu_q_obj, view_descs, outlook = None, None, [], None
     mu_bl = pi.copy()
-    states = _load_states(rets.index) if states is None else states.reindex(rets.index).dropna(
-        subset=["state"])
+    states = _load_states(rets.index) if states is None else align_months(
+        states, rets.index).dropna(subset=["state"])
     if states is not None and len(states) >= C.MACRO_MIN_OVERLAP_MONTHS:
         from portfolio_lab.analytics.macro_state import transition_matrix, quadrant_outlook
         perf_long = _state_mean_returns(rets, states)

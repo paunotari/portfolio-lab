@@ -254,7 +254,9 @@ def test_geo_cap_respected_and_costs_objective():
     res_g = O.optimize(maximin=True, geo_cap=cap, inputs=inp, n_starts=8)
     for zone, v in res_g["geo_exposure"].items():
         assert v <= cap + 1e-4, f"geo cap violated: {zone} = {v:.1%}"
-    worst = lambda r: min(r["per_quadrant_monthly"].values())
+    # on the objective actually maximized (the long-anchored means): the raw per-quadrant
+    # means reported in the output are a different object and need not respect this ordering
+    worst = lambda r: float((inp["mu_q_obj"].values @ r["w"]).min())
     assert worst(res_g) <= worst(res_u) + 1e-9, \
         "a constrained maximin cannot beat the unconstrained one in-sample"
     # infeasible cap (sum of caps < 100%) must raise, not silently relax

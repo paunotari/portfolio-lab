@@ -63,6 +63,7 @@ import numpy as np
 import pandas as pd
 
 from portfolio_lab import config as C
+from portfolio_lab.dates import align_months
 from portfolio_lab.analytics.macro_state import classify_states, transition_matrix, STATE_ORDER
 
 
@@ -88,7 +89,7 @@ def build_universe(include_asset_classes: bool = False) -> dict:
         aligned = ac.reindex(base.index.to_period("M"))
         aligned.index = base.index
         base = pd.concat([base, aligned], axis=1)
-    rets = base.reindex(states.index)
+    rets = align_months(base, states.index)      # by month: MSCI stamps business month-ends
     ok = rets.notna().all(axis=1)          # restrict to months where every series has a return
     rets, st = rets.loc[ok], states.state.loc[ok]
 

@@ -22,6 +22,7 @@ import pandas as pd
 from portfolio_lab import config as C
 from portfolio_lab.portfolio import inference as I
 from portfolio_lab.portfolio import rules
+from portfolio_lab.v2 import audit as AU
 from portfolio_lab.v2 import benchmarks as BM
 from portfolio_lab.v2 import descriptives as D
 from portfolio_lab.v2 import factors as F
@@ -205,6 +206,13 @@ def tex_loadings(al: pd.DataFrame, order: list[str]) -> str:
     return _tabular("lrrrrrrrrr", head, rows)
 
 
+def _power_at(pw: dict, gap: float) -> float:
+    """Design power against a gap fixed in advance, on the test's own HAC s.e."""
+    from scipy.stats import norm
+    se = float(pw["se"]) * np.sqrt(12)
+    return float(norm.cdf(gap / se - 1.96) + norm.cdf(-gap / se - 1.96))
+
+
 def tex_warmup(runs: dict, races: dict, sub: pd.DataFrame, powers: dict, order: list[str]) -> str:
     ws = [w for w in (120, 80, 60) if w in runs]
     g = sub[sub.warmup == min(ws)].set_index("portfolio")["gfc_return"]
@@ -220,8 +228,8 @@ def tex_warmup(runs: dict, races: dict, sub: pd.DataFrame, powers: dict, order: 
         f"\\multicolumn{{2}}{{r}}{{{runs[w].index[0]:%Y-%m}--{runs[w].index[-1]:%Y-%m}}}"
         for w in ws] + [""]),
         " & ".join(["Months"] + [f"\\multicolumn{{2}}{{r}}{{{len(runs[w])}}}" for w in ws] + [""]),
-        " & ".join(["Power, min-variance vs 1/N"] + [
-            f"\\multicolumn{{2}}{{r}}{{{100 * powers[w]['power_at_observed']:.0f}\\%}}"
+        " & ".join(["Power against a true gap of $+0.20$"] + [
+            f"\\multicolumn{{2}}{{r}}{{{100 * _power_at(powers[w], 0.20):.0f}\\%}}"
             for w in ws] + [""]),
         " & ".join(["MDES (annualized Sharpe)"] + [
             f"\\multicolumn{{2}}{{r}}{{{powers[w]['mdes_ann']:.2f}}}" for w in ws] + [""])]
@@ -264,6 +272,111 @@ def tex_fees(ft: pd.DataFrame) -> str:
                                 _p(getattr(r, "p_ir_vs_acwi", np.nan))]))
     head = ("Contestant & TER & Sharpe & $\\Delta$ vs 1/N & $p$ & IR vs 1/N & IR vs ACWI & $p$")
     return _tabular("lrrrrrrr", head, rows)
+
+
+def tex_menus(a: dict) -> str:
+    rows, prev = [], None
+    for r in a["menus_reconciliation"]:
+        if prev and r["era"] != prev:
+            rows.append("\\midrule")
+        prev = r["era"]
+        def cell(k):
+            d, pv = r[f"d_{k}"], r[f"p_{k}"]
+            c = f"{_num(d, 2, sign=True)} ({pv:.2f})"
+            return f"\\textbf{{{c}}}" if pv < 0.05 else c
+        rows.append(" & ".join([r["era"], r["menu"], str(r["n"]), _num(r["mean_corr"]), _num(r["dr2_1n"]),
+                                _num(r["dr2_max"]), _num(r["sharpe_1n"]), cell("Min-variance"),
+                                cell("ERC"), cell("HRP")]))
+    body = [("\\begin{tabular}{llrrrrrrrr}"), "\\toprule",
+            "Scored from & Menu & $N$ & $\\bar\\rho$ & $DR^2$ & max & 1/N & Min-var & ERC & HRP \\\\", "\\midrule"]
+    for x in rows:
+        body.append(x if x == "\\midrule" else x + " \\\\")
+    body += ["\\bottomrule", "\\end{tabular}", ""]
+    return "\n".join(body)
+
+
+def tex_dr2(a: dict) -> str:
+    rows = [" & ".join([r["menu"], str(r["n"]), _num(r["mean_corr"]), _num(r["dr2_1n"]), _num(r["dr2_max"])])
+            for r in a["dr2_menus"]]
+    return _tabular("lrrrr", "Menu & Holdings & Mean correlation & $DR^2$ at 1/N & $DR^2$ at maximum", rows)
+
+
+def tex_widen(a: dict) -> str:
+    def rows(key, keep):
+        t = {r["portfolio"]: r for r in a[key]}
+        out = []
+        for k in keep:
+            r = t[k]
+            name, rule = k.split(" | ")
+            out.append(" & ".join([name, rule, _num(r["sharpe"]), _pct(r["vol"]), f"${100 * r['max_dd']:.0f}$\\%",
+                                   _num(r.get("d_sharpe", np.nan) if r.get("d_sharpe") is not None else np.nan, sign=True),
+                                   _p(r["p_boot"] if r.get("p_boot") is not None else np.nan)]))
+        return out
+    a1 = rows("widen_modern", ["28 sleeves | 1/N", "ACWI alone | 1/N", "28 sleeves | Min-variance",
+                               "28 + T, gold | 1/N", "28 + T, gold | ERC", "ACWI + T, gold | 1/N",
+                               "ACWI + T, gold, cash | 1/N", "ACWI + T, gold | ERC"])
+    a2 = rows("widen_long", ["6 FF equity | 1/N", "6 FF equity | ERC", "6 FF + T, gold | 1/N", "6 FF + T, gold | ERC",
+                             "6 FF + T, gold, cash | 1/N", "6 FF + T, gold, cash | ERC"])
+    out = ["\\begin{tabular}{llrrrrr}", "\\toprule",
+           "Menu & Rule & Sharpe & Vol & maxDD & $\\Delta$ Sharpe & $p$ \\\\", "\\midrule",
+           "\\multicolumn{7}{l}{\\emph{Panel A: 2009--2026 (210 months), MSCI menu}} \\\\"]
+    out += [x + " \\\\" for x in a1]
+    out += ["\\midrule", "\\multicolumn{7}{l}{\\emph{Panel B: 1972--2026 (653 months), long proxy menu}} \\\\"]
+    out += [x + " \\\\" for x in a2] + ["\\bottomrule", "\\end{tabular}", ""]
+    return "\n".join(out)
+
+
+def tex_worked(a: dict) -> str:
+    rows = [" & ".join([r["factor"], r["state"], str(r["n_modern"]), str(r["m_long"]),
+                        "open" if r["gate_open"] else "closed", _num(r["modern_pct"], 2, sign=True),
+                        _num(r["long_mapped_pct"], 2, sign=True), f"{100 * r['weight_on_long']:.0f}\\%",
+                        _num(r["blended_pct"], 2, sign=True)])
+            for r in a["estimator_worked_example"]]
+    return _tabular("llrrlrrrr", "Factor & Macro state & $n$ & $m$ & Gate & Modern & Long, mapped & Weight on long & Final", rows)
+
+
+def tex_robust(a: dict, base: pd.DataFrame, race0: pd.DataFrame) -> str:
+    mv, aw, ne = "Min-variance", "Maximin (all-weather div)", "1/N"
+    r0 = race0.set_index("portfolio")
+    def line(label, one, m, m_p, w):
+        return " & ".join([label, _num(one), _num(m), _p(m_p), _num(w) if w is not None else "---"])
+    rows = [line("Baseline", r0.loc[ne, "sharpe"], r0.loc[mv, "sharpe"], r0.loc[mv, "p_boot"], r0.loc[aw, "sharpe"])]
+    g = pd.read_csv(C.V2_DIR / "wf_gross_warmup120.csv", index_col=0, parse_dates=True)
+    t = pd.read_csv(C.V2_DIR / "wf_turnover_warmup120.csv", index_col=0, parse_dates=True)
+    for bps in (0, 25):
+        net = g - bps / 1e4 * t
+        rc = race_table(net[list(base.columns)]).set_index("portfolio")
+        rows.append(line(f"Costs {bps} bps", rc.loc[ne, "sharpe"], rc.loc[mv, "sharpe"], rc.loc[mv, "p_boot"], rc.loc[aw, "sharpe"]))
+    names = [("refit6", "Refit every 6 months"), ("refit24", "Refit every 24 months"),
+             ("cov_identity", "Covariance: identity target"), ("cov_nonlinear", "Covariance: nonlinear shrinkage"),
+             ("caps_20_35", "Caps 20/35/35"), ("caps_30_45", "Caps 30/45/45"), ("lag2", "Macro labels lagged 2 months"),
+             ("disjoint", "19 non-overlapping sleeves"), ("loro_USA", "Without the USA"), ("loro_EM", "Without EM"),
+             ("loro_Japan", "Without Japan"), ("loro_Europe", "Without Europe"), ("ff_intl", "Virgin FF international universe")]
+    for k, lab in names:
+        x = a["races"].get(k)
+        if not x:
+            continue
+        w = x.get(aw, {}).get("sharpe")
+        rows.append(line(lab, x[ne]["sharpe"], x[mv]["sharpe"], x[mv]["p"], w))
+    return _tabular("lrrrr", "Variation & 1/N & Min-var & $p$ vs 1/N & All-weather", rows)
+
+
+def tex_placebo(a: dict) -> str | None:
+    if "placebo" not in a:
+        return None
+    d = pd.DataFrame(a["placebo"])
+    if set(d["mode"]) != {"circular", "iid"}:
+        return None
+    rows = []
+    for mt in sorted(d.metric.unique()):
+        c = d[(d.metric == mt) & (d["mode"] == "circular")].iloc[0]
+        i = d[(d.metric == mt) & (d["mode"] == "iid")].iloc[0]
+        name, kind = mt.split(" | ")
+        nm = DISPLAY.get(name, name)
+        fmt = (lambda v: _num(v)) if kind == "sharpe" else (lambda v: _num(100 * v, 2, sign=True))
+        rows.append(" & ".join([nm, "Sharpe" if kind == "sharpe" else "Floor (\\%/mo)", fmt(c.real),
+                                fmt(c.placebo_mean), f"{c.p_perm:.2f}", fmt(i.placebo_mean), f"{i.p_perm:.2f}"]))
+    return _tabular("llrrrrr", "Contestant & Metric & Real & Rotated mean & $p$ & Shuffled mean & $p$", rows)
 
 
 def tex_descriptives(st: pd.DataFrame) -> str:
@@ -373,6 +486,14 @@ def run(rerun: bool = False) -> dict:
     pbo = I.pbo_cscv(ex_base)
     block_p = {b: I.sharpe_diff_test(ex_base["Min-variance"], ex_base["1/N"], block=b)["p_boot"]
                for b in (3, 6, 10)}
+    print("[v2] Romano-Wolf on Sharpe differences ...")
+    sharpe_rw = R.sharpe_romano_wolf(base)
+    se_mv = float(sharpe_rw.set_index("portfolio").loc["Min-variance", "se_ann"])
+    # Power against effects fixed IN ADVANCE. "Power at the observed gap" is a restatement of
+    # the p-value (Hoenig-Heisey 2001), so it is not reported as a property of the design.
+    from scipy.stats import norm
+    design_power = {str(d): float(norm.cdf(d / se_mv - 1.96) + norm.cdf(-d / se_mv - 1.96))
+                    for d in (0.05, 0.10, 0.20, 0.30)}
     print("[v2] Romano-Wolf (primary, then the full family) ...")
     models_all = R.available_models(R.factor_frame(base))
     rw_primary = R.romano_wolf(base, [P])
@@ -446,7 +567,7 @@ def run(rerun: bool = False) -> dict:
                      ("descriptives_factors", facs), ("premia_net", pd.DataFrame(premia)),
                      ("alpha_decomposition_P_minvar", decomp), ("naive_tilts_exp120", tilt_tabs["exp120"]),
                      ("naive_tilts_exp60", tilt_tabs["exp60"]), ("dual_momentum_gate", dm_tab),
-                     ("race_live_2015", live)):
+                     ("race_live_2015", live), ("sharpe_romano_wolf_exp120", sharpe_rw)):
         df.to_csv(C.V2_DIR / f"{name}.csv", index=False)
 
     # ---- generated LaTeX (the paper is rewritten later; tables stay current)
@@ -460,6 +581,15 @@ def run(rerun: bool = False) -> dict:
     _write("tab_active.tex", tex_active(infos["exp120"], order))
     _write("tab_fees.tex", tex_fees(feetab))
     _write("tab_factors.tex", tex_factors(facs))
+    aud = AU.collect()
+    if "menus_reconciliation" in aud:
+        _write("tab_menus.tex", tex_menus(aud))
+        _write("tab_dr2.tex", tex_dr2(aud))
+        _write("tab_widen.tex", tex_widen(aud))
+        _write("tab_worked.tex", tex_worked(aud))
+        _write("tab_robust.tex", tex_robust(aud, base, races[w0]))
+    if tex_placebo(aud):
+        _write("tab_placebo.tex", tex_placebo(aud))
 
     # ---- numbers
     def recs(df):
@@ -484,6 +614,8 @@ def run(rerun: bool = False) -> dict:
                                                    "alpha_vs_1N_ann", "t_vs_1N", "p_vs_1N"]]),
         romano_wolf_primary_exp120=recs(rw_primary), romano_wolf_primary_roll60=recs(rw_primary_roll),
         romano_wolf_family_min=recs(rw_family.sort_values("p_rw").head(8)),
+        sharpe_romano_wolf=recs(sharpe_rw), design_power_minvar=design_power,
+        audit=AU.collect(),
         alpha_stability_P=recs(stab), cer_exp120=recs(cer), premia_net=premia,
         alpha_decomposition_P_minvar=recs(decomp),
         minvar_alpha_P=recs(rw_family.query("portfolio == 'Min-variance' and model == @P")),
@@ -518,7 +650,9 @@ def run(rerun: bool = False) -> dict:
     L += ["## Rolling estimation windows", ""]
     for k, t in races_roll.items():
         L += [f"### {k}", "", _md(t), ""]
-    L += ["## Romano-Wolf — primary model P, 120 expanding", "", _md(rw_primary), "",
+    L += ["## Sharpe differences: one-sided, two-sided and Romano-Wolf", "", _md(sharpe_rw), "",
+          f"Power of the headline test against effects fixed in advance: {design_power}", "",
+          "## Romano-Wolf — primary model P, 120 expanding", "", _md(rw_primary), "",
           "## Romano-Wolf — primary model P, rolling 60", "", _md(rw_primary_roll), "",
           "## Romano-Wolf — full family (16 contestants x all models), 15 smallest", "",
           _md(rw_family.sort_values("p_rw").head(15)), "",

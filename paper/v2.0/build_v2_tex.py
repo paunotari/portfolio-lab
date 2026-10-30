@@ -73,7 +73,7 @@ August 2026""", r"""Long-Only Equity Factor Indices}\\[24pt]
 \quita{August 2026} \nuevo{October 2026 --- version 2.0, working draft}""")
 
 rep(r"""critical-findings ledger (M1--M41), names the module""",
-    r"""critical-findings ledger (\quita{M1--M41}\nuevo{M1--M47}), names the module""")
+    r"""critical-findings ledger (\quita{M1--M41}\nuevo{M1--M60}), names the module""")
 
 rep(r"""\href{https://github.com/paunotari/portfolio-lab}{github.com/paunotari/portfolio-lab}.}
 
@@ -129,22 +129,18 @@ For a retail investor, widening the menu is the only move with measurable eviden
 \end{quitado}
 
 \begin{nuevotexto}
-For twenty years the argument over whether portfolio optimization beats equal weighting has
-gone unresolved. We show that both sides are right on their own data. What divides them is the
-menu of assets on offer.
-
-On the menu a real equity investor can reach, twenty-eight long-only regional factor indices,
-no optimization rule beats equal weighting by a margin the data can settle, whether measured by
-the Sharpe, Sortino, Treynor or information ratio, net of fees or not, and with or
-without the 2008 crisis in the sample. The indices are nearly one bet: the whole menu carries
-barely more independent risk than a single index, and Treasuries, gold and cash add more of it
-than all twenty-eight combined. The one edge factor regressions resolve, minimum variance's
-alpha over equal weight once emerging-market exposure is netted out, is a defensive quality
-tilt, not optimization skill.
-
-For a retail investor, widening the menu has the clearest evidence behind it.
+Does portfolio optimization beat simply splitting money equally? Twenty years of research
+disagree. We test seventeen rules on the menu a retail investor can actually buy, twenty-eight
+long-only regional factor indices, under five performance measures, with fund fees, and on
+training windows reaching back to 2002. No rule beats equal weighting by a margin the data can
+settle, and after allowing for the number of rules tried none loses by such a margin either. The
+leader, minimum variance, shows no detectable return beyond its exposures to profitable and
+low-risk stocks. The indices are nearly one bet, yet that redundancy is not the explanation we
+expected: across twelve menus, the rules' edge does not grow with diversification. Changing the
+menu itself does more. Adding Treasuries and gold cuts drawdowns sharply and, over 54 years,
+raises the Sharpe ratio significantly, though 17 years of data cannot settle that gain.
 \end{nuevotexto}
-\nota{resumen nuevo: 158 palabras (l\'imite PMR 160). Revisa el tono de la \'ultima frase del segundo p\'arrafo: es el resultado nuevo m\'as importante de la v2.}""")
+\nota{ATENCI\'ON: cambia la tesis. La auditor\'ia del 30-10 (M57) prob\'o en 12 men\'us que la dispersi\'on NO decide si optimizar funciona, y (M58) que ``tres activos a\~naden m\'as que los 28 \'indices'' era aritm\'eticamente falso. El t\'itulo ``...and the Opportunity Set'' quiz\'a ya no encaje; decide t\'u. Resumen: 157 palabras.}""")
 
 # ------------------------------------------------------------------ key takeaways
 rep(r"""\item On the menu a retail investor can reach, no weighting rule beats equal weight by a margin
@@ -160,44 +156,73 @@ rep(r"""\item On the menu a retail investor can reach, no weighting rule beats e
       this data can resolve. The test carries 56\% power, so an edge the size of the largest
       one observed would have gone undetected about half the time.}
       \nuevo{On the menu a retail investor can reach, no weighting rule beats equal weight by a
-      margin the data can resolve, by Sharpe, Sortino, Treynor or information ratio, and with or
-      without the 2008 crisis. The tests have about 50\% power, so an edge the size of the
-      largest one observed would go undetected about half the time.}
-\item \nuevo{Priced against global factors, minimum variance does earn a resolvable alpha over
-      equal weight, 2.4\% a year, once its smaller emerging-market exposure is netted out. It is
-      a tilt toward quality stocks, which the profitability factor partly explains, rather than
-      a gain from optimizing.}
-\item The binding constraint is the menu, not the optimizer. Twenty-eight long-only
+      margin the data can resolve, by Sharpe, Sortino, Treynor or information ratio, with or
+      without the 2008 crisis. A true gain of 0.20 in Sharpe ratio would be detected only about
+      half the time, so this is ``not shown'', not ``none''.}
+\item \quita{The binding constraint is the menu, not the optimizer. Twenty-eight long-only
       \emph{equity} factor indices hold 1.31 independent risk bets, and adding Treasuries,
-      gold and cash buys more than all of them. \quita{Widen the menu before refining the weights. Optimization pays where holdings
+      gold and cash buys more than all of them.}
+      \nuevo{The leader, minimum variance, earns its edge from known exposures: no alpha is
+      detectable once profitability and low beta are priced. Twenty-eight equity indices hold 1.31
+      independent bets, but on menus twice as diversified the rules gain no more.}
+\item \quita{Widen the menu before refining the weights. Optimization pays where holdings
       genuinely differ, and an investable equity factor menu offers very little difference
-      to exploit.}\nuevo{Widen the menu before refining the weights.}""")
+      to exploit.}\nuevo{A world index plus Treasuries, gold and cash holds 2.78 bets against 1.31.
+      That cuts risk at once; a better risk-adjusted return shows only over decades.}""")
 rep(r"""\noindent\textbf{JEL classification:} G11, C58.""",
-    r"""\noindent\textbf{JEL classification:} G11, C58.
-
-\nota{PMR pide exactamente tres \emph{key takeaways}: el segundo nuevo cabe porque el tercero absorbe el antiguo tercero.}""")
+    r"""\noindent\textbf{JEL classification:} G11, C58.""")
 
 # ------------------------------------------------------------------ introduction
 rep(r"""seven datasets nothing consistently beats 1/N out of sample, and the most recent""",
     r"""seven datasets nothing consistently beats 1/N\nuevo{ (equal weighting: the same share of capital in each of the $N$ assets)} out of sample\nuevo{ (on data the rule did not see when it chose its weights)}, and the most recent""")
 
-rep(r"""conventional significance, and Section 5.1 reports the power behind that statement.""",
-    r"""conventional significance, and Section 5.1 reports the power behind that statement.\nuevo{ The
-statement holds under four performance measures and on a longer window that contains the 2008
-crisis (Sections 5.3 and 5.4). The one edge a factor model resolves, minimum variance's alpha
-once its regional exposure is netted out, turns out to be a defensive factor tilt rather than
-something an optimizer adds.}""")
+rep(r"""It does not, and this article locates the answer. Whether optimization beats 1/N
+turns on five things:""", r"""\quita{It does not, and this article locates the answer.} \nuevo{A natural conjecture is that the
+answer depends on the setting.} Whether optimization beats 1/N
+turns on five things:""")
 
-rep(r"""1/N is unbeatable on an investable factor menu. The diversification ratio implies
+rep(r"""and the question has a clean answer. On that menu no weighting rule beats 1/N at
+conventional significance, and Section 5.1 reports the power behind that statement. The cause is a property of the menu
+itself, which holds about one independent bet, leaving no dispersion for any
+scheme to exploit. The optimization defenders are right on their datasets, where
+dispersion is high. We are right on ours, where it is not. The two findings are
+compatible once the opportunity set is named. Section 6 measures it
+(Exhibits~\ref{ex:frontier} and~\ref{ex:dispersion}).""", r"""and the question has a clean answer. On that menu no weighting rule beats 1/N at
+conventional significance, and Section 5.1 reports the power behind that statement. \quita{The cause is a property of the menu
+itself, which holds about one independent bet, leaving no dispersion for any
+scheme to exploit. The optimization defenders are right on their datasets, where
+dispersion is high. We are right on ours, where it is not. The two findings are
+compatible once the opportunity set is named. Section 6 measures it
+(Exhibits~\ref{ex:frontier} and~\ref{ex:dispersion}).} \nuevo{The statement holds under five
+performance measures, with fund fees, and on training windows that bring the 2002 and 2008 bear
+markets into the race (Sections 5.3 and 5.4). We then test the obvious explanation, that this menu
+is too redundant for any rule to exploit, by running the same rules on eleven other menus. The
+explanation fails: the rules' edge does not grow with diversification (Section 6.2).}""")
+
+rep(r"""\item \textbf{The reconciling finding.} We measure why
+1/N is unbeatable on an investable factor menu. The diversification ratio implies
 1.31 independent bets (95\% confidence interval 1.24 to 1.40 by circular block
 bootstrap), long-only factor tilts co-move at 0.885, and the covariance is
-near-singular.""", r"""1/N is unbeatable on an investable factor menu. The diversification ratio\nuevo{, which
-measures how much of the assets' individual risk cancels out when they are held together,}
-implies 1.31 independent bets (95\% confidence interval 1.24 to 1.40 by circular block
-bootstrap\nuevo{, a resampling method that rebuilds thousands of alternative histories from
-blocks of consecutive months}), long-only factor tilts co-move at 0.885, and the covariance is
-near-singular\nuevo{ (the indices are so redundant that each is close to a combination of the
-others)}.""")
+near-singular. The mechanism is confirmed by contrast: adding three asset classes
+raises the ratio to 1.43, a paired difference of $+0.120$ at $p = 0.0002$, and
+moves the menu's minimum pairwise correlation from 0.53 to $-0.14$. This places
+the twenty-year 1/N debate on a single axis, the opportunity set.""", r"""\item \quita{\textbf{The reconciling finding.} We measure why
+1/N is unbeatable on an investable factor menu. The diversification ratio implies
+1.31 independent bets (95\% confidence interval 1.24 to 1.40 by circular block
+bootstrap), long-only factor tilts co-move at 0.885, and the covariance is
+near-singular. The mechanism is confirmed by contrast: adding three asset classes
+raises the ratio to 1.43, a paired difference of $+0.120$ at $p = 0.0002$, and
+moves the menu's minimum pairwise correlation from 0.53 to $-0.14$. This places
+the twenty-year 1/N debate on a single axis, the opportunity set.}
+\nuevo{\textbf{A test of the menu explanation.} The diversification ratio, which measures how much
+of the assets' individual risk cancels out when held together, implies 1.31 independent bets on
+this menu (95\% confidence interval 1.24 to 1.40, from a bootstrap that rebuilds thousands of
+alternative histories from blocks of consecutive months). The tempting conclusion is that
+redundancy is why nothing beats 1/N. We test it across twelve menus and it fails: from 1999 the
+minimum-variance edge is largest on the most redundant menus (rank correlation $-0.69$), and since
+1963 it is close to zero on all of them. Changing the menu does change the outcome: a world index
+plus Treasuries, gold and cash holds 2.78 bets, and such menus raise the Sharpe ratio significantly
+over 54 years, though not yet over 17.}""")
 
 rep(r"""uses), deflated Sharpe ratios \citep{bailey2014}, a Friedman-Nemenyi joint test""",
     r"""uses), deflated Sharpe ratios \citep{bailey2014}\nuevo{, which discount the best result for
@@ -211,8 +236,9 @@ lands below both its parents.""", r"""published ``beat-1/N'' rules we field fail
 \citeyearpar{brodie2009} sparse portfolio reaches only """ + swap("$p = 0.149$", "$p = 0.193$") + r""", and HERC
 lands below both its parents.\nuevo{ This version adds Sortino, Treynor, information and
 appraisal ratios and CAPM and multifactor alphas against global factors, each tested against
-1/N, an illustrative charge for fund fees, and a re-race on shorter training windows whose
-out-of-sample period includes the 2008 crisis.}""")
+1/N with a family-wise correction for the number of rules tried, an illustrative charge for fund
+fees, and re-races on shorter and rolling training windows whose scored period includes the 2002 and
+2008 bear markets.}""")
 
 rep(r"""pre-register a regime-conditioned shrinkage estimator, then attack it, and the
 macro regime signal it depends on, with placebo tests on the regime layer.""",
@@ -222,9 +248,11 @@ macro regime signal it depends on, with placebo tests on the regime layer\nuevo{
 everything with the regime labels deliberately scrambled)}.""")
 
 rep(r"""gives the protocol and the inference every ranking claim has to clear. Section 5 reports what
-the comparison can and cannot detect; Section 6""", r"""gives the protocol and the inference every ranking claim has to clear. Section 5 reports what
+the comparison can and cannot detect; Section 6, the contribution, measures the menu itself and
+explains why Section 5 comes out as it does.""", r"""gives the protocol and the inference every ranking claim has to clear. Section 5 reports what
 the comparison can and cannot detect\nuevo{, including measures beyond the Sharpe ratio and a
-window that contains the 2008 crisis}; Section 6""")
+window that contains the 2008 crisis}; Section 6, \quita{the contribution, measures the menu itself and
+explains why Section 5 comes out as it does.}\nuevo{measures the menu and tests whether its redundancy explains Section 5.}""")
 
 rep(r"""layer, and set out the robustness checks and the limitations.""",
     r"""layer, and set out the robustness checks and the limitations.\nuevo{ Appendix A defines every
@@ -242,6 +270,10 @@ rule that has to estimate its inputs keeps only part of the performance it would
 perfect knowledge.} Under a one-factor structure\nuevo{ (one common driver, such as the equity
 market, explaining most of the movement)} 1/N is asymptotically
 optimal as $N$ grows.""")
+
+rep(r"""strongest published challenger, adjudicated with that challenger's mathematics.""",
+    r"""strongest published challenger, adjudicated with that challenger's mathematics.
+\nota{cr\'itica posible: en \texttt{rules.py} la $\lambda^{*}$ de Yuan-Zhou est\'a RE-DERIVADA, no transcrita de su ec. (29). Hay que cotejarla con el art\'iculo publicado antes de sostener esta frase.}""")
 
 rep(r"""\head{Structural weighting rules.} Risk parity and equal risk contribution
 \citep{maillard2010,asness2012}, hierarchical risk parity \citep{lopezdeprado2016}
@@ -285,6 +317,17 @@ sleeves \citep{novymarx2013,asness2019}. Standard errors follow \citet{newey1987
 \end{nuevotexto}""")
 
 # ------------------------------------------------------------------ section 3
+rep(r"""approximately 14\% at 5 years against a defensive multi-asset profile's 1.4\%,
+but at 20 years the two are 1.2\% and 0.0\% with the equity profile's median
+compound annual growth rate still materially higher (approximately 9.7\% versus
+7.3\%).""", r"""approximately """ + swap(r"14\%", r"11\%") + r""" at 5 years against a defensive multi-asset profile's """ + swap(r"1.4\%", r"0.9\%") + r""",
+but at 20 years the two are """ + swap(r"1.2\%", r"1.1\%") + r""" and 0.0\% with the equity profile's median
+compound annual growth rate still materially higher (approximately """ + swap("""9.7\\% versus
+7.3\\%""", r"9.8\% versus 6.4\%") + r""").""")
+
+rep(r"""(789 months, 2.4 times the modern window, containing the actual 1970s""",
+    r"""(""" + swap("789", "790") + r""" months, 2.4 times the modern window, containing the actual 1970s""")
+
 rep(r"""The menu is redundant by
 construction, with a mean pairwise correlation of 0.76 and a first principal component
 explaining 77\% of variance.""", r"""The menu is redundant by
@@ -307,9 +350,11 @@ profitability, investment and momentum, and the emerging-markets market factor, 
 dollars from July 1990, with the one-month Treasury bill as the risk-free rate. Each factor is a
 long-short portfolio, for instance value is cheap stocks minus expensive ones, so its return is
 a premium rather than an investable fund. Exhibit~\ref{ex:desc} describes the 28 sleeves;
-Appendix B describes the factors. The sleeves differ little in risk (volatility 13 to 26\%,
-market beta 0.74 to 1.26) and every one suffered a drawdown of 44\% or more, which is the
-redundancy of this section in its plainest form.
+Appendix B describes the factors. Every sleeve fell by 41\% or more at its worst, and market betas
+run from 0.72 to 1.27: however different the labels, these are all equity indices. The tilts do earn
+something. Each region's factor sleeves beat its plain index by 1.67\% a year from 2009 (2.08\% from
+2004) after charging the higher fee of a factor fund, $t = 2.3$ and $3.4$; in the live-index era from
+2015, free of pre-launch back-filling, the figure is 1.96\% with $t = 1.9$.
 \end{nuevotexto}
 
 \begin{table}[H]
@@ -326,6 +371,81 @@ developed-markets market factor.}}
 \end{table}""")
 
 # ------------------------------------------------------------------ section 4
+rep(r"""Growth and inflation composites (z-scored, sign-adjusted trends of several
+indicators each) define four quadrants: Goldilocks, Reflation, Deflationary bust
+and Stagflation, with soft probabilities and an empirical monthly transition
+matrix.""", r"""Growth and inflation composites (z-scored, sign-adjusted trends of several
+indicators each) define four quadrants: Goldilocks, Reflation, Deflationary bust
+and Stagflation, with soft probabilities and an empirical monthly transition
+matrix.\nuevo{ In plain terms, each month is labelled by whether growth and inflation are rising or
+falling: rising growth with falling inflation is Goldilocks, rising both is Reflation, falling both
+is a Deflationary bust, and falling growth with rising inflation is Stagflation. Months sharing a
+label are treated as one group even when decades apart, so the 1970s and 2022 can inform each
+other.}""")
+
+rep(r"""On top of it we build, freeze and pre-register a transparent estimator for the
+noisiest objects in the exercise, the per-regime conditional means, at 30 to 90
+monthly observations per cell.""", r"""\begin{nuevotexto}
+\head{What shrinkage is.} An average computed from few observations mixes signal with luck. If an
+index returned 0.47\% a month over 82 stagflation months, some of that is real and some is chance,
+and nothing in those 82 months says how much of each. Shrinkage is the standard remedy: rather than
+trusting the noisy estimate, move it part of the way toward a steadier reference value,
+\[
+\text{final estimate} = \text{weight} \times \text{noisy estimate} + (1-\text{weight}) \times
+\text{steady reference}.
+\]
+This accepts a small bias in exchange for much less noise, and usually gains on balance. A
+scout does the same with a striker who scored three goals a game over ten games, pulling the number
+back toward what strikers typically score. This study uses two different shrinkages.
+\citet{ledoit2004} shrinkage acts on the covariance matrix, how assets move together, and pulls it
+toward a simple structure; minimum variance, equal risk contribution and hierarchical risk parity
+all rely on it, and it is standard. The second is our own and acts on average returns. It is not a
+Markowitz optimization: no contestant runs classic mean-variance on these means, and the covariance
+is not split by regime. Its peculiarity is that it works regime by regime, borrowing evidence from
+earlier decades that were in the same macroeconomic state.
+\end{nuevotexto}
+
+On top of it we build, freeze and pre-register a transparent estimator for the
+noisiest objects in the exercise, the per-regime conditional means, at """ + swap("30 to 90", "71 to 101 (as few as 14 at the first refit)") + r"""
+monthly observations per cell.""")
+
+rep(r"""estimated once per family as the ordinary-least-squares slope of the pooled modern sleeve excess
+on $f_j$ over their overlap; measured values run from 0.19 to 0.28.""", r"""estimated once per family as the ordinary-least-squares slope of the pooled modern sleeve excess
+on $f_j$ over their overlap; measured values """ + swap("run from 0.19 to 0.28", "are 0.21 for value and 0.26 for momentum") + r""".""")
+
+rep(r"""throughout: 789 classifiable long months against""",
+    r"""throughout: """ + swap("789", "790") + r""" classifiable long months against""")
+
+rep(r"""asset-class and no-counterpart cases, is in the repository.""", r"""asset-class and no-counterpart cases, is in the repository.
+
+\begin{nuevotexto}
+Exhibit~\ref{ex:worked} works the rule through on real numbers. Take Enhanced Value in Stagflation.
+Over 82 modern months it beat its regional index by 0.47\% a month. The academic value factor, over
+180 stagflation months since 1960, translates into only 0.12\% a month in sleeve units. The two eras
+agree on the direction, so the gate opens and the months of evidence set the weights: 69\% on the long
+record, giving 0.23\%. The modern record looked twice too good, and the long record tempers it.
+Where the eras disagree, as for Momentum in a Deflationary bust, the gate closes and the modern
+figure stands. Quality has no long academic counterpart and always stays modern.
+\end{nuevotexto}
+
+\begin{table}[H]
+\centering
+\exhibittitle{\nuevo{The estimator on real numbers (percent per month, full sample)}}{ex:worked}
+\fontsize{8}{9.6}\selectfont
+{\color{nuevoc}\input{tables/tab_worked}}
+\exhibitnote{\nuevo{Excess return of the factor sleeves over their regional index in each macro state.
+$n$: modern months; $m$: months since 1960. Long, mapped: the academic factor's average in that
+state, multiplied by $\beta$. Weight on long: $m/(n+m)$ if the gate is open, zero if closed. In the
+walk-forward every figure is recomputed at each refit on the data available then.}}
+\end{table}
+
+\begin{nuevotexto}
+Three features of this construction limit how much it can claim. The long sample contains the modern
+months, so those months are counted on both sides and the weight on the long record is overstated.
+For the same reason the gate compares a sample with its own subset, so agreement is easier than
+it looks. And the long record is the US, applied to regional indices.
+\end{nuevotexto}""")
+
 rep(r"""behind each. This is empirical-Bayes pooling with a pretest gate on the crudest sufficient
 statistic, the sign.""", r"""behind each. This is empirical-Bayes pooling\nuevo{ (letting a large, related sample inform a
 small one)} with a pretest gate\nuevo{ (a preliminary check that decides whether to pool at
@@ -343,8 +463,9 @@ refits, every input re-estimated on training data only, and returns net of 10
 basis points of one-way transaction costs on turnover.\nuevo{ In plain terms: each January a
 rule sees only the months before it, chooses its weights, holds them for the next twelve
 months, and is scored on those months, exactly as an investor would have lived them. Section 5.4
-repeats the race with 60- and 80-month warmups, which moves the start of scoring from January
-2009 to January 2004 and September 2005.}""")
+repeats the race with shorter warmups, which moves the start of scoring back to 2002, and with
+rolling windows of 36 to 120 months, which test how much estimation length matters. Turnover is the
+share of the portfolio traded at a refit; a basis point is one hundredth of one percent.}""")
 
 rep(r"""is \citet{ledoit2008} heteroskedasticity- and autocorrelation-consistent
 delta-method""", r"""is \citet{ledoit2008} heteroskedasticity- and autocorrelation-consistent\nuevo{ (robust to
@@ -380,14 +501,22 @@ a paired circular block bootstrap with the same block length, replications and s
 Sharpe test. Alphas are intercepts of regressions of a strategy's monthly excess return on the
 monthly factor returns, with \citet{newey1987} standard errors at a lag of four months. The alpha
 of a strategy \emph{relative to} 1/N is the intercept of the same regression run on the return
-difference between the two, which equals the difference of their alphas. The key alpha is also
-checked with a bootstrap that resamples whole months of returns and factors together.
+difference between the two, which equals the difference of their alphas. With this many
+regressors the usual standard errors are too optimistic, so we report $p$-values from a studentized
+bootstrap that resamples whole months of returns and factors together, and Romano-Wolf adjusted
+$p$-values, which allow for having tested many rules: an adjusted $p$ below 0.05 means the result would
+be unusual even as the best of the whole family. The primary factor model was fixed in writing and
+committed to the repository before it was run, after exploratory evidence had already pointed
+toward its likely result, so it blocks further specification search but is not a blind test.
 
 \head{Reading the statistics.} A $p$-value is the probability of seeing a gap at least as large
 as the one observed if the two strategies were in truth equally good; below 0.05 we call a
 difference significant. Power is the reverse question: the probability that the test would
-detect a gap of a given size if it were real. A test with low power can miss a real difference,
-so a non-significant result means ``not shown'', never ``equal''. The bootstrap estimates these
+detect a gap of a given size if it were real, and it is only meaningful for a gap chosen in advance,
+because power at the observed gap merely restates the $p$-value \citep{hoenig2001}. A test with low
+power can miss a real difference, so a non-significant result means ``not shown'', never ``equal''.
+Each ratio is annualized, and a Sharpe ratio of 0.75 means 0.75 percentage points of return above
+Treasury bills for each point of volatility. The bootstrap estimates these
 probabilities by resampling the data instead of assuming that returns are normally distributed,
 which monthly returns are not.
 \end{nuevotexto}""")
@@ -427,31 +556,49 @@ seventeen strategies tried. Sorted by Sharpe ratio.}}
 
 Exhibit~\ref{ex:race} has one headline.""")
 
-rep(r"""equal weight: minimum variance reaches a bootstrap $p$ of 0.055 and every other rule sits at
-$p \ge 0.14$.""", r"""equal weight: minimum variance reaches a bootstrap $p$ of """ + swap("0.055", "0.065") + r""" and every other rule sits at
-$p \ge """ + r"""\quita{0.14}\nuevo{0.17}$.""")
+rep(r"""equal weight: minimum variance reaches a bootstrap $p$ of 0.055 and every other rule sits at""",
+    r"""equal weight: minimum variance reaches a bootstrap $p$ of """ + swap("0.055", "0.065") + r""" and every other rule sits at""")
+
+rep(r"""$p \ge 0.14$. What the data can detect is the downside. Equal weight plus volatility targeting
+is significantly worse than plain 1/N, and dual momentum worse still.""", r"""$p \ge """ + r"""\quita{0.14}\nuevo{0.17}$. \quita{What the data can detect is the downside. Equal weight plus volatility targeting
+is significantly worse than plain 1/N, and dual momentum worse still.} \nuevo{Nor is any rule
+significantly worse: 1/N with volatility targeting and dual momentum sit at $p = 0.07$ and $0.08$.
+A reader may object that ``beats'' calls for a one-sided test, and one-sided the minimum-variance
+gap reaches $p = 0.025$. But that is the best of sixteen rules, and the Romano-Wolf adjustment for
+having tried sixteen puts it at $p = 0.47$. Moreover a reader may object to the benchmark, since 1/N
+over nested indices is not quite naive; on the 19 non-overlapping sleeves the result is the same
+(0.95 against 0.73, $p = 0.064$).}""")
 
 rep(r"""The verdict survives a joint test as well as the pairwise ones. A Friedman test on 12-month
 block ranks rejects the null that the ordering is noise ($\chi^{2} = 46.6$), yet the Nemenyi
 critical difference clears no contestant past 1/N.""", r"""The verdict survives a joint test as well as the pairwise ones. A Friedman test on 12-month
-block ranks\nuevo{, which asks whether the ranking as a whole is better than chance,} rejects the null that the ordering is noise ($\chi^{2} = """ + r"""\quita{46.6}\nuevo{38.4}$\nuevo{, $p = 0.001$}), yet the Nemenyi
+block ranks\nuevo{, which asks whether the ranking as a whole is better than chance,} rejects the null that the ordering is noise ($\chi^{2} = """ + r"""\quita{46.6}\nuevo{30.7}$\nuevo{, $p = 0.015$}), yet the Nemenyi
 critical difference\nuevo{, the smallest rank gap that counts once all pairs are compared at
 once,} clears no contestant past 1/N.""")
 
 rep(r"""the out-of-sample median is 33\%, which is real selection information well short of
-certainty.""", r"""the out-of-sample median is """ + swap(r"33\%", r"30\%") + r""", which is real selection information well short of
+certainty.""", r"""the out-of-sample median is """ + swap(r"33\%", r"36\%") + r""", which is real selection information well short of
 certainty.""")
 
-rep(r"""in Exhibit~\ref{ex:race}, minimum variance's $+0.20$ annualized Sharpe, the design
-has 56\% power at the 5\% level.""", r"""in Exhibit~\ref{ex:race}, minimum variance's """ + swap("$+0.20$", "$+0.19$") + r""" annualized Sharpe, the design
-has """ + swap(r"56\%", r"52\%") + r""" power at the 5\% level.""")
+rep(r"""uses. Against the largest gap
+in Exhibit~\ref{ex:race}, minimum variance's $+0.20$ annualized Sharpe, the design
+has 56\% power at the 5\% level.""", r"""uses. \quita{Against the largest gap
+in Exhibit~\ref{ex:race}, minimum variance's $+0.20$ annualized Sharpe, the design
+has 56\% power at the 5\% level.} \nuevo{The design would detect a true
+gap of $+0.10$ annualized Sharpe 18\% of the time, $+0.20$ 56\% of the time and $+0.30$ 88\% of the
+time. Those gaps are fixed in advance; power computed at the observed gap would merely restate the
+$p$-value.}""")
 
 rep(r"""The observed gap is three quarters of the
 detectable one.""", r"""The observed gap is """ + swap("three quarters", "seven tenths") + r""" of the
 detectable one.""")
 
-rep(r"""Whether a $+0.20$ edge exists is a question 210 monthly""",
-    r"""Whether a """ + swap("$+0.20$", "$+0.19$") + r""" edge exists is a question 210 monthly""")
+rep(r"""Whether a $+0.20$ edge exists is a question 210 monthly
+observations cannot answer either way. Section 6 matters because the menu
+measurement is not subject to the same limit.""",
+    r"""Whether a """ + swap("$+0.20$", "$+0.19$") + r""" edge exists is a question 210 monthly
+observations cannot answer either way. \quita{Section 6 matters because the menu
+measurement is not subject to the same limit.}""")
 
 rep(r"""\begin{figure}[H]
 \exhibittitle{No rule clears significance against 1/N, and two overlays are significantly worse}{ex:inference}""",
@@ -464,28 +611,107 @@ rep(r"""combination loses outright (0.74 against 0.83, $p = 0.45$), which""",
     r"""combination loses outright (""" + swap("0.74 against 0.83, $p = 0.45$", "0.64 against 0.75, $p = 0.42$") + r"""), which""")
 
 rep(r"""\citeauthor{brodie2009}'s \citeyearpar{brodie2009} sparse portfolio reaches third
-place (0.93) at only $p = 0.149$,""", r"""\citeauthor{brodie2009}'s \citeyearpar{brodie2009} sparse portfolio reaches """ + swap("third\nplace (0.93) at only $p = 0.149$", "second place (0.84) at only $p = 0.193$") + r""",""")
+place (0.93) at only $p = 0.149$,""", r"""\citeauthor{brodie2009}'s \citeyearpar{brodie2009} sparse portfolio reaches """ + swap("third\nplace (0.93) at only $p = 0.149$", "third place (0.84) at only $p = 0.193$") + r""",""")
+
+rep(r"""proxy race of Section 5.2 the same rule falls to last among structural rules and
+beats 1/N in only 25\% of shifted-start windows.""", r"""proxy race of Section 5.2 the same rule falls to last among structural rules\quita{ and
+beats 1/N in only 25\% of shifted-start windows}\nuevo{, though only as a point estimate (0.50 against
+0.56, $p = 0.21$)}.""")
+
+rep(r"""Two mechanical facts explain why nothing separates. The contestants' out-of-sample
+returns are 0.93 to 0.998 correlated with one another.""", r"""Two mechanical facts explain why nothing separates. The contestants' out-of-sample
+returns are """ + swap("0.93 to 0.998", "0.78 to 0.999") + r""" correlated with one another\nuevo{, among the twelve equity rules without
+overlays}.""")
+
+rep(r"""optimizer's name. Both facts point past the optimizer to the menu, which
+Section 6 measures.""", r"""optimizer's name. \quita{Both facts point past the optimizer to the menu, which
+Section 6 measures.}
+
+\nuevo{A referee may also object that cross-sectional momentum is normally traded monthly, and our
+annual refit is unkind to it. Refit monthly and quarterly it reaches 0.74 and 0.76 against 1/N's 0.75,
+up from 0.64 at the annual refit, and still does not separate from equal weight ($p = 0.94$ and
+$0.84$).}""")
 
 # ------------------------------------------------------------------ section 5.2
-rep(r"""\exhibitnote{Each grid dimension on its own axis, sharing one Sharpe scale.""",
-    r"""\exhibitnote{\nota{figura de la v1, calculada con tipo libre de riesgo cero; las l\'ineas no cambian de orden en exceso, pero el panel derecho queda desfasado (en exceso: 0.054, 0.065, 0.079). Regenerar con \texttt{make\_figures.py} en convenci\'on de exceso, o quitar ese panel.}
-Each grid dimension on its own axis, sharing one Sharpe scale.""")
+rep(r"""Re-raced over 1936--2026 on six long-only Fama-French portfolios, minimum variance
+falls to last among structural rules (0.71) while hierarchical risk parity (0.76)
+and equal risk contribution (0.75) edge 1/N (0.74). Across shifted-start variants
+both beat 1/N in 100\% of windows and minimum variance in 25\%. The
+modern menu shows the same signature in rolling windows, with equal risk
+contribution and hierarchical risk parity beating 1/N in 98 to 99\% of rolling
+three-year windows. The structural rules hold their advantage across both eras; minimum variance does not.""",
+    r"""\begin{quitado}
+Re-raced over 1936--2026 on six long-only Fama-French portfolios, minimum variance
+falls to last among structural rules (0.71) while hierarchical risk parity (0.76)
+and equal risk contribution (0.75) edge 1/N (0.74). Across shifted-start variants
+both beat 1/N in 100\% of windows and minimum variance in 25\%. The
+modern menu shows the same signature in rolling windows, with equal risk
+contribution and hierarchical risk parity beating 1/N in 98 to 99\% of rolling
+three-year windows. The structural rules hold their advantage across both eras; minimum variance does not.
+\end{quitado}
+\begin{nuevotexto}
+Re-raced over 1936--2026 on six long-only Fama-French portfolios, in excess returns, the four rules
+cannot be told apart: hierarchical risk parity 0.56 ($p = 0.53$ against 1/N), 1/N 0.56, equal risk
+contribution 0.56 ($p = 0.46$) and minimum variance 0.50 ($p = 0.21$). Version 1.0's statement that
+the structural rules hold an advantage over 1/N across both eras does not survive a test. Minimum
+variance's modern lead is absent from the long record, but so is any demonstrated loss.
+\end{nuevotexto}""")
 
-rep(r"""genuine frontier is the headline $p$-value's block-length sensitivity (0.042,
-0.055, 0.066). We report the range and do not choose a block length.""",
-    r"""genuine frontier is the headline $p$-value's block-length sensitivity (""" + swap("0.042,\n0.055, 0.066", "0.054, 0.065, 0.079 in excess returns") + r"""). We report the range and do not choose a block length.\nuevo{ At a zero
-risk-free rate the shortest block had crossed 5\%; in excess returns none does.}
+rep(r"""\begin{figure}[H]
+\exhibittitle{No ranking flips in any sensitivity cell}{ex:grids}""", r"""\nota{se sustituye la figura por una tabla (el colaborador prefiere menos figuras): sus datos eran de julio, en tipo cero y con el fallo de etiquetas.}
+\begin{table}[H]
+\centering
+\exhibittitle{\nuevo{The race under one changed assumption at a time}}{ex:robust}
+\fontsize{8}{9.6}\selectfont
+{\color{nuevoc}\input{tables/tab_robust}}
+\exhibitnote{\nuevo{Excess-return Sharpe ratios, 2009--2026 except the last row (2000--2026). Minimum variance
+is first in every row but ``Without EM'' and the last; no row reaches $p < 0.05$ against 1/N except when Asia
+ex-Japan is dropped ($p = 0.038$, not shown), one of about twenty cells. The diversified-maximin caps limit
+exposure per sleeve, region and factor.}}
+\end{table}
 
-\subsection{\nuevo{Beyond the Sharpe ratio: downside, beta, active risk and alpha}}
+\begin{figure}[H]
+\color{quitarc}
+\exhibittitle{\quita{No ranking flips in any sensitivity cell}}{ex:grids}""")
+
+rep(r"""Constraints behave as \citet{jagannathan2003} predicted, measured prospectively
+rather than in-sample. The capped maximin beats its unconstrained twin out of
+sample in every sensitivity-grid cell, by $+0.115$ to $+0.132$ Sharpe across
+costs of 0, 10 and 25 basis points, refits of 6, 12 and 24 months, and cap levels
+from 20/35/35 through 45/45. No grid cell flips any ranking conclusion. The single
+genuine frontier is the headline $p$-value's block-length sensitivity (0.042,
+0.055, 0.066). We report the range and do not choose a block length.""", r"""\begin{quitado}
+Constraints behave as \citet{jagannathan2003} predicted, measured prospectively
+rather than in-sample. The capped maximin beats its unconstrained twin out of
+sample in every sensitivity-grid cell, by $+0.115$ to $+0.132$ Sharpe across
+costs of 0, 10 and 25 basis points, refits of 6, 12 and 24 months, and cap levels
+from 20/35/35 through 45/45. No grid cell flips any ranking conclusion. The single
+genuine frontier is the headline $p$-value's block-length sensitivity (0.042,
+0.055, 0.066). We report the range and do not choose a block length.
+\end{quitado}
+\begin{nuevotexto}
+Exhibit~\ref{ex:robust} changes one assumption at a time, and no conclusion turns. Costs and refit
+frequency barely register. The covariance estimator is the one that matters for the leader:
+nonlinear shrinkage costs minimum variance 0.07 of Sharpe. Hard caps help the maximin only modestly,
+in the direction \citet{jagannathan2003} predict: the capped version beats its unconstrained twin by
+about 0.05, not significantly ($p = 0.41$), and the sign flips when emerging markets are removed. Block
+length moves the headline $p$-value (0.054, 0.065, 0.079), without taking it below 5\%; we report the
+range and do not choose a block length.
+\end{nuevotexto}""")
+
+
+
+rep(r"""\section{The opportunity set}""", r"""\subsection{\nuevo{Beyond the Sharpe ratio: downside, beta, active risk and alpha}}
 
 \begin{nuevotexto}
-The contestants with the best Sharpe ratios in Exhibit~\ref{ex:race} are also the ones furthest
+The contestants with the best Sharpe ratios in Exhibit~\ref{ex:race} tend to be the ones furthest
 to the left of the risk-return plane, which invites the suspicion that the ranking rewards low
 volatility rather than anything a rule does. The Sharpe ratio cannot be raised by leverage, so a
 low-risk portfolio does not score higher by construction, but a low-risk portfolio can harvest
-the low-volatility anomaly \citep{haugen1991,frazzini2014}, and a single ratio cannot tell that
-apart from skill. We therefore re-rank the race five ways. With $R$ a strategy's return, $R_f$
-the Treasury bill, $\bar{x}$ a time average and $\sigma(\cdot)$ a volatility,
+the low-volatility anomaly \citep{haugen1991,frazzini2014}, the long-documented tendency of calmer
+stocks to earn more than their risk implies, and a single ratio cannot tell that apart from skill.
+We therefore re-rank the race five ways. With $R$ a strategy's return, $R_f$ the Treasury bill,
+$\bar{x}$ a time average and $\sigma(\cdot)$ a volatility,
 
 \begin{align*}
 \text{Sharpe} &= \frac{\overline{R-R_f}}{\sigma(R-R_f)}, &
@@ -498,8 +724,10 @@ R-R_f &= \alpha + \textstyle\sum_k b_k F_k + \varepsilon,
 
 \noindent where $\sigma_{\text{down}}$ counts only the months below the bill, $\beta$ is the
 sensitivity to the global market, the $F_k$ are the factor returns with loadings $b_k$, $\alpha$ is
-the return the factors leave unexplained, and $\varepsilon$ the residual. Exhibit~\ref{ex:riskadj}
-reports the first three and the alphas, Exhibit~\ref{ex:active} the two ratios against 1/N.
+the return the factors leave unexplained, and $\varepsilon$ the residual. Sortino asks whether the
+avoided volatility was the harmful kind; Treynor charges only for market risk; alpha asks whether
+anything is left once the strategy's exposures have been paid for; information and appraisal ratios
+ask how steadily that happens.
 \end{nuevotexto}
 
 \begin{table}[H]
@@ -517,72 +745,71 @@ ratio.}}
 
 \begin{nuevotexto}
 \head{Downside risk.} The Sortino ratio leaves the top of the ranking where it was. Minimum
-variance leads at 1.49 against 1/N's 1.20 ($p = 0.17$): the volatility it avoids is largely
-downside volatility, but not by a margin the data resolve. As with the Sharpe ratio, the only
-significant difference is a loss, 1/N with volatility targeting ($p = 0.005$).
+variance leads at 1.49 against 1/N's 1.20 ($p = 0.17$). The only difference below 5\% is a
+loss, 1/N with volatility targeting ($p = 0.03$).
 
-\head{Market risk.} The Treynor ratio divides by beta, and it re-ranks in the direction the
-concern predicts: the highest Treynor ratio belongs to the all-weather maximin (16.6\%), whose
-beta of 0.40 reflects the bonds and gold it holds, and the trend overlay rises for the same
-reason. That is the measure working as designed, not a better portfolio. Treynor assumes the
-portfolio is one holding inside a diversified whole, so a portfolio that already holds the other
-asset classes is credited for diversification the ratio assumes it lacks. Among the equity-only
-rules minimum variance leads again (14.9\% against 11.9\%, $p = 0.077$).
+\head{Market risk.} The Treynor ratio re-ranks in the direction the concern predicts: the highest
+values belong to the all-weather maximin (17.7\%, beta 0.32) and the trend overlay (16.3\%, beta
+0.46). That is the measure working as designed, not a better portfolio. Treynor assumes a portfolio
+is one holding inside a diversified whole, so a portfolio that already holds other asset classes is
+credited for diversification the ratio assumes it lacks. So it does not answer the concern; if
+anything it sharpens it. Among equity-only rules minimum variance leads again (14.9\% against 11.9\%,
+$p = 0.08$).
 
-\head{Alpha.} Against the global market, minimum variance earns a CAPM alpha of $+3.0$\% a year
-with $t = 2.7$: it beats the market on a risk-adjusted basis, which is the low-volatility anomaly
-at work. Against 1/N the alpha is $+2.5$\% at $p = 0.08$, and the four-factor model leaves it at
-$+2.4$\% ($p = 0.06$). On these tests, minimum variance's edge over 1/N stays unresolved.
+\head{Alpha.} Against the global market minimum variance earns a CAPM alpha of $+3.0$\% a year
+($t = 2.7$), which is the low-volatility anomaly at work. Against 1/N the alpha is $+2.5$\% ($p = 0.08$), and
+the Carhart model leaves it at $+2.4$\% ($p = 0.06$).
+
+One specification looks like a discovery and is not. The gap between minimum variance and 1/N
+contains a large regional bet, loading $+0.27$ on developed markets and $-0.40$ on emerging ones,
+because 1/N keeps nearly a third of its capital in emerging and Asian sleeves and minimum variance
+almost none. Adding an emerging-market factor removes those swings and the same $+2.4$\% looks highly
+significant ($p = 0.004$). We chose that model after seeing the data. The full family of tests
+gives it a Romano-Wolf $p$ of 0.27, and the alpha is the raw gap of $+1.2$\% plus a credit for the
+gap's low beta. Netting out emerging markets without that credit leaves $+0.7$\% ($t = 0.6$).
+
+So we fixed one primary model before computing it, built to price everything we know this gap
+contains: the five regional markets of the menu, the size, value, profitability, investment and
+momentum factors, and betting-against-beta, the academic measure of the low-risk premium. Under that
+model the alpha of minimum variance over 1/N is $+0.24$\% a year (95\% interval $-1.4$ to $+1.8$,
+$p = 0.76$), with no significant cell among the sixteen contestants (smallest adjusted $p = 0.46$). The
+interval matters: effects below about 2.3\% a year could not have been detected, so this is no
+detectable alpha, not zero alpha. The raw gap of $+1.23$\% decomposes into profitability
+($+0.66$), low beta ($+0.51$), regional terms that nearly cancel ($+0.12$), momentum ($-0.38$), size
+($+0.08$) and alpha ($+0.24$).
 \end{nuevotexto}
 
 \begin{table}[H]
 \centering
-\exhibittitle{\nuevo{Alpha over 1/N under six factor models, 2009--2026}}{ex:alpha}
+\exhibittitle{\nuevo{Alpha over 1/N under five factor models, 2009--2026}}{ex:alpha}
 \fontsize{8}{9.6}\selectfont
 {\color{nuevoc}\input{tables/tab_alpha_vs_1n}}
-\exhibitnote{\nuevo{Each cell is the alpha of the strategy relative to 1/N, in percent a year,
-with its Newey-West $p$-value in parentheses; bold marks $p < 0.05$. CAPM uses the developed-markets
-market factor and CAPM (ACWI) the MSCI ACWI index, which includes emerging markets. 4F adds size,
-value and momentum; ``+ EM'' adds the emerging-markets market factor; FF5 adds profitability (RMW)
-and investment (CMA).}}
+\exhibitnote{\nuevo{Each cell is the alpha of the strategy relative to 1/N, in percent a year, with its
+studentized-bootstrap $p$-value in parentheses; bold marks $p < 0.05$ before any adjustment for
+multiple testing, and no cell survives that adjustment. CAPM: developed-markets factor. 4F adds size,
+value and momentum; ``+ EM'' adds the emerging-markets factor; FF5 adds profitability (RMW) and
+investment (CMA); P is the primary model described in the text.}}
 \end{table}
 
 \begin{nuevotexto}
-One specification changes the picture, and it is the one the menu's geography calls for. The
-return difference between minimum variance and 1/N is dominated by a regional bet: regressed on
-the developed and emerging market factors it loads $+0.27$ on the first ($t = 11.6$) and $-0.40$
-on the second ($t = -15.0$), because 1/N puts nearly a third of its capital in the emerging and
-Asian sleeves while minimum variance holds almost none (at the start of 2009, 84\% of it sat in
-the USA and World Quality sleeves). That regional bet contributes little to the average of the
-difference and most of its month-to-month swings. A Sharpe test, or a model without the
-emerging-market factor, treats those swings as noise around the edge; a model that includes the
-factor removes them, and the same $+2.4$\% becomes resolvable ($t = 3.2$, $p = 0.0015$). The
-result does not depend on the standard errors: a bootstrap that resamples whole months gives
-$p = 0.001$, the $t$-statistic stays between 3.1 and 3.7 for Newey-West lags from 0 to 12, and
-on the longer windows of Section 5.4 the bootstrap $p$ is 0.0006 or lower. It also survives the
-obvious multiplicity charge: with sixteen contestants tested under that model, a Holm
-adjustment leaves it at $p = 0.024$.
-
-What the alpha consists of follows from the loadings in Appendix B. Minimum variance loads 0.25
-on profitability ($t = 3.5$), the factor closest to the Quality sleeves that carry 82\% of its
-return, and adding profitability and investment to the model cuts its alpha over 1/N to
-$+1.4$\% ($p = 0.26$) without the emerging-market factor and $+1.5$\% ($p = 0.049$) with it. About
-two fifths of the edge is a priced factor, and what remains is borderline.
+Is the tilt skill? The data do not say. Minimum variance cannot be told apart from a naive
+alternative chosen in advance, equal weight over the seven Quality sleeves (Sharpe 0.82, $p = 0.17$
+against minimum variance), but neither can that alternative be told from 1/N ($p = 0.26$). It is
+ahead of inverse-variance weighting at $p = 0.06$. Only the hindsight pair of USA and World Quality
+matches it (0.96).
 
 \head{Active risk.} The information ratio measures a strategy against 1/N directly: the average
-return gap divided by the volatility of that gap, the tracking error. It rewards beating the
-benchmark steadily rather than through a few large months (Exhibit~\ref{ex:active}). Minimum
-variance finished ahead of 1/N in 96\% of rolling three-year windows, 97\% of five-year windows
-and every ten-year window, yet its information ratio of 0.22 is far from significant
-($p = 0.43$): an average gap of 1.2\% a year is small against a tracking error of 5.7\%.
-Overlapping windows are not independent observations, so those shares describe consistency and
-do not test it. The information ratio has a blind spot of its own: it compares raw returns, so
-any portfolio with less market exposure than 1/N looks worse in a rising market. That is why
-the all-weather maximin, with a beta of 0.40, scores a significantly negative information ratio
-($-0.48$, $p = 0.04$) while its Sharpe ratio is level with 1/N's. The appraisal ratio removes
-the blind spot by dividing alpha, not the raw gap, by the risk the factors leave unexplained.
-Minimum variance's appraisal ratio over 1/N, under the four-factor model with the emerging
-market, is 0.77, the highest in the table: the alpha finding above, expressed per unit of risk.
+return gap divided by the volatility of that gap, the tracking error. Minimum variance finished ahead
+of 1/N in 97\%, 99\% and 100\% of rolling three-, five- and ten-year windows, yet its information ratio
+of 0.22 is far from significant ($p = 0.43$): a gap of 1.2\% a year is small against a tracking error of
+5.7\%. Overlapping windows are not independent, so those shares describe consistency and do not
+test it. They also explain the non-significance better than any talk of redundancy: this is a real
+departure from 1/N over too few years. The information ratio has a blind spot: it compares raw
+returns, so a portfolio with less market exposure looks worse in a rising market. The all-weather
+maximin has a Sharpe ratio above 1/N's and a significantly negative information ratio ($-0.52$,
+$p = 0.03$). That is why it cannot be the only yardstick here, whatever its merits for managers
+measured against a benchmark. The appraisal ratio avoids the blind spot by using alpha in place of the
+raw gap, but it restates the alpha $t$-statistic per year and adds no independent evidence.
 \end{nuevotexto}
 
 \begin{table}[H]
@@ -599,103 +826,290 @@ strategy's cumulative return beat 1/N's (overlapping windows; descriptive, not a
 \end{table}
 
 \begin{nuevotexto}
-\head{Fees.} The race charges trading costs but, because it measures indices, no fund fee.
-Charging illustrative ETF expense ratios on the weights each contestant actually held (0.15\% a
-year for plain market indices, 0.30\% for factor indices, 0.10\% more for emerging and Asian lines)
-lowers every Sharpe ratio by about 0.02 and changes no conclusion; minimum variance against 1/N
-moves from $p = 0.065$ to $p = 0.070$ (Appendix B). The same exercise answers the question the
-factor-investing debate usually asks, whether a factor menu beats the plain market net of its
-higher fees. Equal weight over the 28 sleeves against a plain MSCI ACWI fund has an information
-ratio of 0.09 ($p = 0.72$) over 2009--2026 and 0.34 ($p = 0.14$) over 2004--2026. The factor
-premia of Section 3 survive the fee as point estimates and, like everything else on this menu,
-not by a margin the data resolve.
+\head{Risk aversion.} The certainty-equivalent return, the riskless return an investor would swap the
+strategy for, answers the left-of-the-plane worry directly, because it depends on how much the
+investor dislikes risk. At low risk aversion ($\gamma = 1$, the value in \citealp{demiguel2009})
+no rule beats 1/N and the overlays lose, volatility targeting by 3.6\% a year ($p = 0.009$). At
+$\gamma = 10$ the low-volatility rules gain, minimum variance by 3.8\% ($p = 0.014$) and hierarchical
+risk parity by 1.0\% ($p = 0.013$). None survives adjustment for sixteen rules, and an investor
+that averse would hold Treasury bills alongside, not a fully invested equity portfolio.
 
-Three readings follow, and they qualify Section 5.1 rather than overturn it. First, the edge is
-real once it is measured with the right instrument: a factor model that matches the menu's
-geography resolves what a total-return test cannot. Second, it is not an optimizer's skill but a
-defensive factor tilt, quality and low volatility, which an investor can hold directly through
-the Quality sleeves. Third, a long-only investor cannot strip out the regional bet that comes
-with it, so the edge an investor actually experiences is the total-return one of
-Exhibit~\ref{ex:race}, unresolved at $p = 0.065$. No other contestant earns a significant
-positive alpha over 1/N under more than two of the six models, and none survives a multiplicity
-adjustment; the all-weather maximin's significant four-factor alpha mostly reflects the bonds and
-gold that equity factor models do not price ($R^2 = 0.52$). The losers are robust: 1/N with
-volatility targeting is significantly worse under every model and measure, and dual momentum
-under the multifactor models.
+\head{Fees.} The race charges trading costs but, because it measures indices, no fund fee. Charging
+illustrative ETF expense ratios on the weights each contestant held (0.15\% a year for plain market
+indices, 0.30\% for factor indices, 0.10\% more for emerging and Asian lines) lowers every Sharpe ratio
+by about 0.02 and changes no conclusion; minimum variance against 1/N moves from $p = 0.065$ to $0.070$
+(Appendix B).
 \end{nuevotexto}
-\nota{este es el cambio m\'as importante de la v2: la tesis ``nada bate a 1/N'' sobrevive en t\'erminos de riesgo total, pero con alfas que controlan la exposici\'on emergente la m\'inima varianza s\'i bate a 1/N ($p = 0.0015$). Lo he redactado como matiz (es una apuesta de factor calidad, no habilidad del optimizador). Decide si quieres darle m\'as peso, incluso en el t\'itulo de la secci\'on.}
 
-\subsection{\nuevo{A longer window: bringing 2008 into the race}}
+\subsection{\nuevo{Longer and shorter windows: bringing the bear markets into the race}}
 
 \begin{nuevotexto}
-The 120-month warmup places the whole race inside a single post-crisis expansion.
-Exhibit~\ref{ex:warmup} re-runs it with 60- and 80-month warmups, changing nothing else, so
-that scoring starts in January 2004 and September 2005 and the out-of-sample period contains the
-2007--09 bear market. A shorter training window means noisier estimates, so the comparison also
-tells us what that noise costs.
+The 120-month warmup places the whole race inside one post-crisis expansion. Exhibit~\ref{ex:warmup}
+re-runs it with warmups of 80 and 60 months, so that scoring starts in September 2005 and January
+2004 and contains the 2007--09 bear market; a 36-month warmup reaches back to 2002. These windows
+nest one another, so they are not independent votes. They also keep expanding, so from 2009 they use
+exactly the same training data as the baseline and say nothing about estimation length. For that we
+use rolling windows, which forget old data and are the design of \citet{demiguel2009}.
 \end{nuevotexto}
 
 \begin{table}[H]
 \centering
-\exhibittitle{\nuevo{The race on three training windows, and through the 2008 crisis}}{ex:warmup}
+\exhibittitle{\nuevo{The race on three warmups, and through the 2008 crisis}}{ex:warmup}
 \fontsize{8}{9.6}\selectfont
 {\color{nuevoc}\input{tables/tab_warmup}}
-\exhibitnote{\nuevo{Excess-return Sharpe ratio and bootstrap $p$-value against 1/N for each
-warmup (months of data before the first scored month). GFC return: cumulative total return from
-November 2007 to February 2009 in the 60-month race. Power is the probability that the test would
-detect a true gap equal to minimum variance's observed one; MDES is the smallest gap detectable
-with 80\% power. Rows in the order of the 120-month race.}}
+\exhibitnote{\nuevo{Excess-return Sharpe ratio and bootstrap $p$-value against 1/N for each warmup
+(months of data before the first scored month). GFC return: cumulative total return from November
+2007 to February 2009 in the 60-month race. MDES is the smallest gap detectable with 80\% power. Rows
+in the order of the 120-month race.}}
 \end{table}
 
 \begin{nuevotexto}
-The verdict does not change. Minimum variance is first in all three races, and its margin over
-1/N is not resolved in any of them ($p = 0.065$, $0.050$ and $0.068$; the 80-month value sits
-exactly on the threshold, and one borderline value among three does not make a rejection). Power
-does not improve either: the longer window lowers the minimum detectable gap from 0.27 to 0.22,
-but the observed gap shrinks with it, and power stays near one half. The alphas tell the story of
-Section 5.3 again: nothing over 1/N under the CAPM or the four-factor model, and minimum
-variance's alpha resolvable once emerging markets are controlled for.
+The verdict holds. Minimum variance is first with warmups of 120, 80 and 60 months and its margin
+over 1/N stays at the threshold or above it ($p = 0.065$, $0.050$, $0.068$), weakening to $0.20$ from 2002.
+Rolling windows of 120, 80, 60 and 36 months give minimum variance Sharpe ratios of 0.93, 0.91, 0.91 and
+0.75 against 1/N's 0.75 ($p = 0.09$, $0.11$, $0.11$, $0.94$): a shorter memory costs little down to five
+years and the entire edge at three. The unconstrained Yuan-Zhou combination is outside its own domain
+at 36 months (28 assets per 36 observations) and collapses. A longer window lowers the minimum
+detectable gap from 0.27 to 0.22, but the observed gap shrinks with it.
 
-Two things do change, and both concern the crisis. The shorter training window costs the
-structural rules nothing: on the 2009--2026 months the races share, minimum variance's Sharpe
-ratio is 0.935 in the 60-month race and 0.935 in the 120-month one, so the differences in the
-exhibit come from the months added, not from noisier estimates. And those months reverse the
-verdict on the overlays. The two overlays that lose significantly over 2009--2026 are
-indistinguishable from 1/N once the crisis is in the sample, because the crisis is what they are
-built for: from November 2007 to February 2009 the trend overlay lost 22\% and dual momentum
-24\%, against 55\% for 1/N and 45\% for minimum variance. Over 2004--2008 minimum variance
-trailed 1/N (Sharpe 0.10 against 0.18): it missed most of the emerging-market rally of 2004--07,
-when MSCI EM compounded at 37\% a year, and cushioned the crash, the defensive tilt of
-Section 5.3 seen from the other side.
+The bear markets change the overlays, and less than version 1.0 of this article implied. The trend and
+volatility overlays are crisis insurance. From November 2007 to February 2009 the trend overlay lost
+21\%, dual momentum 23\%, volatility targeting 39\%, minimum variance 45\% and 1/N 55\%. Over those
+crisis months they earn their keep; outside them volatility targeting loses steadily: excluding
+that episode it is worse than 1/N at $p = 0.04$, and over the live-index era at $p = 0.02$. One crash
+cannot settle whether that insurance is worth its cost. Minimum variance is not universal protection
+either. From January 2002 to March 2003 it lost 19\% against 1/N's 14\%, though it was then fitted
+on only 36 months, the very setting that removes its edge. Over 2004--2008 it trailed 1/N (0.10 against
+0.18), missing most of an emerging-market rally of about a third a year.
+\end{nuevotexto}
 
-The overlay verdict of Section 5.1 is therefore a property of a window without a bear market. The
-construction-rule verdict is not.
-\end{nuevotexto}""")
+\section{The opportunity set}""")
 
 # ------------------------------------------------------------------ section 6
 rep(r"""or pure market beta across regions (0.821).""",
     r"""or pure market beta\nuevo{ (how much an index moves with its market as a whole)} across regions (0.821).""")
 
-rep(r"""twenty-eight equity sleeves, and no amount of estimator sophistication
-substitutes.""", r"""twenty-eight equity sleeves, and no amount of estimator sophistication
-substitutes.\nuevo{ Section 5.3 sharpens the point: the one edge a factor model resolves on
-this menu comes from tilting toward one of its sleeves, not from combining them.}""")
+rep(r"""Why does no weighting rule beat 1/N here, when the literature's optimization
+defenders show that it can? Because on an investable long-only factor menu there
+is almost nothing to optimize. We measure it three ways.""", r"""\quita{Why does no weighting rule beat 1/N here, when the literature's optimization
+defenders show that it can? Because on an investable long-only factor menu there
+is almost nothing to optimize. We measure it three ways.} \nuevo{The obvious explanation for
+Section 5 is that this menu leaves almost nothing to optimize. We first measure how redundant it is, and
+then test whether redundancy is in fact the explanation.}""")
+
+rep(r"""different bets on the menu, with Treasuries correlating $-0.115$ with the 28
+equity sleeves and gold $-0.007$.""", r"""different bets on the menu, with Treasuries correlating """ + swap("$-0.115$ with the 28\nequity sleeves and gold $-0.007$", "$-0.11$ and gold $+0.05$ with the equal-weighted equity sleeves") + r""".""")
+
+rep(r"""\begin{figure}[H]
+\exhibittitle{Factor tilts do not decorrelate, and the menu holds about one bet}{ex:dispersion}""", r"""\nota{figura de la v1 con correlaciones desfasadas y un error en la nota (el $DR^2$ de una cartera solo-largos nunca baja de 1). La sustituye la tabla de la Exhibit siguiente.}
+\begin{figure}[H]
+\color{quitarc}
+\exhibittitle{\quita{Factor tilts do not decorrelate, and the menu holds about one bet}}{ex:dispersion}""")
+
+rep(r"""holds about one and a third independent bets, and that figure is tightly estimated.""", r"""holds about one and a third independent bets, and that figure is tightly estimated.\nuevo{ A quick
+check explains the number. With similar volatilities, the ratio at equal weights is about one over the
+average correlation, here $1/0.756 = 1.32$. So $DR^2$ restates mean correlation in units that read as
+bets. It also depends on the weights and not only on the menu: the same 28 sleeves reach 1.46 under
+the weights that maximize it.}""")
+
+rep(r"""\head{Third, the contrast that identifies the mechanism.} Adding the three
+asset-class proxies moves the menu's minimum pairwise correlation from 0.53 to
+$-0.14$ and its diversification ratio to 1.43. Under the paired version of the
+same bootstrap, where one set of resampled months drives both menus, the
+difference is $+0.120$, with a 95\% interval of $+0.101$ to $+0.144$ and $p = 0.0002$. Three sleeves buy more independent-bet content than twenty-eight
+equity sleeves did, and that gap is resolved with a confidence the weighting race
+never reaches. At this data scale the menu effect is measurable and the method effect is not.""", r"""\begin{quitado}
+\head{Third, the contrast that identifies the mechanism.} Adding the three
+asset-class proxies moves the menu's minimum pairwise correlation from 0.53 to
+$-0.14$ and its diversification ratio to 1.43. Under the paired version of the
+same bootstrap, where one set of resampled months drives both menus, the
+difference is $+0.120$, with a 95\% interval of $+0.101$ to $+0.144$ and $p = 0.0002$. Three sleeves buy more independent-bet content than twenty-eight
+equity sleeves did, and that gap is resolved with a confidence the weighting race
+never reaches. At this data scale the menu effect is measurable and the method effect is not.
+\end{quitado}
+\nota{dos errores en lo quitado: (1) $+0{,}12$ de 3 activos NO es m\'as que $+0{,}31$ de 28 sleeves; (2) comparaba una diferencia de $DR^2$, casi mec\'anica, con una de Sharpe.}
+\begin{nuevotexto}
+\head{Third, what another asset class does.} Adding Treasuries, gold and cash to the 28 sleeves at
+equal weights moves the ratio only from 1.31 to 1.43, because they then receive just 3/31 of the
+capital (Exhibit~\ref{ex:dr2}). The right comparison is the other way round. One world index with a
+Treasury holds 2.01 bets; with gold and cash as well, 2.78, more than twice the 28 sleeves, with four
+holdings. And at the weights that maximize the ratio, the extended menu reaches 3.79 against 1.46.
+\end{nuevotexto}
+
+\begin{table}[H]
+\centering
+\exhibittitle{\nuevo{Independent bets, by menu and by weights}}{ex:dr2}
+\fontsize{9}{11}\selectfont
+{\color{nuevoc}\input{tables/tab_dr2}}
+\exhibitnote{\nuevo{$DR^2$ on the shrunk covariance, common window 1999--2026. ``At 1/N'' uses equal
+weights; ``at maximum'' the long-only weights that maximize the ratio. With only three or four holdings
+the mean correlation is close to zero, so the $1/\bar\rho$ shortcut no longer applies.}}
+\end{table}""")
+
+rep(r"""Beta dominance is the mechanism the headline result rests on, and it is why the
+diversification the factor literature promises is largely unavailable in the form
+a retail investor can buy.""", r"""Beta dominance is \quita{the mechanism the headline result rests on, and it is} why the
+diversification the factor literature promises is largely unavailable in the form
+a retail investor can buy.""")
+
+rep(r"""\subsection{The reconciliation}
+
+Optimization beats 1/N exactly where there is dispersion to exploit, on the
+industry and factor-portfolio datasets of its defenders, where idiosyncratic
+volatility is high and the covariance is well conditioned, which is Gelmini and
+Uberti's own explanation (Section 2). An investable factor menu is the opposite
+regime, with one dominant bet, a near-singular covariance, and no dispersion for
+any weighting scheme to convert into an edge. The disagreement in the literature
+concerns the opportunity set, and the retail factor investor sits squarely in the
+region where 1/N cannot be beaten.
+
+For the investor this is a selection problem: \emph{widen the menu before refining the weights.} Three asset classes buy more independent-bet content than
+twenty-eight equity sleeves, and no amount of estimator sophistication
+substitutes.""", r"""\subsection{\quita{The reconciliation}\nuevo{Does the menu decide? A test on twelve menus}}
+
+\begin{quitado}
+Optimization beats 1/N exactly where there is dispersion to exploit, on the
+industry and factor-portfolio datasets of its defenders, where idiosyncratic
+volatility is high and the covariance is well conditioned, which is Gelmini and
+Uberti's own explanation (Section 2). An investable factor menu is the opposite
+regime, with one dominant bet, a near-singular covariance, and no dispersion for
+any weighting scheme to convert into an edge. The disagreement in the literature
+concerns the opportunity set, and the retail factor investor sits squarely in the
+region where 1/N cannot be beaten.
+
+For the investor this is a selection problem: \emph{widen the menu before refining the weights.} Three asset classes buy more independent-bet content than
+twenty-eight equity sleeves, and no amount of estimator sophistication
+substitutes.
+\end{quitado}
+\nota{esto es lo m\'as importante de la auditor\'ia. Era la tesis de la v1, y nunca se hab\'ia probado con m\'as de un men\'u. Probada, no se sostiene. Lo redacto como hallazgo; revisa si quieres otro enfoque.}
+
+\begin{nuevotexto}
+If redundancy were the reason nothing beats 1/N here, the same rules should gain on menus that are
+less redundant. That is DeMiguel's own explanation, and it is testable. Exhibit~\ref{ex:menus} runs
+minimum variance, equal risk contribution and hierarchical risk parity, on the protocol of Section
+4.2, across twelve menus: our sleeves, several subsets, the Ken French industry and size-value
+portfolios, and the international sleeves. The menus range from 1.19 to 2.78 independent bets.
+\end{nuevotexto}
+
+\begin{table}[H]
+\centering
+\exhibittitle{\nuevo{The same rules on menus of very different dispersion}}{ex:menus}
+\fontsize{7.5}{9}\selectfont
+{\color{nuevoc}\input{tables/tab_menus}}
+\exhibitnote{\nuevo{$N$ holdings, $\bar\rho$ mean pairwise correlation, $DR^2$ at equal weights and at its
+maximum. 1/N: excess-return Sharpe ratio. Rule columns: Sharpe gap to 1/N, with bootstrap $p$ in parentheses;
+bold marks $p < 0.05$ with no adjustment for multiple testing. Long-only, expanding Ledoit-Wolf covariance,
+120-month warmup, annual refit, 10 basis points. Scoring starts ten years after the date shown.}}
+\end{table}
+
+\begin{nuevotexto}
+The explanation fails. From 1999, the minimum-variance edge is \emph{largest} on the most redundant menus:
+$+0.17$ to $+0.25$ on the size-value portfolios ($p = 0.03$ to $0.04$, before adjustment), against $+0.04$ to
+$+0.08$ on the far more dispersed industries ($p > 0.5$). The rank correlation between the edge and $DR^2$ is
+$-0.69$ ($p = 0.014$), the wrong sign. Since 1963 the sign is right ($+0.89$, on six overlapping menus) but
+the effect has no economic size: every edge lies between $-0.03$ and $+0.05$, and none is near
+significance. Equal risk contribution and hierarchical risk parity stay within 0.08 of 1/N on every equity
+menu, significant only on the size-value portfolios, where the gaps are tiny (0.02 and under 0.08). Two readings fit. Minimum variance's edge is a feature of the post-2009 era, visible across
+equity menus and absent over six decades. And these long-only rules rarely separate from 1/N on any menu,
+dispersed or not.
+
+We do not claim to refute the optimization side. Its evidence often rests on engines we do not field, with
+short sales and estimated means, and those levers are fixed here at the position of a long-only investor.
+The reconciliation may be right for them. What this test rules out is the shortcut that the retail
+investor's menu is, by itself, why 1/N is hard to beat.
+
+Changing the menu is another matter, and it needs the same yardstick. Version 1.0 compared a gap in $DR^2$
+with a gap in Sharpe ratio, two different quantities, and the former is close to mechanical.
+Exhibit~\ref{ex:widen} compares Sharpe ratios on both sides. Over 2009--2026 equal weight over a world index,
+Treasuries and gold has a Sharpe ratio of 0.96 against 0.75 for the 28 sleeves, with half the volatility and a
+drawdown of 16\% against 27\%; the gain in Sharpe ratio is large but unresolved ($p = 0.35$), because the two
+portfolios differ so much that 210 months cannot separate them. Over 1972--2026, on long-history proxies,
+it is resolved: adding Treasuries and gold raises the Sharpe ratio by 0.07 at equal weights ($p = 0.02$) and by
+0.19 under equal risk contribution ($p = 0.03$), with drawdowns of 40\% and 22\% against 54\%. Those are
+frictionless US constructs, tested without an adjustment for the several comparisons shown. The practical
+statement survives, with a firmer footing than before and a narrower claim: to reduce risk, change what you
+hold, because that works at once; expect a better risk-adjusted return from it only over decades.
+\end{nuevotexto}
+
+\begin{table}[H]
+\centering
+\exhibittitle{\nuevo{Changing the menu, on the same yardstick}}{ex:widen}
+\fontsize{8}{9.6}\selectfont
+{\color{nuevoc}\input{tables/tab_widen}}
+\exhibitnote{\nuevo{T: 10-year Treasury proxy. Sharpe on excess returns; $\Delta$ and $p$ against the first
+row of each panel. ERC is equal risk contribution. Panel B starts where all proxies exist, plus the
+120-month warmup, and its equity sleeves are six US Fama-French portfolios.}}
+\end{table}""")
 
 # ------------------------------------------------------------------ section 7
+rep(r"""floor was a concentrated Value bet, and forcing diversification collapses it
+($+0.31$ to $+0.02$\% per month).""", r"""floor was a concentrated Value bet, and forcing diversification collapses it
+(""" + swap(r"$+0.31$ to $+0.02$", r"$+0.08$ to $-0.09$") + r"""\% per month).""")
 rep(r"""resulting flagship, a capped worst-quadrant portfolio over equities, Treasuries
 and gold, delivers a Sharpe ratio of 0.95 at 8.7\% volatility with a $-16.7$\% maximum drawdown, is statistically indistinguishable from minimum variance, the modern winner, at $p = 0.70$ and two thirds of its volatility, and holds the
 lowest drawdown in Exhibit~\ref{ex:race}.""", r"""resulting flagship, a capped worst-quadrant portfolio over equities, Treasuries
 and gold, delivers """ + swap(r"a Sharpe ratio of 0.95 at 8.7\% volatility with a $-16.7$\% maximum drawdown, is statistically indistinguishable from minimum variance, the modern winner, at $p = 0.70$",
-                               r"an excess-return Sharpe ratio of 0.76 at 8.7\% volatility with a $-18$\% maximum drawdown, is statistically indistinguishable from minimum variance, the modern winner, at $p = 0.48$") + r""" and two thirds of its volatility, and holds the
-lowest drawdown in Exhibit~\ref{ex:race}.\nota{0.95, $-16.7$\% y $p = 0.70$ eran de una ejecuci\'on anterior a la publicada (ver M46).}""")
+                               r"an excess-return Sharpe ratio of 0.77 at 7.3\% volatility with a $-17$\% maximum drawdown, is statistically indistinguishable from minimum variance, the modern winner, at $p = 0.54$") + r""" and """ + swap("two thirds", "about half") + r""" of its volatility, and holds the
+lowest drawdown in Exhibit~\ref{ex:race}.\nota{0.95, $-16.7$\% y $p = 0.70$ eran de una ejecuci\'on anterior a la publicada (M46); y todos los n\'umeros de esta secci\'on usaban solo 235 de 330 meses de etiquetas (M56).}""")
 
 rep(r"""entire walk-forward 80 times with the macro-state labels scrambled, a circular""",
-    r"""entire walk-forward 80 times\nuevo{ (40 under each of two scrambling schemes)} with the macro-state labels scrambled, a circular""")
+    r"""entire walk-forward 80 times\nuevo{ (40 under each of two scrambling schemes; Exhibit~\ref{ex:placebotab})} with the macro-state labels scrambled, a circular""")
 
-rep(r"""Sharpe ratio across 40 replicates with the macro-state labels scrambled by a circular rotation,""",
-    r"""Sharpe ratio across 40 replicates with the macro-state labels scrambled by a circular rotation\nuevo{ (the second scheme, which shuffles months individually, gives the same picture)},""")
+rep(r"""\begin{figure}[H]
+\exhibittitle{Real regime labels land inside the scrambled-label distribution}{ex:placebo}""", r"""\begin{table}[H]
+\centering
+\exhibittitle{\nuevo{Real regime labels against scrambled ones}}{ex:placebotab}
+\fontsize{8}{9.6}\selectfont
+{\color{nuevoc}\input{tables/tab_placebo}}
+\exhibitnote{\nuevo{Sharpe (zero risk-free rate here, since each rule is compared only with itself) and the
+realized average return in the worst actual macro state. Real: the labels as classified. Rotated: all labels
+shifted by a random number of months, which keeps their frequencies and persistence. Shuffled: months permuted
+at random. 40 replications each, 2009--2026. $p$: share of scrambled runs at least as good as the real one.}}
+\end{table}
+
+\begin{figure}[H]
+\color{quitarc}
+\exhibittitle{\quita{Real regime labels land inside the scrambled-label distribution}}{ex:placebo}""")
+
+rep(r"""the objective actually optimizes, across twelve cells, the best permutation $p$ is
+0.195 and the real labels sit below the scrambled mean in seven of twelve. The
+average randomly labelled flagship achieved a better worst-quadrant floor than the
+real one.""", r"""the objective actually optimizes, across twelve cells, the best permutation $p$ is
+""" + swap("0.195", "0.24") + r""" and the real labels sit below the scrambled mean in seven of twelve. \quita{The
+average randomly labelled flagship achieved a better worst-quadrant floor than the
+real one.}""")
+
+rep(r"""difference-of-differences, switching the anchor off and on within each replicate
+on the same labels, finds every real-arm effect under half a null standard
+deviation and the estimator helping in 45 to 60\% of replicates, a coin flip.""", r"""difference-of-differences, switching the anchor off and on within each replicate
+on the same labels, finds every real-arm effect """ + swap("under half a null standard\ndeviation and the estimator helping in 45 to 60\\% of replicates, a coin flip", "within about one null standard deviation, with mixed signs ($+0.03$, $+0.03$ and $-0.05$ of Sharpe across the three variants), and the estimator helping in 30 to 65\\% of replicates") + r""".
+\nuevo{In short, the shrinkage described in Section 4.1 is sensible on paper and has no measurable effect on
+results.}""")
 
 # ------------------------------------------------------------------ section 8
+rep(r"""expose the equity-only maximin as 1/N-like before 2024, correlated 0.93 with
+emerging markets and lifted by the 2024-onward rally. The leave-one-region-out
+re-race then inverts the naive story. Dropping emerging markets improves every
+maximin variant (all-weather 0.93 to 1.18, taking first place), so that exposure
+was a net drag the objective was systematically attracted into. The podium itself
+is stable across menus. Minimum variance is first in 8 of 9 menus, the all-weather
+never leaves the podium, and no overlay beats 1/N on any menu.""", r"""expose the equity-only maximin as 1/N-like before 2024, correlated 0.93 with
+emerging markets and lifted by the 2024-onward rally. The leave-one-region-out
+re-race then inverts the naive story. Dropping emerging markets improves every
+maximin variant (all-weather """ + swap("0.93 to 1.18", "0.77 to 1.02") + r""", taking first place), so that exposure
+was a net drag the objective was systematically attracted into. The podium itself
+is stable across menus. Minimum variance is first in 8 of 9 menus, \quita{the all-weather
+never leaves the podium,} and no overlay beats 1/N on any menu.""")
+
+rep(r"""realistic macro-publication constraint, improves every regime-dependent contestant
+(all-weather 0.93 to 1.11 at 6.6\% volatility), so the shipped results carry no
+look-ahead subsidy.""", r"""realistic macro-publication constraint, \quita{improves every regime-dependent contestant
+(all-weather 0.93 to 1.11 at 6.6\% volatility)}\nuevo{raises the all-weather from 0.77 to 0.80 and the
+diversified maximin from 0.72 to 0.78}, so the shipped results carry no
+look-ahead subsidy.""")
+
+rep(r"""Two secondary readouts, declared before the run: nothing beats 1/N significantly there either (best $p = 0.246$),""", r"""Two secondary readouts, declared before the run: nothing beats 1/N significantly there either (""" + swap("best $p = 0.246$", "smallest $p = 0.22$, after the overlay correction") + r"""),""")
+
 rep(r"""\begin{figure}[H]
 \exhibittitle{Only the maximin family changes rank when a region is dropped}{ex:loro}""",
     r"""\nota{propongo quitar tambi\'en esta figura: el colaborador prefiere no poner el foco en el an\'alisis regional, y su mensaje cabe en el p\'arrafo siguiente, que se queda. Si quieres conservarla, quita el rojo.}
@@ -704,8 +1118,7 @@ rep(r"""\begin{figure}[H]
 \exhibittitle{\quita{Only the maximin family changes rank when a region is dropped}}{ex:loro}""")
 
 rep(r"""\head{Exposure and region dependence.} Sub-period splits""",
-    r"""\nota{las cifras de esta secci\'on (0.93, 1.18, 1.11, 6.6\%) son de la v1: tipo libre de riesgo cero y ejecuciones de julio, anteriores al plantel de 17 contendientes. Pendiente regenerar LORO, lag de 2 meses y era live en exceso (TODO).}
-\head{Exposure and region dependence.} Sub-period splits""")
+    r"""\head{Exposure and region dependence.} Sub-period splits""")
 
 # ------------------------------------------------------------------ section 9
 rep(r"""The modern out-of-sample window is the sharpest external-validity limit here. Scoring begins in 2009 because a
@@ -717,11 +1130,12 @@ bear. That matters specifically, not generically:""",
 entire 210-month race inside a single post-crisis regime containing no prolonged
 bear.} \nuevo{The modern out-of-sample window was the sharpest external-validity limit of
 version 1.0, which scored only 2009--2026, a single post-crisis regime. Section 5.4 extends
-scoring back to 2004 with shorter warmups, and the construction-rule verdict survives the
-2007--09 bear market, but twenty-two years remain a short record with one crisis in it.} That matters specifically, not generically:""")
+scoring back to 2002 with shorter warmups, and the construction-rule verdict survives the 2002 and
+2007--09 bear markets, but two crashes remain a very small sample for any claim about crisis
+behavior.} That matters specifically, not generically:""")
 
 rep(r"""rule falls to last over 90 years (Section 5.1). Read together with the 56\% power
-of the headline test,""", r"""rule falls to last over 90 years (Section 5.1). Read together with the """ + swap(r"56\%", r"52\%") + r""" power
+of the headline test,""", r"""rule falls to last over 90 years (Section 5.1). Read together with the """ + swap(r"56\%", r"limited") + r""" power
 of the headline test,""")
 
 rep(r"""US dollars. We also charge no ongoing fund fee, and the omission has a direction worth stating.""",
@@ -735,16 +1149,100 @@ differences, and readers should discount our effect sizes accordingly.
 \begin{nuevotexto}
 \head{Factor models.} The alphas of Section 5.3 are measured against long-short academic
 factors that a long-only investor cannot hold, so they answer an attribution question, what the
-returns are made of, and not an implementation one. The most important of them depends on
-including the emerging-market factor. We report all six specifications rather than choose one,
-and the most complete leaves minimum variance's edge at $p = 0.049$. Ken French's factors are
-built from broader stock universes than MSCI's indices, and the models include no
-low-volatility factor, so part of what remains as alpha may be a low-volatility premium the
-model does not name. The fee schedule of Section 5.3 is illustrative, not a quote for any
+returns are made of, and not an implementation one. We report several specifications beside the primary one,
+and the primary model, fixed in advance, leaves minimum variance's alpha at $+0.24$\% a year. Ken French's factors are
+built from broader stock universes than MSCI's indices, and factor returns are themselves estimates,
+so a small residual either way would not be informative. The fee schedule of Section 5.3 is illustrative, not a quote for any
 specific fund.
+
+\head{Two contestants are implemented less faithfully than the rest.} The Yuan-Zhou combination weight is
+re-derived from the scalars in their paper rather than transcribed, and volatility targeting uses twelve
+monthly observations where \citet{moreira2017} use daily realized variance, which monthly data do not allow.
+Neither changes a conclusion here, but a verdict on either rule should carry that caveat.
 \end{nuevotexto}""")
 
+rep(r"""hierarchy intact, with minimum variance still first, the all-weather flagship
+still second, and hierarchical risk parity still above equal risk contribution
+still above 1/N, so no conclusion here depends on backfilled months. Structural:
+every headline result replicates on Ken French portfolios, which are continuously
+computed and have no launch date to backfill from.""", r"""hierarchy intact, with minimum variance still first, \quita{the all-weather flagship
+still second, and} hierarchical risk parity still above equal risk contribution
+still above 1/N\nuevo{ and the all-weather below it}, so no conclusion here depends on backfilled months. Structural:
+\quita{every headline result replicates} \nuevo{the absence of a durable edge replicates over 1963--2026} on Ken French portfolios, which are continuously
+computed and have no launch date to backfill from.""")
+
+rep(r"""so at 30 basis points it removes about 0.020 from 1/N at 15.3\%
+volatility and about 0.034 from the all-weather flagship at 8.7\%.""", r"""so at 30 basis points it removes about 0.020 from 1/N at 15.3\%
+volatility and about """ + swap(r"0.034 from the all-weather flagship at 8.7\%", r"0.041 from the all-weather flagship at 7.3\%") + r""".""")
+
 # ------------------------------------------------------------------ section 10
+rep(r"""Two decades of argument over whether optimization beats equal weight have a
+resolution this article can state precisely. It depends on the opportunity set. On
+an investable long-only factor menu, where a real retail investor lives, the set
+holds one dominant bet, and no weighting rule beats 1/N by a margin this much data
+can resolve.""", r"""\quita{Two decades of argument over whether optimization beats equal weight have a
+resolution this article can state precisely. It depends on the opportunity set.} On
+an investable long-only factor menu, where a real retail investor lives, the set
+holds one dominant bet, and no weighting rule beats 1/N by a margin this much data
+can resolve.""")
+
+rep(r"""The finding is a property of the menu and not a limitation of any
+optimizer, and we measure it with inference attached: a diversification ratio of
+1.31 with a 95\% interval of 1.24 to 1.40, rising to 1.43 on the wider menu at
+$p = 0.0002$, factor tilts co-moving at 0.885, and a near-singular covariance. The
+menu effect clears significance comfortably; the weighting effect, on a design
+with 56\% power, does not clear it at all. The optimization defenders are right on
+their own datasets, where dispersion is high. Both can be true because they
+describe different opportunity sets, and we say which one the retail factor
+investor occupies.""", r"""\begin{quitado}
+The finding is a property of the menu and not a limitation of any
+optimizer, and we measure it with inference attached: a diversification ratio of
+1.31 with a 95\% interval of 1.24 to 1.40, rising to 1.43 on the wider menu at
+$p = 0.0002$, factor tilts co-moving at 0.885, and a near-singular covariance. The
+menu effect clears significance comfortably; the weighting effect, on a design
+with 56\% power, does not clear it at all. The optimization defenders are right on
+their own datasets, where dispersion is high. Both can be true because they
+describe different opportunity sets, and we say which one the retail factor
+investor occupies.
+\end{quitado}
+\begin{nuevotexto}
+No rule loses by such a margin either, once the number of rules is allowed for. The leader,
+minimum variance, has earned its edge from known exposures: no alpha is detectable once profitability
+and low beta are priced (95\% interval $-1.4$ to $+1.8$\% a year). Its failure to reach significance is a
+matter of too few years for a real departure from 1/N; its advantage has not lasted over six decades.
+
+The tempting explanation is that the menu is simply too redundant, and it holds about one
+and a third independent bets. We tested that explanation and it does not hold: across twelve menus the
+rules' edge does not grow with diversification. That leaves the twenty-year debate where it was for the
+engines we do not field, and rules out the shortcut for those we do.
+
+A different menu does change the outcome. A world index with Treasuries, gold and cash holds 2.78 independent
+bets against 1.31; such a menu halves risk at once, and raises the Sharpe ratio significantly over 54 years
+of proxies, though not yet over 17 of investable data.
+\end{nuevotexto}""")
+
+rep(r"""One reading has to be closed off, because it is the obvious one and it is wrong. This is not
+the estimation-error explanation the literature has offered since \citet{michaud1989}. The
+sleeves are not alike in return: over the full window the best and the worst differ by 10.7
+percentage points a year. What they lack is dispersion in \emph{risk}, at a mean pairwise
+correlation of 0.76. The failure is therefore not that an optimizer cannot forecast well
+enough. It is that there is almost nothing for a forecast to allocate between.""", r"""\begin{quitado}
+One reading has to be closed off, because it is the obvious one and it is wrong. This is not
+the estimation-error explanation the literature has offered since \citet{michaud1989}. The
+sleeves are not alike in return: over the full window the best and the worst differ by 10.7
+percentage points a year. What they lack is dispersion in \emph{risk}, at a mean pairwise
+correlation of 0.76. The failure is therefore not that an optimizer cannot forecast well
+enough. It is that there is almost nothing for a forecast to allocate between.
+\end{quitado}""")
+
+rep(r"""Risk-structure engines edge return-estimation ones but not significantly, hard
+caps help, and a menu holding genuinely different asset classes rather than
+another equity factor is what buys a shallow-drawdown floor.""", r"""Risk-structure engines edge return-estimation ones but not significantly, hard
+caps help \nuevo{only modestly and not significantly}, and a menu holding genuinely different asset classes rather than
+another equity factor is what buys a shallow-drawdown floor.""")
+
+rep(r"""and we report that with a power post-mortem. At retail data scale the contribution is not a better portfolio. It is knowing, and being able to show, that the menu is where the question actually lives.""", r"""and we report that with a power post-mortem. At retail data scale the contribution is not a better portfolio. It is knowing, and being able to show, \quita{that the menu is where the question actually lives}\nuevo{which claims about portfolio construction survive being tested, including our own}.""")
+
 rep(r"""holds one dominant bet, and no weighting rule beats 1/N by a margin this much data
 can resolve.""", r"""holds one dominant bet, and no weighting rule beats 1/N by a margin this much data
 can resolve\nuevo{, whether risk is counted as volatility, downside, market beta or tracking
@@ -777,9 +1275,9 @@ rep(r"""The author reports no conflicts of interest and received no external fun
 \nota{\textquestiondown agradecer aqu\'i al colaborador por la revisi\'on, o proponerle coautor\'ia? Decisi\'on tuya. Si se agradece y el env\'io es doble ciego, va en la versi\'on final, no en la an\'onima.}""")
 
 rep(r"""\head{Code and reproducibility.} The repository ships the critical-findings ledger (M1--M41),""",
-    r"""\head{Code and reproducibility.} The repository ships the critical-findings ledger (\quita{M1--M41}\nuevo{M1--M47}),""")
+    r"""\head{Code and reproducibility.} The repository ships the critical-findings ledger (\quita{M1--M41}\nuevo{M1--M60}),""")
 rep(r"""plus command-line modules for the expensive probes; 75 unit and integrity tests;""",
-    r"""plus command-line modules for the expensive probes; """ + swap("75", "85") + r""" unit and integrity tests;""")
+    r"""plus command-line modules for the expensive probes; """ + swap("75", "92") + r""" unit and integrity tests;""")
 
 # ------------------------------------------------------------------ appendices
 rep(r"""% =====================================================================
@@ -883,6 +1381,7 @@ bib_before("frazzini2014", r"""\bibitem[Fama and French(2012)]{fama2012} \nuevo{
 \bibitem[Fama and French(2017)]{fama2017} \nuevo{---------. 2017. ``International Tests of a Five-Factor Asset Pricing Model.'' \emph{Journal of Financial Economics} 123 (3): 441–463. https://doi.org/10.1016/j.jfineco.2016.11.004.}""")
 bib_before("guidolin2007", r"""\bibitem[Goodwin(1998)]{goodwin1998} \nuevo{Goodwin, T. 1998. ``The Information Ratio.'' \emph{Financial Analysts Journal} 54 (4): 34–43. https://doi.org/10.2469/faj.v54.n4.2196.}
 \bibitem[Grinold and Kahn(2000)]{grinold2000} \nuevo{Grinold, R., and R. Kahn. 2000. \emph{Active Portfolio Management.} 2nd ed. New York: McGraw-Hill.}""")
+bib_before("hurst2017", r"""\bibitem[Hoenig and Heisey(2001)]{hoenig2001} \nuevo{Hoenig, J., and D. Heisey. 2001. ``The Abuse of Power: The Pervasive Fallacy of Power Calculations for Data Analysis.'' \emph{The American Statistician} 55 (1): 19–24. https://doi.org/10.1198/000313001300339897.}""")
 bib_before("jobson1981", r"""\bibitem[Jensen(1968)]{jensen1968} \nuevo{Jensen, M. 1968. ``The Performance of Mutual Funds in the Period 1945–1964.'' \emph{Journal of Finance} 23 (2): 389–416. https://doi.org/10.1111/j.1540-6261.1968.tb00815.x.}""")
 bib_before("pflug2012", r"""\bibitem[Newey and West(1987)]{newey1987} \nuevo{Newey, W., and K. West. 1987. ``A Simple, Positive Semi-Definite, Heteroskedasticity and Autocorrelation Consistent Covariance Matrix.'' \emph{Econometrica} 55 (3): 703–708. https://doi.org/10.2307/1913610.}
 \bibitem[Novy-Marx(2013)]{novymarx2013} \nuevo{Novy-Marx, R. 2013. ``The Other Side of Value: The Gross Profitability Premium.'' \emph{Journal of Financial Economics} 108 (1): 1–28. https://doi.org/10.1016/j.jfineco.2013.01.003.}""")

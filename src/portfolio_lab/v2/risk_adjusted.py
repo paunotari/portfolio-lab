@@ -353,6 +353,54 @@ def romano_wolf(monthly: pd.DataFrame, models: list[str], bench: str = BENCH,
                          "mde80_ann": 2.80 * se_obs * 12, "mde80_boot_ann": mde_boot})
 
 
+def sharpe_romano_wolf(monthly: pd.DataFrame, bench: str = BENCH, B: int = None,
+                       block: int = None, seed: int = None) -> pd.DataFrame:
+    """Sharpe differences against 1/N with family-wise control across all contestants, plus the
+    one-sided p (does the rule BEAT 1/N?). A referee can fairly say a test of "beats" should be
+    one-sided; the honest reply is that a one-sided test must also pay for having fielded
+    sixteen rules. Studentized circular block bootstrap, same machinery as inference.py;
+    the same resampled months drive every contestant, so their dependence is preserved."""
+    B = B or C.V2_RW_B
+    ex = excess_returns(monthly)
+    names = [c for c in monthly.columns if c != bench]
+    d = ex[names + [bench]].dropna()
+    T = len(d)
+    b = block or C.OPTIMIZER_INFER_BLOCK or max(3, round(T ** (1 / 3)))
+    idx = _block_indices(T, B, b, C.OPTIMIZER_SEED if seed is None else seed)
+    y = d[bench].to_numpy(float)
+    obs, tstar = [], np.full((B, len(names)), np.nan)
+    for j, n in enumerate(names):
+        x = d[n].to_numpy(float)
+        _, delta = I._grad_and_delta(x, y)
+        se = I._hac_se(x, y)
+        obs.append((delta, se))
+        for s, ix in enumerate(idx):
+            xs, ys = x[ix], y[ix]
+            grad, delta_s = I._grad_and_delta(xs, ys)
+            V = I._influence(xs, ys)
+            nb = T // b
+            z = V[:nb * b].reshape(nb, b, 4).sum(axis=1) / np.sqrt(b)
+            var = float(grad @ (z.T @ z / nb) @ grad) / T
+            if var > 0:
+                tstar[s, j] = (delta_s - delta) / np.sqrt(var)
+    delta = np.array([o[0] for o in obs])
+    se = np.array([o[1] for o in obs])
+    t = delta / se
+    order = np.argsort(-np.abs(t))
+    p_rw = np.empty(len(names))
+    prev = 0.0
+    abst = np.abs(tstar)
+    for k, c in enumerate(order):
+        mx = np.nanmax(abst[:, order[k:]], axis=1)
+        prev = max(prev, (1 + np.sum(mx >= abs(t[c]))) / (B + 1))
+        p_rw[c] = prev
+    return pd.DataFrame({"portfolio": names, "T": T, "d_sharpe_ann": delta * np.sqrt(12),
+                         "se_ann": se * np.sqrt(12), "t": t,
+                         "p_two_sided": (1 + (abst >= np.abs(t)).sum(axis=0)) / (B + 1),
+                         "p_one_sided": (1 + (tstar >= t).sum(axis=0)) / (B + 1),
+                         "p_rw": p_rw}).sort_values("p_rw").reset_index(drop=True)
+
+
 def alpha_decomposition(monthly: pd.DataFrame, model: str, name: str = "Min-variance",
                         bench: str = BENCH) -> pd.DataFrame:
     """Raw mean gap to 1/N = alpha + sum_k b_k * mean(F_k): where the gap comes from, factor

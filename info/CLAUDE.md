@@ -133,6 +133,8 @@ python -m portfolio_lab.dashboard.build
 | `v2/short_warmup.py` | Runs `validation.walk_forward(warmup=w)` for 120 (baseline, reproduces v1 exactly), 80 and 60 months → `outputs/v2.0/wf_{returns,summary,attribution,gross,turnover,weights}_warmup{w}.*` (~1 min each). |
 | `v2/risk_adjusted.py` | Sharpe/Sortino/Treynor on excess returns with paired circular block bootstrap p vs 1/N; **alphas** under 6 models (`MODELS`: CAPM, CAPM (ACWI), Carhart 4F, 4F + EM market, FF5 + WML, FF5 + WML + EM) with Newey-West HAC t (`hac_ols`), alpha vs 1/N = intercept of the difference regression; `alpha_block_bootstrap` (pairs block bootstrap); **information / appraisal ratios** + rolling 3/5/10y ahead-of-1/N shares (`information_table`). |
 | `v2/fees.py` | Illustrative ETF TER schedule (`config.V2_TER_BPS`) charged on the per-refit weights held (overlays pay only on invested exposure) → net-of-fees Sharpe/p vs 1/N, IR vs 1/N and vs a plain MSCI ACWI fund. |
+| `dates.py` | **`align_months` / `to_month_end`: the only correct way to join MSCI (business month-end) with labels, FRED or Ken French (calendar month-end).** Every exact-date join between them silently loses ~30% of months (M42, M56). |
+| `v2/audit.py` | The computation audit, one process per job (`python -m portfolio_lab.v2.audit <job>`): `facts`, `dr2`, `menus` (the 12-menu reconciliation test), `widen`, `momentum`, `proxy`, `worked`, and full walk-forwards under one changed assumption (`loro:<R>`, `lag2`, `refit6/24`, `cov:<e>`, `caps:<s>_<g>`, `disjoint`, `ff_intl`), plus parallel `placebo:<mode>:<b>:<seed>` and `estimator:<b>:<seed>` chunks → `outputs/v2.0/audit/`. `collect()` feeds `numbers.json`; `report.py` builds the tables from it, so run the audit jobs before `scripts/run_v2.py`. Findings: M56–M61. |
 | `v2/benchmarks.py` | Naive ex-ante tilt benchmarks (1/N over the Quality sleeves, inverse-variance, the hindsight USA+World Quality pair) and dual momentum with Antonacci's T-bill gate — the tests behind "tilt vs skill" (M54, M55). |
 | `v2/descriptives.py` | Descriptive statistics of the 28 sleeves and the factors (excess mean, vol, Sharpe, skew, ex-kurt, worst month, maxDD, β). |
 | `v2/report.py` | v2 orchestrator (`scripts/run_v2.py`): all of the above → `outputs/v2.0/*.csv` + `REPORT_v2.md`, the paper's generated tables `paper/v2.0/tables/tab_*.tex` and `numbers.json`. Findings: MILESTONES M42–M47. |
@@ -308,11 +310,12 @@ is 14 steps; see
     macro-state labels retain the classifier's mild full-sample z-normalization (caveat #17) —
     stated in the report.
 
-20. **Business vs calendar month-ends — join on the PERIOD.** MSCI levels are stamped on the
-    last business day (2009-01-30), Ken French / FRED-derived series on the last calendar day
-    (2009-01-31). An exact-date join silently keeps ~70% of months (148 of 210 OOS months) — this
-    is what produced the false "rf only covers 148 months" in M40 (closed by M42). Use
-    `v2.factors.align` or `index.to_period("M")`, as `optimizer.load_returns` does.
+20. **Business vs calendar month-ends — join on the MONTH, always through `dates.py`.** MSCI levels
+    are stamped on the last business day (2009-01-30), Ken French, FRED and the macro-state labels on
+    the last calendar day (2009-01-31). An exact-date join silently keeps ~70% of months and raises
+    no error. It produced the false "rf only covers 148 months" (M40→M42) and dropped 95 of 330 months
+    from the whole regime layer (M56). `analytics/macro_link.py` is still to be audited for this
+    (exploratory, not in the paper; TODO).
 21. **pandas 3 `replace([...], pd.NA)` can raise** (`IndexError` in `replace_list`) on some Ken
     French files. `v2/factors.py` masks with `where`; v1's `ingest/ff_factors._parse_monthly`
     still uses `replace` and may hit it on the next v1 re-ingest (TODO).

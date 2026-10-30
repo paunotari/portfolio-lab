@@ -29,6 +29,7 @@ import numpy as np
 import pandas as pd
 
 from portfolio_lab import config as C
+from portfolio_lab.dates import to_month_end
 from portfolio_lab.analytics.macro_state import classify_states, STATE_ORDER
 
 FACTORS = ["mkt_rf", "smb", "hml", "mom"]
@@ -117,6 +118,7 @@ def msci_factor_prior(rets: pd.DataFrame) -> dict | None:
     """
     if not C.FF_FACTORS_MONTHLY.exists():
         return None
+    rets = to_month_end(rets)                # FF and the labels stamp calendar month-ends
     end = rets.index.max()
     ff = pd.read_csv(C.FF_FACTORS_MONTHLY, index_col=0, parse_dates=True).sort_index().loc[:end]
     states_long = classify_states(start="1926-01-01")
@@ -167,6 +169,7 @@ def market_prior(rets: pd.DataFrame) -> dict | None:
     Clipped to rets.index.max() (walk-forward honesty). Returns None without the FF file."""
     if not C.FF_FACTORS_MONTHLY.exists():
         return None
+    rets = to_month_end(rets)                # FF and the labels stamp calendar month-ends
     end = rets.index.max()
     ff = pd.read_csv(C.FF_FACTORS_MONTHLY, index_col=0, parse_dates=True).sort_index().loc[:end]
     if "rf" not in ff.columns:

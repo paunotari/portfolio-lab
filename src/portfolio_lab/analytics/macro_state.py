@@ -72,6 +72,7 @@ import numpy as np
 import pandas as pd
 
 from portfolio_lab import config as C
+from portfolio_lab.dates import to_month_end
 
 STATES = {
     (True, False): "Goldilocks (disinflationary growth)",
@@ -188,7 +189,7 @@ def transition_matrix(states: pd.DataFrame) -> pd.DataFrame:
 def state_performance(states: pd.DataFrame) -> pd.DataFrame:
     """Per (state, series): n_months, mean_monthly_return, annualized_return, ann_vol."""
     lv = pd.read_csv(C.LEVELS_WIDE, index_col=0, parse_dates=True).sort_index()
-    rets = lv.pct_change()
+    rets = to_month_end(lv.pct_change())     # label months are calendar month-ends
     rows = []
     for state_name in sorted(states.state.unique()):
         months = states.index[states.state == state_name]
@@ -209,7 +210,7 @@ def factor_attribution(states: pd.DataFrame) -> pd.DataFrame:
     """Within each state's months, does each FACTOR TYPE beat its own region's reference,
     averaged across all regions that have that factor? (excess monthly return + hit rate)."""
     lv = pd.read_csv(C.LEVELS_WIDE, index_col=0, parse_dates=True).sort_index()
-    rets = lv.pct_change()
+    rets = to_month_end(lv.pct_change())     # label months are calendar month-ends
     rows = []
     for state_name in sorted(states.state.unique()):
         months = states.index[states.state == state_name]

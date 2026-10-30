@@ -68,9 +68,12 @@ def _contestants(inp: dict, n_starts: int, seed: int, diag: dict = None) -> dict
     """name -> weight vector, all estimated from the training-window inputs only.
     diag: optional dict the rules can write scalar diagnostics into (e.g. the GMV combo's λ*)."""
     out = dict(inp["anchors"])                              # 1/N, ERC (anchor), HRP, Min-variance
-    out["Balanced sliders (5/5/5)"] = opt.optimize(
-        prefs={"return": 5, "risk": 5, "diversification": 5},
-        inputs=inp, n_starts=n_starts, seed=seed)["w"]
+    try:
+        out["Balanced sliders (5/5/5)"] = opt.optimize(
+            prefs={"return": 5, "risk": 5, "diversification": 5},
+            inputs=inp, n_starts=n_starts, seed=seed)["w"]
+    except RuntimeError as e:
+        print(f"[validation] WARN balanced sliders skipped at this refit ({e})")
     out[MOMENTUM_NAME] = rules.momentum_weights(inp["rets"])
     w_gmv, lam = rules.gmv_combo_weights(inp["rets"])       # the Yuan-Zhou challenger
     out[GMV_COMBO_NAME] = w_gmv
@@ -86,13 +89,18 @@ def _contestants(inp: dict, n_starts: int, seed: int, diag: dict = None) -> dict
         diag["gmv_lambda"] = lam
         diag["brodie_n_sleeves"] = float((out[BRODIE_NAME] > 0.01).sum())
     if inp["mu_q"] is not None and len(inp["mu_q"]) >= 2:
-        out["Maximin (worst quadrant)"] = opt.optimize(
-            maximin=True, inputs=inp, n_starts=n_starts, seed=seed)["w"]
-        out["Maximin (diversified)"] = opt.optimize(
-            maximin=True, cap=C.OPTIMIZER_DIVERSIFIED_SLEEVE_CAP_PCT / 100.0,
-            geo_cap=C.OPTIMIZER_GEO_CAP_PCT / 100.0,
-            factor_cap=C.OPTIMIZER_FACTOR_CAP_PCT / 100.0,
-            inputs=inp, n_starts=n_starts, seed=seed)["w"]
+        # On very short rolling windows a quadrant's per-state means can leave the caps with no
+        # solution: skip that refit (chunks carry their own dates, so nothing is misdated).
+        for name, kw in (("Maximin (worst quadrant)", {}),
+                         ("Maximin (diversified)",
+                          dict(cap=C.OPTIMIZER_DIVERSIFIED_SLEEVE_CAP_PCT / 100.0,
+                               geo_cap=C.OPTIMIZER_GEO_CAP_PCT / 100.0,
+                               factor_cap=C.OPTIMIZER_FACTOR_CAP_PCT / 100.0))):
+            try:
+                out[name] = opt.optimize(maximin=True, inputs=inp, n_starts=n_starts,
+                                         seed=seed, **kw)["w"]
+            except RuntimeError as e:
+                print(f"[validation] WARN {name} skipped at this refit ({e})")
     return out
 
 
@@ -197,7 +205,7 @@ def walk_forward(warmup: int = None, refit: int = None, n_starts: int = None,
                                             n_starts=n_starts, seed=seed, **div_kw)["w"]
                         entries.append((AW_NAME, w_aw, oos_aw.values, rets_aw.columns,
                                         oos_aw.index))
-                except Exception as e:
+                except Exception as e:                  # includes infeasible short windows
                     print(f"[validation] WARN all-weather refit at {rets.index[t - 1].date()} "
                           f"skipped ({e})")
         for name, w, oos_m, cols, dates in entries:

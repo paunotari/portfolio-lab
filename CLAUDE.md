@@ -43,6 +43,7 @@ python tests/test_pipeline.py       # data-integrity checks — must pass before
 python tests/test_optimizer.py      # optimizer-stack unit tests — must pass before committing
 python tests/test_v2.py             # v2.0 unit tests — must pass before committing
 python scripts/run_v2.py            # v2.0 experiments (collaborator review) -> outputs/v2.0, paper/v2.0/tables
+python paper/v2.0/build_v2_tex.py   # regenerate paper_v2.tex (v1 text + marked changes)
 ```
 The interpreter is the system `python3` (the `.venv` has no packages). The paper lives in
 `paper/v1.0/` (frozen SSRN version) and `paper/v2.0/` (current, colour-coded); the owner compiles
