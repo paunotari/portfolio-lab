@@ -137,8 +137,9 @@ settle, and after allowing for the number of rules tried none loses by such a ma
 leader, minimum variance, shows no detectable return beyond its exposures to profitable and
 low-risk stocks. The indices are nearly one bet, yet that redundancy is not the explanation we
 expected: across twelve menus, the rules' edge does not grow with diversification. Changing the
-menu itself does more. Adding Treasuries and gold cuts drawdowns sharply and, over 54 years,
-raises the Sharpe ratio significantly, though 17 years of data cannot settle that gain.
+menu itself does more for risk: adding Treasuries and gold nearly halves volatility and cuts the
+worst loss by a third. A better risk-adjusted return from it is suggested by 54 years of history
+and absent from the last 17.
 \end{nuevotexto}
 \nota{ATENCI\'ON: cambia la tesis. La auditor\'ia del 30-10 (M57) prob\'o en 12 men\'us que la dispersi\'on NO decide si optimizar funciona, y (M58) que ``tres activos a\~naden m\'as que los 28 \'indices'' era aritm\'eticamente falso. El t\'itulo ``...and the Opportunity Set'' quiz\'a ya no encaje; decide t\'u. Resumen: 157 palabras.}""")
 
@@ -167,8 +168,8 @@ rep(r"""\item On the menu a retail investor can reach, no weighting rule beats e
       independent bets, but on menus twice as diversified the rules gain no more.}
 \item \quita{Widen the menu before refining the weights. Optimization pays where holdings
       genuinely differ, and an investable equity factor menu offers very little difference
-      to exploit.}\nuevo{A world index plus Treasuries, gold and cash holds 2.78 bets against 1.31.
-      That cuts risk at once; a better risk-adjusted return shows only over decades.}""")
+      to exploit.}\nuevo{A world index plus Treasuries, gold and cash holds 2.40 bets against 1.31.
+      That cuts risk at once; a better risk-adjusted return is only suggested, over decades.}""")
 rep(r"""\noindent\textbf{JEL classification:} G11, C58.""",
     r"""\noindent\textbf{JEL classification:} G11, C58.""")
 
@@ -219,10 +220,11 @@ of the assets' individual risk cancels out when held together, implies 1.31 inde
 this menu (95\% confidence interval 1.24 to 1.40, from a bootstrap that rebuilds thousands of
 alternative histories from blocks of consecutive months). The tempting conclusion is that
 redundancy is why nothing beats 1/N. We test it across twelve menus and it fails: from 1999 the
-minimum-variance edge is largest on the most redundant menus (rank correlation $-0.69$), and since
-1963 it is close to zero on all of them. Changing the menu does change the outcome: a world index
-plus Treasuries, gold and cash holds 2.78 bets, and such menus raise the Sharpe ratio significantly
-over 54 years, though not yet over 17.}""")
+minimum-variance edge is, if anything, larger on the more redundant menus (rank correlation $-0.53$
+across ten equity menus, not significant), and since 1963 it is close to zero on all of them. Changing
+the menu does change the risk: a world index plus Treasuries, gold and cash holds 2.40 bets and
+nearly halves volatility, while a higher Sharpe ratio is suggested over 54 years and not visible
+over 17.}""")
 
 rep(r"""uses), deflated Sharpe ratios \citep{bailey2014}, a Friedman-Nemenyi joint test""",
     r"""uses), deflated Sharpe ratios \citep{bailey2014}\nuevo{, which discount the best result for
@@ -320,10 +322,19 @@ sleeves \citep{novymarx2013,asness2019}. Standard errors follow \citet{newey1987
 rep(r"""approximately 14\% at 5 years against a defensive multi-asset profile's 1.4\%,
 but at 20 years the two are 1.2\% and 0.0\% with the equity profile's median
 compound annual growth rate still materially higher (approximately 9.7\% versus
-7.3\%).""", r"""approximately """ + swap(r"14\%", r"11\%") + r""" at 5 years against a defensive multi-asset profile's """ + swap(r"1.4\%", r"0.9\%") + r""",
+7.3\%).""", r"""approximately """ + swap(r"14\%", r"11\%") + r""" at 5 years against a defensive multi-asset profile's """ + swap(r"1.4\%", r"1.2\%") + r""",
 but at 20 years the two are """ + swap(r"1.2\%", r"1.1\%") + r""" and 0.0\% with the equity profile's median
 compound annual growth rate still materially higher (approximately """ + swap("""9.7\\% versus
-7.3\\%""", r"9.8\% versus 6.4\%") + r""").""")
+7.3\\%""", r"9.8\% versus 6.5\%") + r""").""")
+
+rep(r"""$+21$\%, 2022 $-16$\%), LBMA gold and Treasury bill returns. These are research
+constructs and never investable sleeves.""", r"""$+21$\%, 2022 $-16$\%), \quita{LBMA} gold and Treasury bill returns. These are research
+constructs and never investable sleeves.\nuevo{ Gold is the exception from December 2004: from then
+it is the month-end return of the largest gold fund, with its fee added back. Before that date the
+only free long series is of monthly \emph{average} prices, whose returns are smoother than month-end
+returns (volatility 13\% against 17\%) and far less correlated with month-end equity returns (0.05
+against 0.24), so every result that rests on pre-2005 gold is flagged where it appears. The Treasury
+construct tracks an investable 7--10 year Treasury fund with a correlation of 0.99.}""")
 
 rep(r"""(789 months, 2.4 times the modern window, containing the actual 1970s""",
     r"""(""" + swap("789", "790") + r""" months, 2.4 times the modern window, containing the actual 1970s""")
@@ -371,6 +382,10 @@ developed-markets market factor.}}
 \end{table}""")
 
 # ------------------------------------------------------------------ section 4
+rep(r"""15 of 16 factor-by-quadrant sign cells agreeing between 1960--2026 and the modern
+window. The single flip is the market factor in stagflation.""", swap("15", "14") + r""" of 16 factor-by-quadrant sign cells agreeing between 1960--2026 and the modern
+window. """ + swap("The single flip is the market factor in stagflation.", "The two flips are the market and size factors in stagflation; size is not used by the estimator.") )
+
 rep(r"""Growth and inflation composites (z-scored, sign-adjusted trends of several
 indicators each) define four quadrants: Goldilocks, Reflation, Deflationary bust
 and Stagflation, with soft probabilities and an empirical monthly transition
@@ -572,12 +587,12 @@ over nested indices is not quite naive; on the 19 non-overlapping sleeves the re
 rep(r"""The verdict survives a joint test as well as the pairwise ones. A Friedman test on 12-month
 block ranks rejects the null that the ordering is noise ($\chi^{2} = 46.6$), yet the Nemenyi
 critical difference clears no contestant past 1/N.""", r"""The verdict survives a joint test as well as the pairwise ones. A Friedman test on 12-month
-block ranks\nuevo{, which asks whether the ranking as a whole is better than chance,} rejects the null that the ordering is noise ($\chi^{2} = """ + r"""\quita{46.6}\nuevo{30.7}$\nuevo{, $p = 0.015$}), yet the Nemenyi
+block ranks\nuevo{, which asks whether the ranking as a whole is better than chance,} rejects the null that the ordering is noise ($\chi^{2} = """ + r"""\quita{46.6}\nuevo{29.9}$\nuevo{, $p = 0.02$}), yet the Nemenyi
 critical difference\nuevo{, the smallest rank gap that counts once all pairs are compared at
 once,} clears no contestant past 1/N.""")
 
 rep(r"""the out-of-sample median is 33\%, which is real selection information well short of
-certainty.""", r"""the out-of-sample median is """ + swap(r"33\%", r"36\%") + r""", which is real selection information well short of
+certainty.""", r"""the out-of-sample median is """ + swap(r"33\%", r"24\%") + r""", which is real selection information well short of
 certainty.""")
 
 rep(r"""uses. Against the largest gap
@@ -658,6 +673,11 @@ variance's modern lead is absent from the long record, but so is any demonstrate
 \end{nuevotexto}""")
 
 rep(r"""\begin{figure}[H]
+\exhibittitle{The equity menu cannot reach below 13.3\% volatility; the extended menu reaches 0.6\%}{ex:frontier}""", r"""\nota{figura de la v1, dibujada con el oro en medias mensuales (M62): la frontera del panel B cambia algo; el suelo del 0,6\% es efectivo y no cambia. Regenerar antes de enviar.}
+\begin{figure}[H]
+\exhibittitle{The equity menu cannot reach below 13.3\% volatility; the extended menu reaches 0.6\%}{ex:frontier}""")
+
+rep(r"""\begin{figure}[H]
 \exhibittitle{No ranking flips in any sensitivity cell}{ex:grids}""", r"""\nota{se sustituye la figura por una tabla (el colaborador prefiere menos figuras): sus datos eran de julio, en tipo cero y con el fallo de etiquetas.}
 \begin{table}[H]
 \centering
@@ -665,7 +685,7 @@ rep(r"""\begin{figure}[H]
 \fontsize{8}{9.6}\selectfont
 {\color{nuevoc}\input{tables/tab_robust}}
 \exhibitnote{\nuevo{Excess-return Sharpe ratios, 2009--2026 except the last row (2000--2026). Minimum variance
-is first in every row but ``Without EM'' and the last; no row reaches $p < 0.05$ against 1/N except when Asia
+is first in every row but the last; no row reaches $p < 0.05$ against 1/N except when Asia
 ex-Japan is dropped ($p = 0.038$, not shown), one of about twenty cells. The diversified-maximin caps limit
 exposure per sleeve, region and factor.}}
 \end{table}
@@ -749,8 +769,8 @@ variance leads at 1.49 against 1/N's 1.20 ($p = 0.17$). The only difference belo
 loss, 1/N with volatility targeting ($p = 0.03$).
 
 \head{Market risk.} The Treynor ratio re-ranks in the direction the concern predicts: the highest
-values belong to the all-weather maximin (17.7\%, beta 0.32) and the trend overlay (16.3\%, beta
-0.46). That is the measure working as designed, not a better portfolio. Treynor assumes a portfolio
+values belong to the trend overlay (16.3\%, beta 0.46) and the all-weather maximin (15.3\%, beta
+0.38). That is the measure working as designed, not a better portfolio. Treynor assumes a portfolio
 is one holding inside a diversified whole, so a portfolio that already holds other asset classes is
 credited for diversification the ratio assumes it lacks. So it does not answer the concern; if
 anything it sharpens it. Among equity-only rules minimum variance leads again (14.9\% against 11.9\%,
@@ -806,8 +826,8 @@ of 0.22 is far from significant ($p = 0.43$): a gap of 1.2\% a year is small aga
 test it. They also explain the non-significance better than any talk of redundancy: this is a real
 departure from 1/N over too few years. The information ratio has a blind spot: it compares raw
 returns, so a portfolio with less market exposure looks worse in a rising market. The all-weather
-maximin has a Sharpe ratio above 1/N's and a significantly negative information ratio ($-0.52$,
-$p = 0.03$). That is why it cannot be the only yardstick here, whatever its merits for managers
+maximin has a Sharpe ratio statistically level with 1/N's (0.68 against 0.75, $p = 0.73$) and a
+significantly negative information ratio ($-0.53$, $p = 0.03$). That is why it cannot be the only yardstick here, whatever its merits for managers
 measured against a benchmark. The appraisal ratio avoids the blind spot by using alpha in place of the
 raw gap, but it restates the alpha $t$-statistic per year and adds no independent evidence.
 \end{nuevotexto}
@@ -866,6 +886,9 @@ in the order of the 120-month race.}}
 \begin{nuevotexto}
 The verdict holds. Minimum variance is first with warmups of 120, 80 and 60 months and its margin
 over 1/N stays at the threshold or above it ($p = 0.065$, $0.050$, $0.068$), weakening to $0.20$ from 2002.
+The bootstrap adds its own noise, about $\pm 0.006$ across random seeds (the first of these ranges from
+0.052 to 0.065 over twelve seeds, the second from 0.050 to 0.062), so a value on the threshold is not a
+rejection.
 Rolling windows of 120, 80, 60 and 36 months give minimum variance Sharpe ratios of 0.93, 0.91, 0.91 and
 0.75 against 1/N's 0.75 ($p = 0.09$, $0.11$, $0.11$, $0.94$): a shorter memory costs little down to five
 years and the entire edge at three. The unconstrained Yuan-Zhou combination is outside its own domain
@@ -898,7 +921,7 @@ Section 5 is that this menu leaves almost nothing to optimize. We first measure 
 then test whether redundancy is in fact the explanation.}""")
 
 rep(r"""different bets on the menu, with Treasuries correlating $-0.115$ with the 28
-equity sleeves and gold $-0.007$.""", r"""different bets on the menu, with Treasuries correlating """ + swap("$-0.115$ with the 28\nequity sleeves and gold $-0.007$", "$-0.11$ and gold $+0.05$ with the equal-weighted equity sleeves") + r""".""")
+equity sleeves and gold $-0.007$.""", r"""different bets on the menu, with Treasuries correlating """ + swap("$-0.115$ with the 28\nequity sleeves and gold $-0.007$", "$-0.11$ and gold $+0.19$ with the equal-weighted equity sleeves (gold measured at month-end from 2005)") + r""".""")
 
 rep(r"""\begin{figure}[H]
 \exhibittitle{Factor tilts do not decorrelate, and the menu holds about one bet}{ex:dispersion}""", r"""\nota{figura de la v1 con correlaciones desfasadas y un error en la nota (el $DR^2$ de una cartera solo-largos nunca baja de 1). La sustituye la tabla de la Exhibit siguiente.}
@@ -932,8 +955,8 @@ never reaches. At this data scale the menu effect is measurable and the method e
 \head{Third, what another asset class does.} Adding Treasuries, gold and cash to the 28 sleeves at
 equal weights moves the ratio only from 1.31 to 1.43, because they then receive just 3/31 of the
 capital (Exhibit~\ref{ex:dr2}). The right comparison is the other way round. One world index with a
-Treasury holds 2.01 bets; with gold and cash as well, 2.78, more than twice the 28 sleeves, with four
-holdings. And at the weights that maximize the ratio, the extended menu reaches 3.79 against 1.46.
+Treasury holds 2.01 bets; with gold and cash as well, 2.40, nearly twice the 28 sleeves, with four
+holdings. And at the weights that maximize the ratio, the extended menu reaches 3.53 against 1.46.
 \end{nuevotexto}
 
 \begin{table}[H]
@@ -988,7 +1011,7 @@ If redundancy were the reason nothing beats 1/N here, the same rules should gain
 less redundant. That is DeMiguel's own explanation, and it is testable. Exhibit~\ref{ex:menus} runs
 minimum variance, equal risk contribution and hierarchical risk parity, on the protocol of Section
 4.2, across twelve menus: our sleeves, several subsets, the Ken French industry and size-value
-portfolios, and the international sleeves. The menus range from 1.19 to 2.78 independent bets.
+portfolios, and the international sleeves. The menus range from 1.19 to 2.40 independent bets.
 \end{nuevotexto}
 
 \begin{table}[H]
@@ -1005,8 +1028,10 @@ bold marks $p < 0.05$ with no adjustment for multiple testing. Long-only, expand
 \begin{nuevotexto}
 The explanation fails. From 1999, the minimum-variance edge is \emph{largest} on the most redundant menus:
 $+0.17$ to $+0.25$ on the size-value portfolios ($p = 0.03$ to $0.04$, before adjustment), against $+0.04$ to
-$+0.08$ on the far more dispersed industries ($p > 0.5$). The rank correlation between the edge and $DR^2$ is
-$-0.69$ ($p = 0.014$), the wrong sign. Since 1963 the sign is right ($+0.89$, on six overlapping menus) but
+$+0.08$ on the far more dispersed industries ($p > 0.5$). Across the ten equity menus the rank correlation
+between the edge and $DR^2$ is $-0.53$ ($p = 0.12$): negative, not significant, and nowhere near the
+positive relation the explanation requires. Including the two menus with cash it is $-0.69$, but there
+minimum variance simply collapses into Treasury bills, so they should not carry the argument. Since 1963 the sign is right ($+0.89$, on six overlapping menus) but
 the effect has no economic size: every edge lies between $-0.03$ and $+0.05$, and none is near
 significance. Equal risk contribution and hierarchical risk parity stay within 0.08 of 1/N on every equity
 menu, significant only on the size-value portfolios, where the gaps are tiny (0.02 and under 0.08). Two readings fit. Minimum variance's edge is a feature of the post-2009 era, visible across
@@ -1021,14 +1046,16 @@ investor's menu is, by itself, why 1/N is hard to beat.
 Changing the menu is another matter, and it needs the same yardstick. Version 1.0 compared a gap in $DR^2$
 with a gap in Sharpe ratio, two different quantities, and the former is close to mechanical.
 Exhibit~\ref{ex:widen} compares Sharpe ratios on both sides. Over 2009--2026 equal weight over a world index,
-Treasuries and gold has a Sharpe ratio of 0.96 against 0.75 for the 28 sleeves, with half the volatility and a
-drawdown of 16\% against 27\%; the gain in Sharpe ratio is large but unresolved ($p = 0.35$), because the two
-portfolios differ so much that 210 months cannot separate them. Over 1972--2026, on long-history proxies,
-it is resolved: adding Treasuries and gold raises the Sharpe ratio by 0.07 at equal weights ($p = 0.02$) and by
-0.19 under equal risk contribution ($p = 0.03$), with drawdowns of 40\% and 22\% against 54\%. Those are
-frictionless US constructs, tested without an adjustment for the several comparisons shown. The practical
-statement survives, with a firmer footing than before and a narrower claim: to reduce risk, change what you
-hold, because that works at once; expect a better risk-adjusted return from it only over decades.
+Treasuries and gold has a Sharpe ratio of 0.77 against 0.75 for the 28 sleeves ($p = 0.89$): no gain in
+risk-adjusted return. What changes is the risk: volatility of 8.9\% against 15.3\% and a worst loss of 17\%
+against 27\%. Over 1972--2026, on long-history proxies, adding Treasuries and gold raises the Sharpe ratio by
+0.07 at equal weights ($p = 0.03$) and by 0.17 under equal risk contribution ($p = 0.05$), with worst losses
+of 40\% and 22\% against 54\%. That evidence is suggestive and no more. It uses frictionless US constructs,
+carries no adjustment for the several comparisons shown, and before 2005 its gold series is of monthly
+averages, which flatter a portfolio that holds gold; on quarterly returns, which largely remove that bias,
+the two $p$-values are 0.06 and 0.10. The practical statement is therefore narrower than in version 1.0:
+to reduce risk, change what you hold, because that works at once and by a wide margin; a better
+risk-adjusted return from it is not shown.
 \end{nuevotexto}
 
 \begin{table}[H]
@@ -1049,7 +1076,7 @@ rep(r"""resulting flagship, a capped worst-quadrant portfolio over equities, Tre
 and gold, delivers a Sharpe ratio of 0.95 at 8.7\% volatility with a $-16.7$\% maximum drawdown, is statistically indistinguishable from minimum variance, the modern winner, at $p = 0.70$ and two thirds of its volatility, and holds the
 lowest drawdown in Exhibit~\ref{ex:race}.""", r"""resulting flagship, a capped worst-quadrant portfolio over equities, Treasuries
 and gold, delivers """ + swap(r"a Sharpe ratio of 0.95 at 8.7\% volatility with a $-16.7$\% maximum drawdown, is statistically indistinguishable from minimum variance, the modern winner, at $p = 0.70$",
-                               r"an excess-return Sharpe ratio of 0.77 at 7.3\% volatility with a $-17$\% maximum drawdown, is statistically indistinguishable from minimum variance, the modern winner, at $p = 0.54$") + r""" and """ + swap("two thirds", "about half") + r""" of its volatility, and holds the
+                               r"an excess-return Sharpe ratio of 0.68 at 8.5\% volatility with a $-17$\% maximum drawdown, is statistically indistinguishable from minimum variance, the modern winner, at $p = 0.29$, and from 1/N at $p = 0.73$,") + r""" and two thirds of its volatility, and holds the
 lowest drawdown in Exhibit~\ref{ex:race}.\nota{0.95, $-16.7$\% y $p = 0.70$ eran de una ejecuci\'on anterior a la publicada (M46); y todos los n\'umeros de esta secci\'on usaban solo 235 de 330 meses de etiquetas (M56).}""")
 
 rep(r"""entire walk-forward 80 times with the macro-state labels scrambled, a circular""",
@@ -1075,14 +1102,14 @@ rep(r"""the objective actually optimizes, across twelve cells, the best permutat
 0.195 and the real labels sit below the scrambled mean in seven of twelve. The
 average randomly labelled flagship achieved a better worst-quadrant floor than the
 real one.""", r"""the objective actually optimizes, across twelve cells, the best permutation $p$ is
-""" + swap("0.195", "0.24") + r""" and the real labels sit below the scrambled mean in seven of twelve. \quita{The
+""" + swap("0.195", "0.24") + r""" and the real labels sit below the scrambled mean in """ + swap("seven", "eight") + r""" of twelve. \quita{The
 average randomly labelled flagship achieved a better worst-quadrant floor than the
 real one.}""")
 
 rep(r"""difference-of-differences, switching the anchor off and on within each replicate
 on the same labels, finds every real-arm effect under half a null standard
 deviation and the estimator helping in 45 to 60\% of replicates, a coin flip.""", r"""difference-of-differences, switching the anchor off and on within each replicate
-on the same labels, finds every real-arm effect """ + swap("under half a null standard\ndeviation and the estimator helping in 45 to 60\\% of replicates, a coin flip", "within about one null standard deviation, with mixed signs ($+0.03$, $+0.03$ and $-0.05$ of Sharpe across the three variants), and the estimator helping in 30 to 65\\% of replicates") + r""".
+on the same labels, finds every real-arm effect """ + swap("under half a null standard\ndeviation and the estimator helping in 45 to 60\\% of replicates, a coin flip", "within about one null standard deviation, with mixed signs ($+0.03$, $+0.03$ and $-0.03$ of Sharpe across the three variants), and the estimator helping in 30 to 65\\% of replicates") + r""".
 \nuevo{In short, the shrinkage described in Section 4.1 is sensible on paper and has no measurable effect on
 results.}""")
 
@@ -1096,15 +1123,15 @@ is stable across menus. Minimum variance is first in 8 of 9 menus, the all-weath
 never leaves the podium, and no overlay beats 1/N on any menu.""", r"""expose the equity-only maximin as 1/N-like before 2024, correlated 0.93 with
 emerging markets and lifted by the 2024-onward rally. The leave-one-region-out
 re-race then inverts the naive story. Dropping emerging markets improves every
-maximin variant (all-weather """ + swap("0.93 to 1.18", "0.77 to 1.02") + r""", taking first place), so that exposure
+maximin variant (all-weather """ + swap("0.93 to 1.18, taking first place", "0.68 to 0.84") + r"""), so that exposure
 was a net drag the objective was systematically attracted into. The podium itself
-is stable across menus. Minimum variance is first in 8 of 9 menus, \quita{the all-weather
-never leaves the podium,} and no overlay beats 1/N on any menu.""")
+is stable across menus. Minimum variance is first in """ + swap("8", "9") + r""" of 9 menus, \quita{the all-weather
+never leaves the podium,} and no overlay beats \quita{1/N}\nuevo{its own base portfolio} on any menu.""")
 
 rep(r"""realistic macro-publication constraint, improves every regime-dependent contestant
 (all-weather 0.93 to 1.11 at 6.6\% volatility), so the shipped results carry no
 look-ahead subsidy.""", r"""realistic macro-publication constraint, \quita{improves every regime-dependent contestant
-(all-weather 0.93 to 1.11 at 6.6\% volatility)}\nuevo{raises the all-weather from 0.77 to 0.80 and the
+(all-weather 0.93 to 1.11 at 6.6\% volatility)}\nuevo{raises the all-weather from 0.68 to 0.71 and the
 diversified maximin from 0.72 to 0.78}, so the shipped results carry no
 look-ahead subsidy.""")
 
@@ -1155,6 +1182,12 @@ built from broader stock universes than MSCI's indices, and factor returns are t
 so a small residual either way would not be informative. The fee schedule of Section 5.3 is illustrative, not a quote for any
 specific fund.
 
+\head{The non-equity sleeves are constructs.} The Treasury return is built from yields and tracks an
+investable fund closely (correlation 0.99). Gold is an investable fund only from December 2004; earlier
+gold returns come from monthly average prices and understate both its volatility and its correlation
+with equities, which affects the 1972--2026 panel of Exhibit~\ref{ex:widen}, the 1973--74 episode of
+Section 7.1 and the early training years of the all-weather contestant.
+
 \head{Two contestants are implemented less faithfully than the rest.} The Yuan-Zhou combination weight is
 re-derived from the scalars in their paper rather than transcribed, and volatility targeting uses twelve
 monthly observations where \citet{moreira2017} use daily realized variance, which monthly data do not allow.
@@ -1173,7 +1206,7 @@ computed and have no launch date to backfill from.""")
 
 rep(r"""so at 30 basis points it removes about 0.020 from 1/N at 15.3\%
 volatility and about 0.034 from the all-weather flagship at 8.7\%.""", r"""so at 30 basis points it removes about 0.020 from 1/N at 15.3\%
-volatility and about """ + swap(r"0.034 from the all-weather flagship at 8.7\%", r"0.041 from the all-weather flagship at 7.3\%") + r""".""")
+volatility and about """ + swap(r"0.034 from the all-weather flagship at 8.7\%", r"0.035 from the all-weather flagship at 8.5\%") + r""".""")
 
 # ------------------------------------------------------------------ section 10
 rep(r"""Two decades of argument over whether optimization beats equal weight have a
@@ -1216,9 +1249,9 @@ and a third independent bets. We tested that explanation and it does not hold: a
 rules' edge does not grow with diversification. That leaves the twenty-year debate where it was for the
 engines we do not field, and rules out the shortcut for those we do.
 
-A different menu does change the outcome. A world index with Treasuries, gold and cash holds 2.78 independent
-bets against 1.31; such a menu halves risk at once, and raises the Sharpe ratio significantly over 54 years
-of proxies, though not yet over 17 of investable data.
+A different menu does change the risk. A world index with Treasuries, gold and cash holds 2.40 independent
+bets against 1.31 and nearly halves volatility at once. A higher Sharpe ratio from it is suggested by 54
+years of proxies and absent from 17 years of investable data.
 \end{nuevotexto}""")
 
 rep(r"""One reading has to be closed off, because it is the obvious one and it is wrong. This is not
@@ -1270,6 +1303,9 @@ five performance measures, six factor models, fund fees,} and two placebos on th
 is a short list.""")
 
 # ------------------------------------------------------------------ disclosures
+rep(r"""the Ken French data library, and an LBMA gold-price mirror.""",
+    r"""the Ken French data library, \nuevo{AQR's factor library,} and """ + swap("an LBMA gold-price mirror", "gold prices (a public mirror of World Bank monthly averages and, from 2004, a gold fund's month-end prices)") + r""".""")
+
 rep(r"""The author reports no conflicts of interest and received no external funding.""",
     r"""The author reports no conflicts of interest and received no external funding.
 \nota{\textquestiondown agradecer aqu\'i al colaborador por la revisi\'on, o proponerle coautor\'ia? Decisi\'on tuya. Si se agradece y el env\'io es doble ciego, va en la versi\'on final, no en la an\'onima.}""")

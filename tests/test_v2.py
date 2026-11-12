@@ -172,6 +172,19 @@ def test_align_months_matches_by_month_not_by_date():
     assert list(to_month_end(pd.Series([1.0], index=idx[:1])).index) == [pd.Timestamp("2009-01-31")]
 
 
+def test_gold_sleeve_is_month_end_not_monthly_average():
+    """M62 regression: returns of monthly-AVERAGE prices are smoothed (variance about 2/3 of
+    month-end, positive lag-1 autocorrelation). From 2005 the gold sleeve must be month-end."""
+    if not C.ASSET_CLASS_MONTHLY.exists():
+        return
+    g = pd.read_csv(C.ASSET_CLASS_MONTHLY, index_col=0, parse_dates=True)["Asset | Gold"]
+    g = g.loc["2005-01-01":"2026-06-30"].dropna()
+    if len(g) < 200:
+        return
+    assert g.std() * np.sqrt(12) > 0.15, "gold volatility too low: monthly-average prices?"
+    assert g.autocorr(1) < 0.08, "gold returns positively autocorrelated: monthly averages?"
+
+
 def test_vectorized_intercept_t_matches_hac_ols():
     """romano_wolf's vectorized intercept s.e. must equal hac_ols's, column by column."""
     fac, rng = _toy()

@@ -189,11 +189,15 @@ def job_menus():
     t = pd.DataFrame(rows)
     t.to_csv(OUT / "menus_reconciliation.csv", index=False)
     summ = {}
-    for era, g in t.groupby("era"):
-        for rule in ("Min-variance", "ERC", "HRP"):
-            for x in ("dr2_1n", "mean_corr"):
-                rho, p = spearmanr(g[x], g[f"d_{rule}"])
-                summ[f"{era} | {rule} | {x}"] = dict(spearman=float(rho), p=float(p), n=len(g))
+    # Two versions: all menus, and equity-only. On the menus that contain cash, min-variance
+    # collapses into T-bills (a known degeneracy), so they must not drive the conclusion.
+    for era, g0 in t.groupby("era"):
+        for scope, g in (("all menus", g0), ("equity menus", g0[~g0.menu.str.contains("asset classes")])):
+            for rule in ("Min-variance", "ERC", "HRP"):
+                for x in ("dr2_1n", "mean_corr"):
+                    rho, p = spearmanr(g[x], g[f"d_{rule}"])
+                    summ[f"{era} | {scope} | {rule} | {x}"] = dict(spearman=float(rho), p=float(p),
+                                                                   n=len(g))
     (OUT / "menus_spearman.json").write_text(json.dumps(summ, indent=1))
     print(json.dumps(summ, indent=1))
 
@@ -363,6 +367,17 @@ def job_widen():
         if c != base:
             t = I.sharpe_diff_test(e, ex[base])
             row.update(d_sharpe=t["delta"] * np.sqrt(12), p_boot=t["p_boot"])
+            # Gold before 2004-12 is monthly-AVERAGE prices (M62): smoothed and straddling two
+            # months. Compounding to non-overlapping quarters removes most of that bias (the
+            # variance shortfall falls from 1/3 to 1/9), so the test is repeated on quarters,
+            # and on the months from 2005 only, where gold is the month-end ETF.
+            q = (1 + ex[[c, base]]).dropna()
+            q = q.groupby(np.arange(len(q)) // 3).prod() - 1
+            tq = I.sharpe_diff_test(q[c], q[base])
+            row.update(d_sharpe_quarterly=tq["delta"] * 2.0, p_quarterly=tq["p_boot"])
+            sub = ex[[c, base]].loc["2005-01-01":].dropna()
+            t5 = I.sharpe_diff_test(sub[c], sub[base])
+            row.update(d_sharpe_2005=t5["delta"] * np.sqrt(12), p_2005=t5["p_boot"])
         rows.append(row)
     t2 = pd.DataFrame(rows).sort_values("sharpe", ascending=False)
     t2.to_csv(OUT / "widen_long.csv", index=False)

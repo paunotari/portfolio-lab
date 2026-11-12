@@ -1417,3 +1417,84 @@ helps in 30–65% of replicates; virgin universe unchanged at Δ +0.002/+0.016. 
 real-arm effects are larger than before the fix (+0.005, +0.001, −0.004) and still inside the noise.
 **⇒ Consequence.** M32 and M35 stand on correct data. **See:** `outputs/v2.0/audit/placebo_summary.csv`,
 `estimator_ab_summary.csv`. **Status:** OOS modern; rf = 0 in the placebo, each rule against itself.
+
+---
+
+# v2.0 final coherence review of data and experiments (2026-11-12)
+
+Independent re-derivations of the inputs and of the stated facts, not of the prose. What was
+checked and held: the 28 MSCI series (330 months, no gaps, duplicates or stale values; calendar-
+year returns match published figures: ACWI 2008 −42.2%, 2022 −18.4%; USA 2008 −37.6%); 1/N's
+excess Sharpe recomputed from raw levels (0.7453, identical to the shipped series to 1e-16); the
+race reproduced by a second code path (`audit.simple_race`: min-var +0.190, p 0.065); DR² and the
+max-DR solver on known cases; the Treasury construct against an investable 7–10y fund (IEF,
+total return, 2002+: correlation 0.989, same mean); §6.1's facts (Quality β 0.912, worst-decile
+−7.95% vs −8.87%, 6 of 6; value/momentum excess correlations by region; full-sample min-var 4
+sleeves, DR² 1.283, vol floor 13.4%). Two things did not hold.
+
+## M62 — CORRECTION (data): the gold sleeve was MONTHLY-AVERAGE prices, not month-end
+**Claim (verified):** the gold "LBMA mirror" is, from 1960, the World Bank Pink Sheet: monthly
+AVERAGE prices (documented by the dataset; confirmed numerically: its calendar-year returns match
+average-to-average, e.g. 2008 +1.6% vs +4.3% year-end fixing). Returns of averages are smoothed
+and straddle two months. Against the investable gold fund (GLD, month-end, 2004-12→2026-06):
+
+| | monthly averages | month-end fund |
+|---|---|---|
+| annual volatility | 13.7% | **17.0%** |
+| correlation with 1/N equity | 0.06 | **0.24** |
+| correlation with the Treasury construct | 0.18 | 0.32 |
+| lag-1 autocorrelation | +0.11 | −0.09 |
+
+**Fix:** `ingest/asset_classes.py` now uses GLD's month-end adjusted close (expense ratio added
+back, so gross of fees like the index sleeves) from 2004-12; averages remain only before, saved
+alone in `gold_monthly_average_returns.csv`. Everything holding the proxies was re-run (9 walk-
+forwards, 15 robustness races, the menu tests, placebo, estimator A/B, v1 optimizer/stress/proxy
+stages). Pre-correction outputs: `outputs/v2.0/round4_avg_gold/`, `outputs/v2.0/audit/avg_gold/`.
+
+| changed result | averages | corrected |
+|---|---|---|
+| DR², ACWI + Treasury + gold + cash, at 1/N | 2.78 | **2.40** |
+| DR², 28 + 3 at its maximum | 3.79 | **3.53** |
+| ACWI + T + gold 1/N vs 28-sleeve 1/N, Sharpe (2009–26) | 0.96 vs 0.75, p 0.35 | **0.77 vs 0.75, p 0.89** |
+| its volatility / worst loss | 7.2% / −16% | **8.9% / −17%** (vs 15.3% / −27%) |
+| long panel 1972–2026, 1/N with T + gold, ΔSharpe | +0.07, p 0.017 | **+0.065, p 0.028** (quarterly 0.055) |
+| long panel, ERC with T + gold, ΔSharpe | +0.19, p 0.032 | **+0.17, p 0.052** (quarterly 0.095) |
+| all-weather contestant: Sharpe / vol / maxDD | 0.775 / 7.3% / −17% | **0.677 / 8.5% / −17%** (below 1/N's 0.745) |
+| all-weather without EM (LORO) | 1.02, first | **0.84**; min-variance first in 9 of 9 menus |
+| Friedman χ² / PBO (17 contestants) | 30.7 / 36% | **29.9 (p 0.019) / 24%** |
+
+**⇒ Consequence.** M58/M59 are restated: widening the menu nearly halves volatility and cuts the
+worst loss by a third — robust, immediate — but a higher SHARPE ratio is **not shown** over
+2009–2026 and only suggested over 54 years (p 0.03–0.10 depending on rule and horizon; the long
+panel still uses averaged gold before 2005, which flatters it). Not affected: every equity-only
+result (race, alphas, rolling windows, 10 of 12 menus). Still on averages: the 1972–2004 part of
+the long panel, the 1973–74 stress episode (+9.8% all-weather static), early all-weather training
+years. A month-end LBMA series from 1968 would settle those (TODO; the two public sources tried
+block automated downloads). **Status:** corrected for 2004-12 onward.
+
+## M63 — Coherence corrections to earlier entries
+- **M57's rank correlation was carried by two degenerate menus.** −0.69 (p 0.014) over 12 menus
+  includes the two with cash, where min-variance collapses into T-bills. **Across the ten equity
+  menus it is −0.53 (p 0.12).** The finding stands in its correct form: no positive relation
+  between dispersion and the optimizer's edge; "significantly the wrong sign" is withdrawn.
+  `menus_spearman.json` now reports both scopes.
+- **Bootstrap p-values carry Monte Carlo noise of about ±0.006** (B = 4999). Min-var vs 1/N over
+  12 seeds: 120 race 0.052–0.065 (the shipped 0.065 is the top of that range; mean 0.059); 80 race
+  0.050–0.062, below 0.05 in 1 of 12 seeds; 60 race 0.068–0.075. No table bolds a p that prints as
+  0.050 any more. Read every p near 0.05 as "about 0.06".
+- **Era sign-agreement is 14 of 16 cells, not 15** on current data (flips: market and size in
+  stagflation). Size is not used by the estimator; no downstream effect. Corrects M4.
+- **"No overlay beats 1/N on any menu" was never literally true** (min-var + vol-target 0.85 > 1/N
+  0.75, in v1 too). True statement, verified on the baseline and all 8 leave-one-out menus: no
+  overlay beats its OWN BASE portfolio.
+- **Numbers in earlier entries superseded by M48/M56/M62** (current values in `numbers.json`):
+  all-weather Treynor 16.6% → 15.3% (β 0.38) and IR −0.48 → −0.53 (M43, M45); worst-quadrant
+  maximin CER at γ = 10 −5.3% (p 0.002) → −3.7% (p 0.034), so nothing in M51 survives Holm in
+  either direction; GFC all-weather −32% (M55); live-era all-weather 0.57 (M56 said 0.61);
+  scenario cones: all-weather 5y P(loss) 1.2%, median 6.5%.
+**Status:** recorded; entries above this section are historical where they conflict.
+
+**M61 after M62 (regime layer on corrected gold):** placebo, 40 + 40 replicates: best p 0.24, real
+labels below the scrambled mean in 8 of 12 cells, 1/N identical in all 86 runs. Estimator A/B:
+Δ Sharpe +0.032, +0.031, −0.027, every effect ≤ 1.1 null sd, helps in 30–65% of replicates. The
+negative results on the regime layer stand.

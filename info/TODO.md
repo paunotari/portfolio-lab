@@ -144,6 +144,16 @@ Check items off as completed. Add new ones as they come up; keep entries short a
       Sharpe apples to oranges → performance test (M59), one-sided/RW, post-hoc power, momentum
       refit, nested 1/N, 90-year p-values (M60). paper_v2.tex rewritten from the ledger, with the
       plain-language shrinkage explanation and worked table in §4.1.
+- [x] **Final coherence review of data and experiments, 2026-11-12 (M62–M63)** — gold sleeve was
+      monthly-average prices (fixed from 2004-12 with the month-end ETF; everything with proxies
+      re-run); the 12-menu rank correlation restated on equity menus (−0.53, n.s.); bootstrap seed
+      noise ±0.006 documented; 14/16 sign cells; overlay sentence corrected.
+- [ ] **Month-end gold before 2005** (LBMA PM fix from 1968, monthly end-of-period): the owner can
+      export it; LBMA and Stooq block automated downloads. Needed to clean the 1972–2026 panel of
+      the "changing the menu" exhibit and the 1973–74 stress episode. Until then they are flagged.
+- [ ] Owner's call: `ingest/asset_classes.py` now fetches GLD from Yahoo's chart endpoint
+      (unofficial, personal-research use). Keep, or replace with an owner-exported file.
+- [ ] Regenerate Exhibit 12 (frontier figure) with the corrected gold before submission.
 - [ ] **Owner decides: the thesis changed** (blue notes in the abstract and §6.2). Is the title
       still right? Does the collaborator agree with framing M57 as a finding?
 - [ ] Extend the 12-menu test to the engines the optimization side uses (shorting, estimated

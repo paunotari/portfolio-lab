@@ -75,7 +75,9 @@ def _p(x):
     if not np.isfinite(x):
         return "---"
     s = "$<$0.001" if x < 0.001 else f"{x:.3f}"
-    return f"\\textbf{{{s}}}" if x < 0.05 else s
+    # bold only when significant AS PRINTED: a bootstrap p of 0.0496 prints as 0.050 and moves
+    # by about +-0.006 with the random seed (M63), so it is not a rejection
+    return f"\\textbf{{{s}}}" if round(x, 3) < 0.05 else s
 
 
 def _tabular(spec: str, header: str, rows: list[str], footer: list[str] = ()) -> str:
@@ -486,6 +488,10 @@ def run(rerun: bool = False) -> dict:
     pbo = I.pbo_cscv(ex_base)
     block_p = {b: I.sharpe_diff_test(ex_base["Min-variance"], ex_base["1/N"], block=b)["p_boot"]
                for b in (3, 6, 10)}
+    # Monte Carlo error of the bootstrap p itself: the headline test under 12 seeds
+    p_seeds = {str(w): [I.sharpe_diff_test(R.excess_returns(exp[w])["Min-variance"],
+                                           R.excess_returns(exp[w])["1/N"], seed=sd)["p_boot"]
+                        for sd in range(1, 13)] for w in (120, 80, 60)}
     print("[v2] Romano-Wolf on Sharpe differences ...")
     sharpe_rw = R.sharpe_romano_wolf(base)
     se_mv = float(sharpe_rw.set_index("portfolio").loc["Min-variance", "se_ann"])
@@ -615,6 +621,9 @@ def run(rerun: bool = False) -> dict:
         romano_wolf_primary_exp120=recs(rw_primary), romano_wolf_primary_roll60=recs(rw_primary_roll),
         romano_wolf_family_min=recs(rw_family.sort_values("p_rw").head(8)),
         sharpe_romano_wolf=recs(sharpe_rw), design_power_minvar=design_power,
+        headline_p_by_seed={w: dict(min=float(min(v)), max=float(max(v)), mean=float(np.mean(v)),
+                                    share_below_005=float(np.mean(np.array(v) < 0.05)))
+                            for w, v in p_seeds.items()},
         audit=AU.collect(),
         alpha_stability_P=recs(stab), cer_exp120=recs(cer), premia_net=premia,
         alpha_decomposition_P_minvar=recs(decomp),

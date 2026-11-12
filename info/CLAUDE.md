@@ -319,6 +319,13 @@ is 14 steps; see
 21. **pandas 3 `replace([...], pd.NA)` can raise** (`IndexError` in `replace_list`) on some Ken
     French files. `v2/factors.py` masks with `where`; v1's `ingest/ff_factors._parse_monthly`
     still uses `replace` and may hit it on the next v1 re-ingest (TODO).
+24. **The gold sleeve is two series spliced (M62).** Before 2004-12 it is World Bank monthly
+    AVERAGE prices (smoothed: vol 13% vs 17%, correlation with equities 0.05 vs 0.24); from 2004-12
+    the month-end gold ETF, gross of its fee (`ingest/asset_classes.py`, Yahoo chart endpoint,
+    WARN-and-fall-back-to-averages on failure). Anything resting on pre-2005 gold (long multi-asset
+    panel, 1973–74 stress episode) is biased toward gold. Never treat a "monthly" commodity or
+    yield series as month-end without checking: test lag-1 autocorrelation and one calendar-year
+    return against a published figure.
 23. **Walk-forward OOS chunks carry their own dates** (`validation.walk_forward`): before M53,
     a contestant skipped at early refits had its returns stamped from the first OOS month.
     **Overlay signals are NaN-masked and seeded with causal pre-sample history; overlay cash

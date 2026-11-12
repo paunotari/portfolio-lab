@@ -10,7 +10,9 @@ can be a real all-weather instead of reshuffling equities. All three are free:
   for exactly this):    r_t = y_{t-1}/12 - D(y_t)*dy + 0.5*C(y_t)*dy^2
   with par-bond closed forms D = (1/y)(1-(1+y)^-M), C = (2/y^2)(1-(1+y)^-M) - 2M/(y(1+y)^(M+1)),
   M = 10. Deterministic arithmetic on a published yield — allowed side of caveat #11.
-- "Asset | Gold": monthly price return from the datasets/gold-prices LBMA mirror (1833+,
+- "Asset | Gold": the investable gold ETF at month-end from 2004-12 (gross of its fee); before
+  that, monthly-AVERAGE price returns, which are smoothed (config, M62). Originally:
+  monthly price return from the datasets/gold-prices mirror (1833+,
   currently maintained). Pre-1971 the price was pegged (Bretton Woods) — returns exist but are
   near-zero by construction; any long-history use should start ~1971, documented where used.
 - "Asset | Cash (T-bill)": the Fama-French RF series (ff_factors_monthly.csv) as-is.
@@ -56,17 +58,50 @@ def _bond_total_return() -> pd.Series | None:
     return r.dropna().rename("Asset | US Treasury 10y")
 
 
+def _gold_etf_return() -> pd.Series | None:
+    """Month-end total return of the gold ETF, gross of its expense ratio (see config)."""
+    import json
+    import time
+    try:
+        ctx = ssl.create_default_context(cafile=certifi.where())
+        req = urllib.request.Request(C.GOLD_ETF_URL.format(now=int(time.time())),
+                                     headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, context=ctx, timeout=60) as resp:
+            d = json.loads(resp.read().decode("utf-8"))["chart"]["result"][0]
+        px = pd.Series(d["indicators"]["adjclose"][0]["adjclose"],
+                       index=pd.to_datetime(d["timestamp"], unit="s")).dropna()
+        px.index = px.index.to_period("M")
+        px = px[~px.index.duplicated(keep="last")]
+        px = px[px.index < pd.Timestamp.today().to_period("M")]     # drop the unfinished month
+        px.index = px.index.to_timestamp("M")
+        return (px.pct_change().dropna() + C.GOLD_ETF_TER / 12.0).rename("Asset | Gold")
+    except Exception as e:
+        print(f"[asset_classes] WARN gold ETF fetch failed ({e}) — gold stays on monthly averages")
+        return None
+
+
 def _gold_return() -> pd.Series | None:
+    """Gold sleeve: monthly-AVERAGE price returns (long history) with the month-end ETF spliced
+    in from its first full month. Averages are kept alone in GOLD_AVERAGE_RETURNS."""
     try:
         ctx = ssl.create_default_context(cafile=certifi.where())
         with urllib.request.urlopen(C.GOLD_PRICES_URL, context=ctx, timeout=60) as resp:
             raw = resp.read().decode("utf-8")
         px = pd.read_csv(io.StringIO(raw))
         px.index = pd.PeriodIndex(px["Date"], freq="M").to_timestamp("M")
-        return px["Price"].pct_change().dropna().rename("Asset | Gold")
+        avg = px["Price"].pct_change().dropna().rename("Asset | Gold")
     except Exception as e:
         print(f"[asset_classes] WARN gold fetch failed ({e}) — skipping")
         return None
+    avg.to_frame().to_csv(C.GOLD_AVERAGE_RETURNS)
+    etf = _gold_etf_return()
+    if etf is None:
+        return avg
+    out = avg[avg.index < etf.index[0]]
+    out = pd.concat([out, etf]).rename("Asset | Gold")
+    print(f"[asset_classes] gold: monthly averages to {out.index[len(avg[avg.index < etf.index[0]]) - 1].date()}, "
+          f"month-end ETF from {etf.index[0].date()}")
+    return out
 
 
 def _cash_return() -> pd.Series | None:

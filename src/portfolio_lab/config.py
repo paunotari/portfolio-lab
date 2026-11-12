@@ -43,8 +43,18 @@ MACRO_MONTHLY = PROCESSED_DIR / "macro_monthly.csv"      # date x indicators (tr
 MACRO_META = PROCESSED_DIR / "macro_meta.csv"            # one row per indicator
 FF_FACTORS_MONTHLY = PROCESSED_DIR / "ff_factors_monthly.csv"  # Fama-French factors, 1926+
 ASSET_CLASS_MONTHLY = PROCESSED_DIR / "asset_class_monthly.csv"  # bond/gold/cash proxy returns
-# free LBMA gold price history (datasets/gold-prices mirror, monthly, 1833+; floats post-1971)
+# Long gold history (datasets/gold-prices mirror, 1833+; floats post-1971). From 1960 its source
+# is the World Bank Pink Sheet, i.e. MONTHLY AVERAGE prices: returns of averages are smoothed
+# (variance about 2/3 of month-end, lag-1 autocorrelation about +0.2) and straddle two months,
+# which understates gold's volatility and its correlation with month-end equity returns (M62).
 GOLD_PRICES_URL = "https://raw.githubusercontent.com/datasets/gold-prices/master/data/monthly.csv"
+# So from its first full month the gold sleeve is the investable ETF (SPDR Gold Shares, month-end
+# adjusted close), with the expense ratio added back so it is gross of fund fees like the index
+# sleeves. The averages remain only before that date, for the long-history research layer.
+GOLD_ETF_URL = ("https://query1.finance.yahoo.com/v8/finance/chart/GLD"
+                "?period1=1099267200&period2={now}&interval=1mo&events=div")
+GOLD_ETF_TER = 0.0040
+GOLD_AVERAGE_RETURNS = PROCESSED_DIR / "gold_monthly_average_returns.csv"   # kept for sensitivity
 # EQUITY-ONLY IS THE PRODUCT DEFAULT (house thesis: equity indices are the productive asset).
 # Non-equity sleeves are an OPT-IN (optimizer include_asset_classes=True) so other user
 # profiles can complete the all-weather picture without imposing it on anyone.
